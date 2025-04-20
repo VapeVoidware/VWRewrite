@@ -276,112 +276,179 @@ local function getSword()
 end
 
 local function getTool(breakType)
-	local bestTool, bestToolSlot, bestToolDamage = nil, nil, 0
-	for slot, item in store.inventory.inventory.items do
-		local toolMeta = bedwars.ItemMeta[item.itemType].breakBlock
-		if toolMeta then
-			local toolDamage = toolMeta[breakType] or 0
-			if toolDamage > bestToolDamage then
-				bestTool, bestToolSlot, bestToolDamage = item, slot, toolDamage
-			end
-		end
-	end
-	return bestTool, bestToolSlot
+    if not breakType or type(breakType) ~= "string" then
+        return nil, nil
+    end
+
+    local inventory = store and store.inventory and store.inventory.inventory
+    if not inventory then
+        return nil, nil
+    end
+
+    local itemMeta = bedwars and bedwars.ItemMeta
+    if not itemMeta then
+        return nil, nil
+    end
+
+    local bestTool, bestToolSlot, bestToolDamage = nil, nil, 0
+
+    for slot, item in pairs(inventory.items) do
+        if item and item.itemType then
+            local meta = itemMeta[item.itemType]
+            if meta and meta.breakBlock then
+                local toolDamage = meta.breakBlock[breakType] or 0
+
+                if item.tool then
+                    toolDamage = toolDamage * (1 + (item.tool.efficiency or 0) * 0.2)
+                end
+
+                if toolDamage > bestToolDamage or (toolDamage == bestToolDamage and math.random() > 0.5) then
+                    bestTool, bestToolSlot, bestToolDamage = item, slot, toolDamage
+                end
+            end
+        end
+    end
+
+    return bestTool, bestToolSlot
 end
 
 local function getWool()
-	for _, wool in (inv or store.inventory.inventory.items) do
-		if wool.itemType:find('wool') then
-			return wool and wool.itemType, wool and wool.amount
-		end
-	end
+    local inventory = inv or (store and store.inventory and store.inventory.inventory)
+    if not inventory or not inventory.items then return nil, 0 end
+
+    for _, item in pairs(inventory.items) do
+        if item and item.itemType and type(item.itemType) == "string" then
+            if item.itemType:lower():find("wool") then
+                return item.itemType, item.amount or 0
+            end
+        end
+    end
+    return nil, 0
 end
 
 local function getStrength(plr)
-	if not plr.Player then
-		return 0
-	end
-	local strength = 0
-	for _, v in (store.inventories[plr.Player] or {items = {}}).items do
-		local itemmeta = bedwars.ItemMeta[v.itemType]
-		if itemmeta and itemmeta.sword and itemmeta.sword.damage > strength then
-			strength = itemmeta.sword.damage
-		end
-	end
-	return strength
+    if not plr or not plr.Player then return 0 end
+    
+    local inventory = store.inventories[plr.Player]
+    if not inventory or not inventory.items then return 0 end
+
+    local strength = 0
+    local itemMeta = bedwars.ItemMeta
+
+    for _, item in pairs(inventory.items) do
+        if item and item.itemType then
+            local meta = itemMeta[item.itemType]
+            if meta and meta.sword then
+                local damage = meta.sword.damage or 0
+                if damage > strength then
+                    strength = damage
+                end
+            end
+        end
+    end
+
+    return strength
 end
 
 local function getPlacedBlock(pos)
-	if not pos then
-		return
-	end
-	local roundedPosition = bedwars.BlockController:getBlockPosition(pos)
-	return bedwars.BlockController:getStore():getBlockAt(roundedPosition), roundedPosition
+    if not pos then return nil end
+    
+    local blockController = bedwars and bedwars.BlockController
+    if not blockController then return nil end
+    
+    local roundedPos = blockController:getBlockPosition(pos)
+    local store = blockController:getStore()
+    
+    return (store and store:getBlockAt(roundedPos)), roundedPos
 end
 
 local function getBlocksInPoints(s, e)
-	local blocks, list = bedwars.BlockController:getStore(), {}
-	for x = s.X, e.X do
-		for y = s.Y, e.Y do
-			for z = s.Z, e.Z do
-				local vec = Vector3.new(x, y, z)
-				if blocks:getBlockAt(vec) then
-					table.insert(list, vec * 3)
-				end
-			end
-		end
-	end
-	return list
+    local store = bedwars and bedwars.BlockController and bedwars.BlockController:getStore()
+    if not store then return {} end
+    
+    local list = {}
+    local xStep = s.X < e.X and 1 or -1
+    local yStep = s.Y < e.Y and 1 or -1
+    local zStep = s.Z < e.Z and 1 or -1
+    
+    for x = s.X, e.X, xStep do
+        for y = s.Y, e.Y, yStep do
+            for z = s.Z, e.Z, zStep do
+                local vec = Vector3.new(x, y, z)
+                if store:getBlockAt(vec) then
+                    list[#list+1] = vec * 3
+                end
+            end
+        end
+    end
+    return list
 end
 
 local function getNearGround(range)
-	range = Vector3.new(3, 3, 3) * (range or 10)
-	local localPosition, mag, closest = entitylib.character.RootPart.Position, 60
-	local blocks = getBlocksInPoints(bedwars.BlockController:getBlockPosition(localPosition - range), bedwars.BlockController:getBlockPosition(localPosition + range))
+    if not entitylib or not entitylib.character or not entitylib.character.RootPart then 
+        return nil 
+    end
 
-	for _, v in blocks do
-		if not getPlacedBlock(v + Vector3.new(0, 3, 0)) then
-			local newmag = (localPosition - v).Magnitude
-			if newmag < mag then
-				mag, closest = newmag, v + Vector3.new(0, 3, 0)
-			end
-		end
-	end
+    range = Vector3.new(3, 3, 3) * (range or 10)
+    local localPos = entitylib.character.RootPart.Position
+    local blockPos = bedwars.BlockController:getBlockPosition(localPos)
+    local min = blockPos - range
+    local max = blockPos + range
 
-	table.clear(blocks)
-	return closest
+    local closest, minDist = nil, 60
+    local blocks = getBlocksInPoints(min, max)
+
+    for _, blockPos in ipairs(blocks) do
+        local checkPos = blockPos + Vector3.new(0, 3, 0)
+        if not getPlacedBlock(checkPos) then
+            local dist = (localPos - blockPos).Magnitude
+            if dist < minDist then
+                closest, minDist = checkPos, dist
+            end
+        end
+    end
+
+    table.clear(blocks)
+    return closest
 end
 
 local function getShieldAttribute(char)
-	local returned = 0
-	for name, val in char:GetAttributes() do
-		if name:find('Shield') and type(val) == 'number' and val > 0 then
-			returned += val
-		end
-	end
-	return returned
+    if not char or not char.GetAttributes then return 0 end
+    
+    local shieldValue = 0
+    for name, val in char:GetAttributes() do
+        if name and type(name) == 'string' and name:lower():find('shield') and type(val) == 'number' and val > 0 then
+            shieldValue = shieldValue + val
+        end
+    end
+    return shieldValue
 end
 
 local function getSpeed()
-	local multi, increase, modifiers = 0, true, bedwars.SprintController:getMovementStatusModifier():getModifiers()
+    if not bedwars or not bedwars.SprintController then return 20 end
+    
+    local modifiers = bedwars.SprintController:getMovementStatusModifier():getModifiers()
+    if not modifiers then return 20 end
 
-	for v in modifiers do
-		local val = v.constantSpeedMultiplier and v.constantSpeedMultiplier or 0
-		if val and val > math.max(multi, 1) then
-			increase = false
-			multi = val - (0.06 * math.round(val))
-		end
-	end
+    local multi, increase = 0, true
+    
+    for _, v in pairs(modifiers) do
+        local val = v.constantSpeedMultiplier or 0
+        if val > math.max(multi, 1) then
+            increase = false
+            multi = val - (0.06 * math.floor(val * 100) / 100)
+        end
+    end
 
-	for v in modifiers do
-		multi += math.max((v.moveSpeedMultiplier or 0) - 1, 0)
-	end
+    for _, v in pairs(modifiers) do
+        multi = multi + math.max((v.moveSpeedMultiplier or 1) - 1, 0)
+    end
 
-	if multi > 0 and increase then
-		multi += 0.16 + (0.02 * math.round(multi))
-	end
+    if multi > 0 and increase then
+        multi = multi + 0.16 + (0.02 * math.floor(multi * 100) / 100)
+    end
 
-	return 20 * (multi + 1)
+    return math.floor(20 * (multi + 1) * 100) / 100
 end
 
 local function getTableSize(tab)
@@ -591,29 +658,35 @@ local function corehotbarswitch(tool)
 end
 
 local function coreswitch(tool, ignore)
-    local character = lplr.Character
+    local character = lplr and lplr.Character
     if not character then return end
 
-    local humanoid = character:FindFirstChild("Humanoid")
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
     if not humanoid then return end
 
-	if not ignore then
-		local currentHandItem
-		for _, acc in character:GetChildren() do
-			if acc:IsA("Accessory") and acc:GetAttribute("InvItem") == true and acc:GetAttribute("ArmorSlot") == nil and acc:GetAttribute("IsBackpack") == nil then
-				currentHandItem = acc
-				break
-			end
-		end
-		if currentHandItem then
-			currentHandItem:Destroy()
-		end
-	
-		for _, weld in pairs(character:GetDescendants()) do
-			if weld:IsA("Weld") and weld.Name == "HandItemWeld" then
-				weld:Destroy()
-			end
-		end
+    if not ignore then
+        for _, acc in ipairs(character:GetChildren()) do
+            if acc:IsA("Accessory") and acc:GetAttribute("InvItem") 
+               and not acc:GetAttribute("ArmorSlot") 
+               and not acc:GetAttribute("IsBackpack") then
+                acc:Destroy()
+                break
+            end
+        end
+
+        for _, weld in ipairs(character:GetDescendants()) do
+            if weld:IsA("Weld") and weld.Name == "HandItemWeld" then
+                weld:Destroy()
+            end
+        end
+    end
+
+    if tool then
+        local newTool = tool:Clone()
+        newTool.Parent = character
+        humanoid:AddAccessory(newTool)
+    end
+end
 	
 		local inventoryFolder = character:FindFirstChild("InventoryFolder")
 		if not inventoryFolder or not inventoryFolder.Value then return end
@@ -679,26 +752,38 @@ local function switchItem(tool, delayTime)
 end
 
 local function waitForChildOfType(obj, name, timeout, prop)
-	local check, returned = tick() + timeout
-	repeat
-		returned = prop and obj[name] or obj:FindFirstChildOfClass(name)
-		if returned and returned.Name ~= 'UpperTorso' or check < tick() then
-			break
-		end
-		task.wait()
-	until false
-	return returned
+    if not obj or not name then return nil end
+    local startTime = tick()
+    timeout = timeout or 5
+    local returned
+    
+    repeat
+        returned = prop and obj[name] or obj:FindFirstChildOfClass(name)
+        if returned and returned.Name ~= "UpperTorso" then
+            break
+        end
+        if (tick() - startTime) > timeout then
+            returned = nil
+            break
+        end
+        task.wait(0.1)
+    until not returned
+    
+    return returned
 end
 
 local frictionTable, oldfrict = {}, {}
 local frictionConnection
 local frictionState
 
+
 local function modifyVelocity(v)
-	if v:IsA('BasePart') and v.Name ~= 'HumanoidRootPart' and not oldfrict[v] then
-		oldfrict[v] = v.CustomPhysicalProperties or 'none'
-		v.CustomPhysicalProperties = PhysicalProperties.new(0.0001, 0.2, 0.5, 1, 1)
-	end
+    if not v:IsA("BasePart") or v.Name == "HumanoidRootPart" or oldfrict[v] then
+        return
+    end
+    
+    oldfrict[v] = v.CustomPhysicalProperties or nil
+    v.CustomPhysicalProperties = PhysicalProperties.new(0.0001, 0.2, 0.5, 1, 1)
 end
 
 local function updateVelocity(force)
