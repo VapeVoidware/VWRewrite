@@ -272,7 +272,7 @@ local function vapeGithubRequest(scripturl, isImportant)
     return res
 end
 shared.VapeDeveloper = shared.VapeDeveloper or shared.VoidDev
-task.spawn(function()
+--[[task.spawn(function()
     pcall(function()
         local Services = setmetatable({}, {
             __index = function(self, key)
@@ -367,7 +367,6 @@ task.spawn(function()
                 return result
             end
             
-            --if chatVersion == Enum.ChatVersion.TextChatService then
                 TextChatService.OnIncomingMessage = function(data)
                     TagRegister = shared.TagRegister or {}
                     local properties = Instance.new("TextChatMessageProperties")
@@ -395,35 +394,10 @@ task.spawn(function()
                     properties.Text = data.Text
                     return properties
                 end
-            --[[elseif chatVersion == Enum.ChatVersion.LegacyChatService then
-                ChatService:RegisterProcessCommandsFunction("CustomPrefix", function(speakerName, message)
-                    TagRegister = shared.TagRegister or {}
-                    local plr = Players:FindFirstChild(speakerName)
-                    if plr then
-                        local prefix = ""
-                        if TagRegister[plr] then
-                            prefix = prefix .. TagRegister[plr]
-                        end
-                        if plr:GetAttribute("__OwnsVIPGamepass") and plr:GetAttribute("VIPChatTag") ~= false then
-                            prefix = prefix .. "[VIP] "
-                        end
-                        local currentLevel = plr:GetAttribute("_CurrentLevel")
-                        if currentLevel then
-                            prefix = prefix .. string.format("[%s] ", tostring(currentLevel))
-                        end
-                        local playerTagValue = plr:FindFirstChild("PlayerTagValue")
-                        if playerTagValue and playerTagValue.Value then
-                            prefix = prefix .. string.format("[#%s] ", tostring(playerTagValue.Value))
-                        end
-                        prefix = prefix .. speakerName
-                        return prefix .. " " .. message
-                    end
-                    return message
-                end)
-            end--]]
+            
         end
     end)
-end)
+end)--]]
 local function pload(fileName, isImportant, required)
     fileName = tostring(fileName)
     if string.find(fileName, "CustomModules") and string.find(fileName, "Voidware") then
