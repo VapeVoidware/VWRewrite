@@ -13,11 +13,6 @@ getgenv().run = function(func)
 	end
 end
 
-local suc, err = pcall(function()
-	return getrenv().require(game:GetService("CoreGui").RobloxGui.Modules.ErrorPrompt)
-end)
-if (not suc) then shared.CheatEngineMode = true end
-
 local vape
 local loadstring = function(...)
 	local res, err = loadstring(...)

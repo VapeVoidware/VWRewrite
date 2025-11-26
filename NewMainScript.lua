@@ -142,14 +142,6 @@ end
 if (not CheatEngineMode) then checkDebug() end
 if shared.ForceDisableCE then CheatEngineMode = false; shared.CheatEngineMode = false end
 shared.CheatEngineMode = shared.CheatEngineMode or CheatEngineMode
-local s1, vv = pcall(function() return string.find(string.lower(tostring(identifyexecutor())), 'wave') end)
-if s1 and vv then
-    shared.CheatEngineMode = false
-    CheatEngineMode = false
-end
-for i = 1, 100 do
-    warn(`FINAL FINAL RESULT: {tostring(shared.CheatEngineMode)}`)
-end
 if (not isfolder('vape')) then makefolder('vape') end
 if (not isfolder('rise')) then makefolder('rise') end
 if (not isfolder('vape/Libraries')) then makefolder('vape/Libraries') end
