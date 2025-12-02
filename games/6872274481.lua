@@ -1542,7 +1542,7 @@ run(function()
 		DepositPinata = "DepositCoins"
     }
 
-    local remoteDefinitions = {
+    local remoteDefinitions = setmetatable({
         --[[AttackEntity = function()
             local remote = dumpRemote(debug.getconstants(Knit.Controllers.SwordController.sendServerRequest))
             if remote == '' and shared.VoidDev then
@@ -1606,7 +1606,20 @@ run(function()
         ActivateGravestone = function() return bedwars2.Client:Get(remz.CryptGravestone, 0) end,
         OwlFireProjectile = function() return bedwars2.Client:Get(remz.WhisperProjectile, 0) end,
 		DepositPinata = function() return bedwars2.Client:Get(remz.DepositPinata, 0) end
-    }
+    }, {
+		__index = function(self, key)
+			if remz[key] then
+				local res = function()
+					return bedwars2.Client:Get(remz[key], 0)
+				end
+				rawset(self, key, res)
+				return res
+			end
+		end,
+		__tostring = function()
+			return "VOIDWARE_INTERNAL_REMOTE_DEFINITIONS"
+		end
+	})
 
     remotes = setmetatable({}, {
         __index = function(self, ind)
