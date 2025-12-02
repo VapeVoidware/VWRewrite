@@ -1538,7 +1538,8 @@ run(function()
         HannahKill = "HannahPromptTrigger",
         SummonerClawAttack = "SummonerClawAttackRequest",
         CryptGravestone = "ActivateGravestone",
-        WhisperProjectile = "OwlFireProjectile"
+        WhisperProjectile = "OwlFireProjectile",
+		DepositPinata = "DepositCoins"
     }
 
     local remoteDefinitions = {
@@ -1549,13 +1550,6 @@ run(function()
             end
             return remote
         end,--]]
-        DepositPinata = function()
-            local remote = dumpRemote(debug.getconstants(debug.getproto(debug.getproto(Knit.Controllers.PiggyBankController.KnitStart, 2), 5)))
-            if remote == '' and shared.VoidDev then
-                notif('Vape', 'Failed to grab remote (DepositPinata)', 10, 'alert')
-            end
-            return remote
-        end,
         DragonEndFly = function()
             local remote = dumpRemote(debug.getconstants(debug.getproto(Knit.Controllers.VoidDragonController.flapWings, 1)))
             if remote == '' and shared.VoidDev then
@@ -1610,7 +1604,8 @@ run(function()
         HannahKill = function() return bedwars2.Client:Get(remz.HannahKill, 0) end,
         SummonerClawAttack = function() return bedwars2.Client:Get(remz.SummonerClawAttack, 0) end,
         ActivateGravestone = function() return bedwars2.Client:Get(remz.CryptGravestone, 0) end,
-        OwlFireProjectile = function() return bedwars2.Client:Get(remz.WhisperProjectile, 0) end
+        OwlFireProjectile = function() return bedwars2.Client:Get(remz.WhisperProjectile, 0) end,
+		DepositPinata = function() return bedwars2.Client:Get(remz.DepositPinata, 0) end
     }
 
     remotes = setmetatable({}, {
