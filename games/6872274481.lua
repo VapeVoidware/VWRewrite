@@ -4771,7 +4771,7 @@ run(function()
 					updateOutline(nil); 
 					return 
 				end
-				local touchPos = input.Position
+				local touchPos = tostring(typeof(input)) == "Vector2" and input or input.Position
 				local ray = workspace.CurrentCamera:ScreenPointToRay(touchPos.X, touchPos.Y)
 				local result = workspace:Raycast(ray.Origin, ray.Direction * 1000)
 				if result and result.Instance then
