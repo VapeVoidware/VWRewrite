@@ -5,7 +5,17 @@ if identifyexecutor and ({identifyexecutor()})[1] == 'Argon' then
 	getgenv().setthreadidentity = nil
 end
 
-getgenv().setthreadidentity = function() end
+shared.OLD_SETTHREADIDENTITY = shared.OLD_SETTHREADIDENTITY or getgenv().setthreadidentity or function() end
+getgenv().setthreadidentity = function(...)
+	local args = {...}
+	local suc, err = pcall(function()
+		return shared.OLD_SETTHREADIDENTITY(unpack(args))
+	end)
+	if not suc and shared.VoidDev then
+		warn(`SETTHREADIDENTITY ERROR: {tostring(err)}`)
+	end
+	return suc and err
+end
 getgenv().run = function(func)
 	local suc, err = pcall(function() func() end)
 	if (not suc) then
