@@ -1153,6 +1153,8 @@ bedwars.SwordController = {
 	isClickingTooFast = function() end,
 	canSee = function() return true end,
 	playSwordEffect = function(swordmeta, status)
+		if not swordmeta then return end
+		if not swordmeta.displayName then return end
 		task.spawn(function()
 			local animation
 			local animName = swordmeta.displayName:find(" Scythe") and "SCYTHE_SWING" or "SWORD_SWING"
