@@ -4748,11 +4748,11 @@ run(function()
 			if target and target.Parent then
 				local plr = Players:GetPlayerFromCharacter(target.Parent)
 				if plr then
-					if selectedTarget == plr then
+					if selectedTarget.Player == plr then
 						selectedTarget = nil
 						updateOutline(nil)
 					else
-						selectedTarget = plr
+						selectedTarget = {Player = plr, Character = plr.Character}
 						updateOutline(plr)
 					end
 				end
