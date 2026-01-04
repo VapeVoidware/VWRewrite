@@ -8285,7 +8285,7 @@ run(function()
 							end)
 						end)
 					else
-						local color = GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"].Api
+						local color = vape.GUIColor
 						sloticon.Parent.BackgroundColor3 = Color3.fromHSV(color.Hue, color.Sat, color.Value)
 						VoidwareFunctions.Connections:register(VoidwareFunctions.Controllers:get("UpdateUI").UIUpdate.Event:Connect(function(h,s,v)
 							color = {Hue = h, Sat = s, Value = v}
@@ -8336,7 +8336,7 @@ run(function()
 								highlight.Color = GuiLibrary.GUICoreColor
 							end)
 						else
-							local color = GuiLibrary.ObjectsThatCanBeSaved["Gui ColorSliderColor"].Api
+							local color = vape.GUIColor
 							highlight.Color = Color3.fromHSV(color.Hue, color.Sat, color.Value)
 							VoidwareFunctions.Connections:register(VoidwareFunctions.Controllers:get("UpdateUI").UIUpdate.Event:Connect(function(h,s,v)
 								color = {Hue = h, Sat = s, Value = v}

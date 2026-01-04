@@ -77,30 +77,6 @@ local function finishLoading()
 	end)
 
 	if not isInkGame then
-		task.spawn(function()
-			repeat
-				shared.vape.ObjectsThatCanBeSaved = shared.vape.ObjectsThatCanBeSaved or {}
-				if oldtbl ~= vape.Modules then
-					oldtbl = vape.Modules
-					for i,v in pairs(vape.Modules) do
-						v.ToggleButton = function(...)
-							v:Toggle(...)
-						end
-						if tostring(i) == "Breaker" then
-							shared.vape.ObjectsThatCanBeSaved.NukerOptionsButton = {Api = v}
-						end
-						shared.vape.ObjectsThatCanBeSaved[tostring(i).."OptionsButton"] = {Api = v}
-					end
-				end
-				pcall(function()
-					local uipallet = vape.libraries.uipallet
-					local hue, saturation, value = Color3.toHSV(uipallet.Main)
-					shared.vape.ObjectsThatCanBeSaved["Gui ColorSliderColor"] = {Api = {Hue = vape.GUIColor.Hue, Sat = vape.GUIColor.Sat, Value = vape.GUIColor}}
-				end)
-				shared.GuiLibrary = shared.vape
-				task.wait(10)
-			until not vape.Loaded
-		end)
 
 		local teleportedServers
 		vape:Clean(playersService.LocalPlayer.OnTeleport:Connect(function()

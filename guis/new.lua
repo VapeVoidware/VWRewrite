@@ -564,7 +564,8 @@ local function hookCF(func, settings)
 							errorNotification('Voidware | '..tostring(S_Name), "There was an error with this module. Attempting restart...", 3)
 							attemptedRestarts[S_Name] = true
 							local suc2, err2 = pcall(function() func(false) end)
-							if suc2 then InfoNotification("Voidware | "..tostring(S_Name), "Restart successfull!", 3); end
+							if suc2 then InfoNotification("Voidware | "..tostring(S_Name), "Restart successfull!", 3)
+end
 						end
 					else
 						errorNotification("Voidware | "..tostring(S_Name), "There was an error with this module. If you can please send the\n VW_Error_Log.json in your workspace to erchodev#0 or discord.gg/voidware", 10)
@@ -5766,85 +5767,65 @@ local function saveSavingError(data)
 end
 
 function mainapi:Save(newprofile)
-	local suc, err = pcall(function()
-		if not self.Loaded then return end
-		local guidata = {
-			Categories = {},
-			Profile = newprofile or self.Profile,
-			Profiles = self.Profiles,
-			Keybind = self.Keybind
-		}
-		local savedata = {
-			Modules = {},
-			Categories = {},
-			Legit = {}
-		}
-	
-		for i, v in self.Categories do
-			(v.Type ~= 'Category' and i ~= 'Main' and savedata or guidata).Categories[i] = {
-				Enabled = i ~= 'Main' and v.Button.Enabled or nil,
-				Expanded = v.Type ~= 'Overlay' and v.Expanded or nil,
-				Pinned = v.Pinned,
-				Position = {X = v.Object.Position.X.Offset, Y = v.Object.Position.Y.Offset},
-				Options = mainapi:SaveOptions(v, v.Options),
-				List = v.List,
-				ListEnabled = v.ListEnabled
-			}
-		end
-	
-		for i, v in self.Modules do
-			local suc_1, data_1 = pcall(function() return mainapi:SaveOptions(v, true) end)
-			if not suc_1 then notifyError("Failure saving data for "..tostring(i)); continue end
-			if suc_1 and type(data_1) == "table" and data_1.ErrorLog then
-				notifyError("Failure saving data for "..tostring(i))
-				warn("[SAVING] - "..tostring(i).." : "..tostring(data_1))
-				saveSavingError(data_1.ErrorLog)
-			end
-			savedata.Modules[i] = {
-				Enabled = v.Enabled,
-				Bind = v.Bind.Button and {Mobile = true, X = v.Bind.Button.Position.X.Offset, Y = v.Bind.Button.Position.Y.Offset} or v.Bind,
-				Options = mainapi:SaveOptions(v, true)
-			}
-		end
-	
-		for i, v in self.Legit.Modules do
-			savedata.Legit[i] = {
-				Enabled = v.Enabled,
-				Position = v.Children and {X = v.Children.Position.X.Offset, Y = v.Children.Position.Y.Offset} or nil,
-				Options = mainapi:SaveOptions(v, v.Options)
-			}
-		end
-	
-		writefile('vape/profiles/'..game.GameId..'.gui.txt', httpService:JSONEncode(guidata))
-		writefile('vape/profiles/'..self.Profile..self.Place..'.txt', httpService:JSONEncode(savedata))
-	end)
-	if not suc then
-		saveSavingError({
-			message = tostring(err),
-			data = debug.traceback(tostring(err))
-		})
-		if errorNotification ~= nil and type(errorNotification) == "function" then
-			pcall(function()
-				errorNotification("Voidware", "Failure saving your profile!", 3)
-			end)
-		end
+	if not self.Loaded then
+		return
 	end
+	local guidata = {
+		Categories = {},
+		Profile = newprofile or self.Profile,
+		Profiles = self.Profiles,
+		Keybind = self.Keybind,
+	}
+	local savedata = {
+		Modules = {},
+		Categories = {},
+		Legit = {},
+	}
+
+	for i, v in self.Categories do
+		(v.Type ~= "Category" and i ~= "Main" and savedata or guidata).Categories[i] = {
+			Enabled = i ~= "Main" and v.Button.Enabled or nil,
+			Expanded = v.Type ~= "Overlay" and v.Expanded or nil,
+			Pinned = v.Pinned,
+			Position = { X = v.Object.Position.X.Offset, Y = v.Object.Position.Y.Offset },
+			Options = mainapi:SaveOptions(v, v.Options),
+			List = v.List,
+			ListEnabled = v.ListEnabled,
+		}
+	end
+
+	for i, v in self.Modules do
+		savedata.Modules[i] = {
+			Enabled = v.Enabled,
+			Bind = v.Bind.Button
+					and { Mobile = true, X = v.Bind.Button.Position.X.Offset, Y = v.Bind.Button.Position.Y.Offset }
+				or v.Bind,
+			Options = mainapi:SaveOptions(v, true),
+		}
+	end
+
+	for i, v in self.Legit.Modules do
+		savedata.Legit[i] = {
+			Enabled = v.Enabled,
+			Position = v.Children and { X = v.Children.Position.X.Offset, Y = v.Children.Position.Y.Offset } or nil,
+			Options = mainapi:SaveOptions(v, v.Options),
+		}
+	end
+
+	writefile("vape/profiles/" .. game.GameId .. ".gui.txt", httpService:JSONEncode(guidata))
+	writefile("vape/profiles/" .. self.Profile .. self.Place .. ".txt", httpService:JSONEncode(savedata))
 end
 
 function mainapi:SaveOptions(object, savedoptions)
-	if not savedoptions then return end
+	if not savedoptions then
+		return
+	end
 	savedoptions = {}
-	for i, v in object.Options do
-		if not v.Save then continue end
-		local suc, err = pcall(function() return v:Save(savedoptions) end)
-		if not suc then 
-			savedoptions.ErrorLog = savedoptions.ErrorLog or {}
-			savedoptions.ErrorLog[tostring(i)] = savedoptions.ErrorLog[tostring(i)] or {}
-			table.insert(savedoptions.ErrorLog[tostring(i)], {
-				message = tostring(err),
-				data = debug.traceback(tostring(err))
-			})
+	for _, v in object.Options do
+		if not v.Save then
+			continue
 		end
+		v:Save(savedoptions)
 	end
 	return savedoptions
 end
