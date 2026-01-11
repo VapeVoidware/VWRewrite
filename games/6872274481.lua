@@ -8812,6 +8812,10 @@ run(function()
 		table.insert(CoreConnections, con)
 	end
 
+	local function useOwlAbility(args)
+		game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("OwlActionAbilities"):FireServer(args)
+	end
+
     AutoWhisper = vape.Categories.World:CreateModule({
         Name = 'AutoWhisper',
         Function = function(callback)
@@ -8835,11 +8839,19 @@ run(function()
 							if FlyWhisper.Enabled and root.Velocity.Y <= -85 and not workspace:Raycast(root.Position, Vector3.new(0, -100, 0), rayCheck) then
 								if bedwars.AbilityController:canUseAbility('OWL_LIFT') then
 									bedwars.AbilityController:useAbility('OWL_LIFT')
+									useOwlAbility({
+										target = target,
+										ability = "OWL_LIFT",
+									})
 								end
 							end
 							if HealWhisper.Enabled and (hum.MaxHealth - hum.Health) >= 20 then
 								if bedwars.AbilityController:canUseAbility('OWL_HEAL') then
 									bedwars.AbilityController:useAbility('OWL_HEAL')
+									useOwlAbility({
+										target = target,
+										ability = "OWL_HEAL",
+									})
 								end
 							end
 							task.wait(0.05)
