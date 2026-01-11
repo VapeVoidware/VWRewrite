@@ -3,7 +3,8 @@ local run = function(func)
 		func()
 	else
 		local suc, err = pcall(function() func() end)
-		if (not suc) then errorNotification("Vape 4481", 'Failure executing function: '..tostring(err), 3); warn(debug.traceback(tostring(err))) end
+		if (not suc) then errorNotification("Vape 4481", 'Failure executing function: '..tostring(err), 3)
+warn(debug.traceback(tostring(err))) end
 	end
 end
 local cloneref = function(obj)
@@ -22,7 +23,8 @@ local internalConfig = {
 		"RemoteInternal"
 	}
 }
-local internalConstructor = {}; internalConstructor = {
+local internalConstructor = {}
+internalConstructor = {
 	__index = function(self, key)
 		if key == "new" then
 			return function(id)
@@ -4763,12 +4765,12 @@ run(function()
 		if isMobile then
 			con = UserInputService.TouchTapInWorld:Connect(function(input, gameProcessed)
 				if gameProcessed or not hovering then 
-					updateOutline(nil); 
+					updateOutline(nil)
 					return 
 				end
 				if not ProjectileAimbot.Enabled then 
-					pcall(function() con:Disconnect() end); 
-					updateOutline(nil); 
+					pcall(function() con:Disconnect() end)
+					updateOutline(nil)
 					return 
 				end
 				local touchPos = tostring(typeof(input)) == "Vector2" and input or input.Position
@@ -5930,9 +5932,9 @@ run(function()
 				if Equipment.Enabled and store.inventories[ent.Player] then
 					local inventory = store.inventories[ent.Player]
 					EntityNameTag.Hand.Image = bedwars.getIcon(inventory.hand or {itemType = ''}, true)
-					EntityNameTag.Helmet.Image = bedwars.getIcon(inventory.armor[4] or {itemType = ''}, true)
-					EntityNameTag.Chestplate.Image = bedwars.getIcon(inventory.armor[5] or {itemType = ''}, true)
-					EntityNameTag.Boots.Image = bedwars.getIcon(inventory.armor[6] or {itemType = ''}, true)
+					EntityNameTag.Helmet.Image = bedwars.getIcon(inventory.armor[1] or {itemType = ''}, true)
+					EntityNameTag.Chestplate.Image = bedwars.getIcon(inventory.armor[2] or {itemType = ''}, true)
+					EntityNameTag.Boots.Image = bedwars.getIcon(inventory.armor[3] or {itemType = ''}, true)
 					EntityNameTag.Kit.Image = bedwars.getIcon({itemType = kititems[ent.Player:GetAttribute('PlayingAsKit')] or ''}, true)
 				end
 				local nametagSize = getfontsize(removeTags(Strings[ent]), EntityNameTag.TextSize, EntityNameTag.FontFace, Vector2.new(100000, 100000))
@@ -6437,7 +6439,8 @@ run(function()
 				if (not obj) then return warn("[AutoKit - necromancer.verifyAttributes]: No object specified!") end
 				local required_attributes = {"ArmorType", "GravestonePlayerUserId", "GravestonePosition", "GravestoneSecret", "SwordType"}
 				for i,v in pairs(required_attributes) do
-					if (not obj:GetAttribute(v)) then print(v.." not found in "..obj.Name); return false end
+					if (not obj:GetAttribute(v)) then print(v.." not found in "..obj.Name)
+return false end
 				end
 				return true
 			end
@@ -8814,7 +8817,11 @@ run(function()
         Function = function(callback)
             if callback then
 				local isWhispering
-				clean(bedwars.Client:Get("OwlSummoned"):Connect(function(data)
+				clean(bedwars.Client:Get("OwlSummoned"):Connect(function(plr, target)
+					local data = {
+						user = plr,
+						target = target,
+					}
 					if data.user == lplr then
 						local target = data.target
 						local chr = target.Character
@@ -8839,7 +8846,10 @@ run(function()
 						until not isWhispering or not AutoWhisper.Enabled
 					end
 				end))
-				clean(bedwars.Client:Get("OwlDeattached"):Connect(function(data)
+				clean(bedwars.Client:Get("OwlDeattached"):Connect(function(plr)
+					local data = {
+						user = plr
+					}
 					if data.user == lplr then
 						isWhispering = false
 					end
