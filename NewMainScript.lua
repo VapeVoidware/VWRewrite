@@ -60,9 +60,13 @@ task.spawn(function()
 end)
 local CheatEngineMode = false
 if (not getgenv) or (getgenv and type(getgenv) ~= "function") then CheatEngineMode = true end
-if getgenv and not getgenv().shared then CheatEngineMode = true; getgenv().shared = {}; end
-if getgenv and not getgenv().debug then CheatEngineMode = true; getgenv().debug = {traceback = function(string) return string end} end
-if getgenv and not getgenv().require then CheatEngineMode = true; end
+if getgenv and not getgenv().shared then CheatEngineMode = true
+getgenv().shared = {}
+end
+if getgenv and not getgenv().debug then CheatEngineMode = true
+getgenv().debug = {traceback = function(string) return string end} end
+if getgenv and not getgenv().require then CheatEngineMode = true
+end
 if getgenv and getgenv().require and type(getgenv().require) ~= "function" then CheatEngineMode = true end
 local debugChecks = {
     Type = "table",
@@ -140,7 +144,8 @@ local function checkDebug()
     end
 end
 if (not CheatEngineMode) then checkDebug() end
-if shared.ForceDisableCE then CheatEngineMode = false; shared.CheatEngineMode = false end
+if shared.ForceDisableCE then CheatEngineMode = false
+shared.CheatEngineMode = false end
 shared.CheatEngineMode = shared.CheatEngineMode or CheatEngineMode
 if (not isfolder('vape')) then makefolder('vape') end
 if (not isfolder('rise')) then makefolder('rise') end
@@ -227,7 +232,7 @@ if not are_installed_1() then pcall(function() install_profiles(1) end) end
 local url = shared.RiseMode and "https://github.com/VapeVoidware/VWRise/" or "https://github.com/VapeVoidware/VWRewrite"
 local commit = "main"
 writefile(baseDirectory.."commithash2.txt", commit)
-commit = '87ca3fa1f2e5215e34e90c2a7f5579739cfa69d9'
+commit = '070e96570036b2836b10f3581c88bd452f722c26'
 commit = shared.CustomCommit and tostring(shared.CustomCommit) or commit
 writefile(baseDirectory.."commithash2.txt", commit)
 pcall(function()
@@ -407,7 +412,8 @@ local function pload(fileName, isImportant, required)
     local res = vapeGithubRequest(fileName, isImportant)
     local a = loadstring(res)
     local suc, err = true, ""
-    if type(a) ~= "function" then suc = false; err = tostring(a) else if required then return a() else a() end end
+    if type(a) ~= "function" then suc = false
+err = tostring(a) else if required then return a() else a() end end
     if (not suc) then 
         if isImportant then
             if (not string.find(string.lower(err), "vape already injected")) and (not string.find(string.lower(err), "rise already injected")) then
