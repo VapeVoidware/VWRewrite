@@ -32,6 +32,32 @@ local DEBUG_CHECK_TABLE = {
         "getproto"
     }
 }
+getgenv().global = setmetatable({}, {
+	__index = function(self, key)
+		key = tostring(key)
+		return getgenv()[key]
+	end,
+	__newindex = function(self, key, val)
+		key = tostring(key)
+		rawset(self, key, val)
+		getgenv()[key] = val
+		return val
+	end,
+	__call = function(self)
+		return setmetatable({}, {
+			__index = self,
+			__newindex = function(_, key, val)
+				rawset(self, key, val)
+				getgenv()[key] = val
+				shared[key] = val
+				return val
+			end,
+		})
+	end,
+	__tostring = function()
+		return "VOIDWARE_INTERNAL_GLOBAL_ENV"
+	end,
+})
 local function checkExecutor()
     if CEMode ~= nil then return CEMode end
     if (not getgenv) or (getgenv and type(getgenv) ~= "function") then return true end
@@ -116,7 +142,7 @@ do
 	end
 end
 
-if not shared.VapeDeveloper then
+--if not shared.VapeDeveloper then
 	local TESTING_COMMIT = "master"
 	local PRODUCTION_COMMIT = "6220c44e18e94d003d4b94db4af97a805aac328b"
 	local commit = shared.CustomCommit or (shared.TestingMode or shared.StagingMode) and TESTING_COMMIT or PRODUCTION_COMMIT
@@ -127,10 +153,7 @@ if not shared.VapeDeveloper then
 		wipeFolder('vape/libraries')
 	end
 	writefile('vape/profiles/commit.txt', commit)
-end
-
-local REPO_OWNER = shared.REPO_OWNER or "VapeVoidware"
-shared.REPO_OWNER = REPO_OWNER
+--end
 
 local SAVE_BLACKLISTED = setmetatable({
 	"6872274481",
@@ -156,7 +179,7 @@ local SAVE_BLACKLISTED = setmetatable({
 local function downloadFile(path, func)
 	if not isfile(path) or SAVE_BLACKLISTED(path) then
 		local suc, res = pcall(function()
-			return game:HttpGet('https://raw.githubusercontent.com/"..tostring(shared.REPO_OWNER).."/VWRewrite/'..readfile('vape/profiles/commit.txt')..'/'..select(1, path:gsub('vape/', '')), true)
+			return game:HttpGet('https://raw.githubusercontent.com/VapeVoidware/VWRewrite/'..readfile('vape/profiles/commit.txt')..'/'..select(1, path:gsub('vape/', '')), true)
 		end)
 		if not suc or res == '404: Not Found' then
 			error(res)

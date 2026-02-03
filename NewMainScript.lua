@@ -41,6 +41,32 @@ local DEBUG_CHECK_TABLE = {
 		"getproto",
 	},
 }
+getgenv().global = setmetatable({}, {
+	__index = function(self, key)
+		key = tostring(key)
+		return getgenv()[key]
+	end,
+	__newindex = function(self, key, val)
+		key = tostring(key)
+		rawset(self, key, val)
+		getgenv()[key] = val
+		return val
+	end,
+	__call = function(self)
+		return setmetatable({}, {
+			__index = self,
+			__newindex = function(_, key, val)
+				rawset(self, key, val)
+				getgenv()[key] = val
+				shared[key] = val
+				return val
+			end,
+		})
+	end,
+	__tostring = function()
+		return "VOIDWARE_INTERNAL_GLOBAL_ENV"
+	end,
+})
 local function checkExecutor()
 	if CEMode ~= nil then
 		return CEMode
@@ -148,23 +174,18 @@ for _, folder in { "vape", "vape/games", "vape/profiles", "vape/assets", "vape/l
 	end
 end
 
-if not shared.VapeDeveloper then
-	local TESTING_COMMIT = "master"
-	local PRODUCTION_COMMIT = "6220c44e18e94d003d4b94db4af97a805aac328b"
-	local commit = shared.CustomCommit
-		or (shared.TestingMode or shared.StagingMode) and TESTING_COMMIT
-		or PRODUCTION_COMMIT
-	if (isfile("vape/profiles/commit.txt") and readfile("vape/profiles/commit.txt") or "") ~= commit then
-		wipeFolder("vape")
-		wipeFolder("vape/games")
-		wipeFolder("vape/guis")
-		wipeFolder("vape/libraries")
-	end
-	writefile("vape/profiles/commit.txt", commit)
+--if not shared.VapeDeveloper then
+local TESTING_COMMIT = "master"
+local PRODUCTION_COMMIT = "6220c44e18e94d003d4b94db4af97a805aac328b"
+local commit = shared.CustomCommit or (shared.TestingMode or shared.StagingMode) and TESTING_COMMIT or PRODUCTION_COMMIT
+if (isfile("vape/profiles/commit.txt") and readfile("vape/profiles/commit.txt") or "") ~= commit then
+	wipeFolder("vape")
+	wipeFolder("vape/games")
+	wipeFolder("vape/guis")
+	wipeFolder("vape/libraries")
 end
-
-local REPO_OWNER = shared.REPO_OWNER or "VapeVoidware"
-shared.REPO_OWNER = REPO_OWNER
+writefile("vape/profiles/commit.txt", commit)
+--end
 
 local SAVE_BLACKLISTED = setmetatable({
 	"6872274481",
@@ -195,7 +216,7 @@ local function downloadFile(path, func)
 	if not isfile(path) or SAVE_BLACKLISTED(path) then
 		local suc, res = pcall(function()
 			return game:HttpGet(
-				'https://raw.githubusercontent.com/"..tostring(shared.REPO_OWNER).."/VWRewrite/'
+				"https://raw.githubusercontent.com/VapeVoidware/VWRewrite/"
 					.. readfile("vape/profiles/commit.txt")
 					.. "/"
 					.. select(1, path:gsub("vape/", "")),

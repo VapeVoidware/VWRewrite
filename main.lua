@@ -54,7 +54,7 @@ local function downloadFile(path, func)
 		local suc, res = pcall(function()
 			return game:HttpGet(
 				"https://raw.githubusercontent.com/"
-					.. tostring(shared.REPO_OWNER)
+					.. "VapeVoidware"
 					.. "/VWRewrite/"
 					.. readfile("vape/profiles/commit.txt")
 					.. "/"
@@ -213,33 +213,6 @@ local function mprint(tbl, indent, visited)
 		end
 	end
 end
-
-getgenv().global = setmetatable({}, {
-	__index = function(self, key)
-		key = tostring(key)
-		return getgenv()[key]
-	end,
-	__newindex = function(self, key, val)
-		key = tostring(key)
-		rawset(self, key, val)
-		getgenv()[key] = val
-		return val
-	end,
-	__call = function(self)
-		return setmetatable({}, {
-			__index = self,
-			__newindex = function(_, key, val)
-				rawset(self, key, val)
-				getgenv()[key] = val
-				shared[key] = val
-				return val
-			end,
-		})
-	end,
-	__tostring = function()
-		return "VOIDWARE_INTERNAL_GLOBAL_ENV"
-	end,
-})
 
 local VoidwareLoader
 local createCustomSignal = function(key, delay)
