@@ -24,15 +24,25 @@ local function notif(...)
 	return vape:CreateNotification(...)
 end
 
+local knitfailed = false
 run(function()
 	local function dumpRemote(tab)
 		local ind = table.find(tab, 'Client')
 		return ind and tab[ind + 1] or ''
 	end
 
+	local suc, knitmod = pcall(function()
+		return require(lplr.PlayerScripts.TS.knit)
+	end)
+	if not suc then
+		warn(`Knit Failed to load`)
+		knitfailed = true
+		return
+	end
+
 	local KnitInit, Knit
 	repeat
-		KnitInit, Knit = pcall(function() return debug.getupvalue(require(lplr.PlayerScripts.TS.knit).setup, 9) end)
+		KnitInit, Knit = pcall(function() return debug.getupvalue(knitmod.setup, 9) end)
 		if KnitInit then break end
 		task.wait()
 	until KnitInit
@@ -63,6 +73,7 @@ run(function()
 		table.clear(bedwars)
 	end)
 end)
+if knitfailed then return end
 
 run(function()
 	local Sprint

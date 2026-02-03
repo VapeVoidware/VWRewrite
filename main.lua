@@ -21,13 +21,6 @@ task.spawn(function()
 	end)
 end)
 
--- why do exploits fail to implement anything correctly? Is it really that hard?
-if identifyexecutor then
-	if table.find({ "Argon", "Wave" }, ({ identifyexecutor() })[1]) then
-		getgenv().setthreadidentity = nil
-	end
-end
-
 local vape
 local loadstring = function(...)
 	local res, err = loadstring(...)
