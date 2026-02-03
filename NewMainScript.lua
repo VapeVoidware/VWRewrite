@@ -154,6 +154,8 @@ if CEMode then
 	warn(`[CEMode]: Voidware Cheat Engine mode overwrite done`)
 end
 
+shared.CheatEngineMode = CEMode
+
 local function wipeFolder(path)
 	if shared.VoidDev then
 		return

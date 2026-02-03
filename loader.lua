@@ -58,7 +58,7 @@ local CE_EXECUTORS = shared.CE_EXECUTORS or {
 	"xeno",
 	"ember",
 	"ronix",
-	"potassium"
+	"potassium",
 }
 local DEBUG_CHECK_TABLE = {
 	type = "table",
@@ -154,6 +154,8 @@ if CEMode then
 	warn(`[CEMode]: Voidware Cheat Engine mode overwrite done`)
 end
 
+shared.CheatEngineMode = CEMode
+
 local function wipeFolder(path)
 	if shared.VoidDev then
 		return
@@ -221,10 +223,14 @@ local SAVE_BLACKLISTED = setmetatable({
 local function downloadFile(path, func)
 	if not isfile(path) or SAVE_BLACKLISTED(path) then
 		if shared.VoidwareBedwarsLoadingDebug then
-			warn("downloadFile", path, "https://raw.githubusercontent.com/VapeVoidware/VWRewrite/"
+			warn(
+				"downloadFile",
+				path,
+				"https://raw.githubusercontent.com/VapeVoidware/VWRewrite/"
 					.. readfile("vape/profiles/commit.txt")
 					.. "/"
-					.. select(1, path:gsub("vape/", "")))
+					.. select(1, path:gsub("vape/", ""))
+			)
 		end
 		local suc, res = pcall(function()
 			return game:HttpGet(
