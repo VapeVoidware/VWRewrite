@@ -217,6 +217,16 @@ local SAVE_BLACKLISTED = setmetatable({
 })
 local function downloadFile(path, func)
 	if not isfile(path) or SAVE_BLACKLISTED(path) then
+		if shared.VoidwareBedwarsLoadingDebug then
+			warn(
+				"downloadFile",
+				path,
+				"https://raw.githubusercontent.com/VapeVoidware/VWRewrite/"
+					.. readfile("vape/profiles/commit.txt")
+					.. "/"
+					.. select(1, path:gsub("vape/", ""))
+			)
+		end
 		local suc, res = pcall(function()
 			return game:HttpGet(
 				"https://raw.githubusercontent.com/VapeVoidware/VWRewrite/"
