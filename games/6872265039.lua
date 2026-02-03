@@ -73,7 +73,10 @@ run(function()
 		table.clear(bedwars)
 	end)
 end)
-if knitfailed then return end
+if knitfailed then 
+	shared.CheatEngineMode = knitfailed
+	return 
+end
 
 run(function()
 	local Sprint
