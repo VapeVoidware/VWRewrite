@@ -76,6 +76,7 @@ local function checkExecutor()
 	if (not getgenv) or (getgenv and type(getgenv) ~= "function") then
 		return true
 	end
+	local global = getgenv()
 	if getgenv and not global.shared then
 		global.shared = {}
 		return true
