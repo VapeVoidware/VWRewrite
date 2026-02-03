@@ -168,7 +168,7 @@ local function wipeFolder(path)
 	end
 end
 
-for _, folder in { "vape", "vape/games", "vape/profiles", "vape/assets", "vape/libraries", "vape/guis" } do
+for _, folder in { "vape", "vape/games", "vape/profiles", "vape/assets", "vape/libraries", "vape/guis", "vwmeta" } do
 	if not isfolder(folder) then
 		makefolder(folder)
 	end
