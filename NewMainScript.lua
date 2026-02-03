@@ -142,30 +142,28 @@ local function wipeFolder(path)
 	end
 end
 
-for _, folder in
-	{ "newvape", "newvape/games", "newvape/profiles", "newvape/assets", "newvape/libraries", "newvape/guis" }
-do
+for _, folder in { "vape", "vape/games", "vape/profiles", "vape/assets", "vape/libraries", "vape/guis" } do
 	if not isfolder(folder) then
 		makefolder(folder)
 	end
 end
 
 if not shared.VapeDeveloper then
-	local TESTING_COMMIT = "main"
-	local PRODUCTION_COMMIT = "main"
+	local TESTING_COMMIT = "master"
+	local PRODUCTION_COMMIT = "6220c44e18e94d003d4b94db4af97a805aac328b"
 	local commit = shared.CustomCommit
 		or (shared.TestingMode or shared.StagingMode) and TESTING_COMMIT
 		or PRODUCTION_COMMIT
-	if (isfile("newvape/profiles/commit.txt") and readfile("newvape/profiles/commit.txt") or "") ~= commit then
-		wipeFolder("newvape")
-		wipeFolder("newvape/games")
-		wipeFolder("newvape/guis")
-		wipeFolder("newvape/libraries")
+	if (isfile("vape/profiles/commit.txt") and readfile("vape/profiles/commit.txt") or "") ~= commit then
+		wipeFolder("vape")
+		wipeFolder("vape/games")
+		wipeFolder("vape/guis")
+		wipeFolder("vape/libraries")
 	end
-	writefile("newvape/profiles/commit.txt", commit)
+	writefile("vape/profiles/commit.txt", commit)
 end
 
-local REPO_OWNER = shared.REPO_OWNER or "7GrandDadPGN"
+local REPO_OWNER = shared.REPO_OWNER or "VapeVoidware"
 shared.REPO_OWNER = REPO_OWNER
 
 local SAVE_BLACKLISTED = setmetatable({
@@ -198,9 +196,9 @@ local function downloadFile(path, func)
 		local suc, res = pcall(function()
 			return game:HttpGet(
 				'https://raw.githubusercontent.com/"..tostring(shared.REPO_OWNER).."/VWRewrite/'
-					.. readfile("newvape/profiles/commit.txt")
+					.. readfile("vape/profiles/commit.txt")
 					.. "/"
-					.. select(1, path:gsub("newvape/", "")),
+					.. select(1, path:gsub("vape/", "")),
 				true
 			)
 		end)
@@ -242,23 +240,23 @@ getgenv().pload = function(name, id, found)
 			for i, v in parts do
 				resolved = resolved .. v .. (i == #parts and "" or "/")
 			end
-			if isfile(`newvape/{resolved}{part}`) then
+			if isfile(`vape/{resolved}{part}`) then
 				warn(`[Obfuscation-Debug]: [1] Loading file ({tostring(resolved)}{part})!`)
 				name = resolved
 			end
 		else
 			local resolved = "obfuscated_" .. name
-			if isfile(`newvape/{resolved}{part}`) then
+			if isfile(`vape/{resolved}{part}`) then
 				warn(`[Obfuscation-Debug]: [2] Loading file ({tostring(resolved)}{part})!`)
 				name = resolved
 			end
 		end
 	end
 	if shared.VoidwareBedwarsLoadingDebug then
-		print(`newvape/{name}{part}`)
+		print(`vape/{name}{part}`)
 	end
 	local suc, download = pcall(function()
-		return downloadFile(`newvape/{name}{part}`), (id or name)
+		return downloadFile(`vape/{name}{part}`), (id or name)
 	end)
 	if not suc and found then
 		warn(`Load Error: [{tostring(id or name)}] {download}`)

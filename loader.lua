@@ -117,8 +117,8 @@ do
 end
 
 if not shared.VapeDeveloper then
-	local TESTING_COMMIT = "main"
-	local PRODUCTION_COMMIT = "main"
+	local TESTING_COMMIT = "master"
+	local PRODUCTION_COMMIT = "6220c44e18e94d003d4b94db4af97a805aac328b"
 	local commit = shared.CustomCommit or (shared.TestingMode or shared.StagingMode) and TESTING_COMMIT or PRODUCTION_COMMIT
 	if (isfile('vape/profiles/commit.txt') and readfile('vape/profiles/commit.txt') or '') ~= commit then
 		wipeFolder('vape')
@@ -129,7 +129,7 @@ if not shared.VapeDeveloper then
 	writefile('vape/profiles/commit.txt', commit)
 end
 
-local REPO_OWNER = shared.REPO_OWNER or "7GrandDadPGN"
+local REPO_OWNER = shared.REPO_OWNER or "VapeVoidware"
 shared.REPO_OWNER = REPO_OWNER
 
 local SAVE_BLACKLISTED = setmetatable({
