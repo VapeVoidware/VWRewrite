@@ -58,6 +58,7 @@ local CE_EXECUTORS = shared.CE_EXECUTORS or {
 	"xeno",
 	"ember",
 	"ronix",
+	"potassium"
 }
 local DEBUG_CHECK_TABLE = {
 	type = "table",
