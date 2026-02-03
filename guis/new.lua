@@ -5753,8 +5753,9 @@ aq.Image=t"vape/assets/new/expandup.png"
 end)
 
 local function safeTween(ar,...)
+local as={...}
 safe("tween → "..ar,function()
-m:Tween(...)
+m:Tween(unpack(as))
 end)
 end
 
@@ -5785,7 +5786,6 @@ an.Container=modulescontainer
 
 return an
 end
-
 
 ad:GetPropertyChangedSignal"Visible":Connect(function()
 local al=ac
