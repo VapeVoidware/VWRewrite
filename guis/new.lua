@@ -5705,100 +5705,414 @@ end)
 end
 end
 
-local function safe(al,am)
-local an,ao=pcall(am)
-if not an then
-warn("❌ CreateModuleCategory FAILED @",al,"\n",ao,"\n")
-end
-return an
-end
-
 function ac.CreateModuleCategory(al,am)
-local an=am
-mprint(an)
-
-local ao={
+local an,ao=pcall(function()
+local an={
 Type="ModuleCategory",
 Expanded=false,
 Modules={},
-Name=an.Name,
+Name=am.Name,
 }
 
-local ap
-safe("create categoryframe",function()
-ap=Instance.new"Frame"
-ap.Name=an.Name.."ModuleCategory"
-ap.Size=UDim2.fromOffset(220,45)
-ap.BackgroundColor3=an.BackgroundColor or l.Dark(n.Main,0.08)
-ap.BorderSizePixel=0
-ap.Parent=ai
-end)
 
-safe("addTooltip",function()
-addTooltip(ap,an.Name.." Category")
+local ao
+success,err=pcall(function()
+ao=Instance.new"Frame"
+ao.Name=am.Name.."ModuleCategory"
+ao.Size=UDim2.fromOffset(220,45)
+ao.BackgroundColor3=am.BackgroundColor or l.Dark(n.Main,0.08)
+ao.BorderSizePixel=0
+ao.Parent=ai
 end)
-
-safe("addCorner",function()
-addCorner(ap,UDim.new(0,4))
-end)
-
-local aq
-safe("create headerbutton",function()
-aq=Instance.new"TextButton"
-aq.Parent=ap
-end)
-
-local ar
-safe("create arrow + asset",function()
-ar=Instance.new"ImageLabel"
-ar.Image=t"vape/assets/new/expandup.png"
-end)
-
-local function safeTween(as,...)
-local at={...}
-safe("tween → "..as,function()
-m:Tween(unpack(at))
-end)
+if not success then
+warn("[ModuleCategory] Frame creation failed:",err)
+return
 end
 
-function ao.Toggle(as,at)
 
-as.Expanded=at~=nil and at or not as.Expanded local au=
+success,err=pcall(function()
+addTooltip(
+ao,
+am.Name
+.." "
+..(am.Name~="Special"and"Special Category"or"Category")
+)
+end)
+if not success then
+warn("[ModuleCategory] Tooltip failed:",err)
+end
 
-as.Expanded and modulelist.AbsoluteContentSize.Y/z.Scale or 0
 
-safeTween("arrow",ar,TweenInfo.new(0.25,Enum.EasingStyle.Quad),{
-Rotation=as.Expanded and 0 or 180,
+if am.StrokeColor then
+success,err=pcall(function()
+local ap=Instance.new"UIStroke"
+ap.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
+ap.Color=am.StrokeColor
+ap.Thickness=am.StrokeThickness or 1
+ap.Transparency=am.StrokeTransparency or 0.5
+ap.Parent=ao
+end)
+if not success then
+warn("[ModuleCategory] Stroke creation failed:",err)
+end
+end
+
+
+success,err=pcall(function()
+addCorner(ao,UDim.new(0,4))
+end)
+if not success then
+warn("[ModuleCategory] Corner failed:",err)
+end
+
+
+local ap
+success,err=pcall(function()
+ap=Instance.new"TextButton"
+ap.Name="Header"
+ap.Size=UDim2.fromOffset(220,45)
+ap.BackgroundTransparency=1
+ap.BorderSizePixel=0
+ap.AutoButtonColor=false
+ap.Text=""
+ap.Parent=ao
+end)
+if not success then
+warn("[ModuleCategory] Header button creation failed:",err)
+return
+end
+
+
+local aq
+success,err=pcall(function()
+aq=Instance.new"Frame"
+aq.Name="AccentBar"
+aq.Size=UDim2.fromOffset(3,45)
+aq.Position=UDim2.fromOffset(0,0)
+aq.BackgroundColor3=am.AccentColor
+or am.StrokeColor
+or Color3.fromRGB(100,150,255)
+aq.BorderSizePixel=0
+aq.Parent=ao
+
+local ar=Instance.new"UICorner"
+ar.CornerRadius=UDim.new(0,4)
+ar.Parent=aq
+end)
+if not success then
+warn("[ModuleCategory] Accent bar creation failed:",err)
+end
+
+
+local ar
+success,err=pcall(function()
+ar=Instance.new"ImageLabel"
+ar.Name="Icon"
+ar.Size=am.Size or UDim2.fromOffset(20,20)
+ar.Position=UDim2.fromOffset(15,15)
+ar.BackgroundTransparency=1
+ar.Image=am.Icon or""
+ar.ImageColor3=n.Text
+ar.Parent=ap
+end)
+if not success then
+warn("[ModuleCategory] Icon creation failed:",err)
+end
+
+
+local as
+success,err=pcall(function()
+as=Instance.new"TextLabel"
+as.Name="Title"
+as.Size=UDim2.new(1,-90,0,45)
+as.Position=UDim2.fromOffset(45,0)
+as.BackgroundTransparency=1
+as.Text=am.Name
+as.TextXAlignment=Enum.TextXAlignment.Left
+as.TextColor3=n.Text
+as.TextSize=14
+as.FontFace=Font.new(n.Font.Family,Enum.FontWeight.SemiBold)
+as.Parent=ap
+end)
+if not success then
+warn("[ModuleCategory] Title creation failed:",err)
+end
+
+
+local at
+success,err=pcall(function()
+at=Instance.new"TextLabel"
+at.Name="Count"
+at.Size=UDim2.fromOffset(40,45)
+at.Position=UDim2.new(1,-85,0,0)
+at.BackgroundTransparency=1
+at.Text="0"
+at.TextXAlignment=Enum.TextXAlignment.Right
+at.TextColor3=l.Dark(n.Text,0.4)
+at.TextSize=12
+at.FontFace=n.Font
+at.Parent=ap
+end)
+if not success then
+warn("[ModuleCategory] Count label creation failed:",err)
+end
+
+
+local au,av
+success,err=pcall(function()
+au=Instance.new"TextButton"
+au.Name="Arrow"
+au.Size=UDim2.fromOffset(45,45)
+au.Position=UDim2.new(1,-45,0,0)
+au.BackgroundTransparency=1
+au.Text=""
+au.Parent=ap
+
+av=Instance.new"ImageLabel"
+av.Name="Arrow"
+av.Size=UDim2.fromOffset(12,7)
+av.Position=UDim2.fromOffset(17,19)
+av.BackgroundTransparency=1
+av.Image=t"vape/assets/new/expandup.png"
+av.ImageColor3=n.Text
+av.Rotation=180
+av.Parent=au
+end)
+if not success then
+warn("[ModuleCategory] Arrow button creation failed:",err)
+end
+
+
+success,err=pcall(function()
+local aw=Instance.new"UIGradient"
+aw.Color=ColorSequence.new{
+ColorSequenceKeypoint.new(0,Color3.new(1,1,1)),
+ColorSequenceKeypoint.new(1,Color3.fromRGB(0.95,0.95,0.95)),
+}
+aw.Rotation=90
+aw.Parent=ao
+end)
+if not success then
+warn("[ModuleCategory] Gradient creation failed:",err)
+end
+
+
+local aw,ax
+success,err=pcall(function()
+aw=Instance.new"Frame"
+aw.Name="ModulesContainer"
+aw.Size=UDim2.new(1,0,0,0)
+aw.Position=UDim2.fromOffset(0,45)
+aw.BackgroundTransparency=1
+aw.BorderSizePixel=0
+aw.Visible=false
+aw.ClipsDescendants=true
+aw.Parent=ao
+
+ax=Instance.new"UIListLayout"
+ax.SortOrder=Enum.SortOrder.LayoutOrder
+ax.HorizontalAlignment=Enum.HorizontalAlignment.Center
+ax.Padding=UDim.new(0,2)
+ax.Parent=aw
+end)
+if not success then
+warn("[ModuleCategory] Modules container creation failed:",err)
+return
+end
+
+local function updateCount()
+success,err=pcall(function()
+at.Text=tostring(#an.Modules)
+end)
+if not success then
+warn("[ModuleCategory] updateCount failed:",err)
+end
+end
+
+function an.Toggle(ay,az)
+success,err=pcall(function()
+if az~=nil then
+if az==ay.Expanded then
+return
+end
+ay.Expanded=az
+else
+ay.Expanded=not ay.Expanded
+end
+
+local aA=ay.Expanded and ax.AbsoluteContentSize.Y/z.Scale or 0
+
+m:Tween(av,TweenInfo.new(0.25,Enum.EasingStyle.Quad),{
+Rotation=ay.Expanded and 0 or 180,
+ImageColor3=ay.Expanded
+and(am.AccentColor or am.StrokeColor or Color3.fromRGB(
+100,
+150,
+255
+))
+or n.Text,
 })
 
-safeTween("icon",ae,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+m:Tween(ar,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+ImageColor3=ay.Expanded
+and(am.AccentColor or am.StrokeColor or Color3.fromRGB(
+100,
+150,
+255
+))
+or n.Text,
+})
+
+m:Tween(aq,TweenInfo.new(0.3,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{
+Size=UDim2.fromOffset(3,ay.Expanded and(45+aA)or 45),
+})
+
+m:Tween(ao,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+BackgroundColor3=ay.Expanded and l.Dark(n.Main,0.12)
+or(am.BackgroundColor or l.Dark(n.Main,0.08)),
+})
+
+aw.Visible=true
+m:Tween(aw,TweenInfo.new(0.3,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{
+Size=UDim2.new(1,0,0,aA),
+})
+
+m:Tween(ao,TweenInfo.new(0.3,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{
+Size=UDim2.fromOffset(220,45+aA),
+})
+
+if not ay.Expanded then
+task.delay(0.3,function()
+if not ay.Expanded then
+aw.Visible=false
+end
+end)
+end
+end)
+if not success then
+warn("[ModuleCategory] Toggle failed:",err)
+end
+end
+
+function an.Load(ay,az)
+success,err=pcall(function()
+for aA,aB in az do
+local H=c.Modules[aB]
+if H then
+ay:AddModule(H)
+end
+end
+end)
+if not success then
+warn("[ModuleCategory] Load failed:",err)
+end
+end
+
+function an.AddModule(ay,az)
+success,err=pcall(function()
+if not az or not az.Object then
+return
+end
+
+table.insert(ay.Modules,az)
+updateCount()
+
+az.Object.Parent=aw
+if az.Children then
+az.Children.Parent=aw
+end
+az.ModuleCategory=an
+end)
+if not success then
+warn("[ModuleCategory] AddModule failed:",err)
+end
+
+return az
+end
+
+function an.SetVisible(ay,az)
+success,err=pcall(function()
+if az==nil then
+az=not ao.Visible
+end
+ao.Visible=az
+end)
+if not success then
+warn("[ModuleCategory] SetVisible failed:",err)
+end
+end
+
+an.Button={Toggle=function()end}
+
+function an.CreateModule(ay,az)
+local aA
+success,err=pcall(function()
+aA=ac:CreateModule(az)
+ay:AddModule(aA)
+end)
+if not success then
+warn("[ModuleCategory] CreateModule failed:",err)
+end
+return aA
+end
+
+
+success,err=pcall(function()
+ap.Activated:Connect(function()
+an:Toggle()
+end)
+
+au.Activated:Connect(function()
+an:Toggle()
+end)
+
+ap.MouseEnter:Connect(function()
+if not an.Expanded then
+m:Tween(ao,TweenInfo.new(0.15),{
+BackgroundColor3=l.Light(am.BackgroundColor or n.Main,0.05),
+})
+m:Tween(av,TweenInfo.new(0.15),{
+ImageColor3=am.AccentColor
+or am.StrokeColor
+or Color3.fromRGB(100,150,255),
+})
+end
+end)
+
+ap.MouseLeave:Connect(function()
+if not an.Expanded then
+m:Tween(ao,TweenInfo.new(0.15),{
+BackgroundColor3=am.BackgroundColor or l.Dark(n.Main,0.08),
+})
+m:Tween(av,TweenInfo.new(0.15),{
 ImageColor3=n.Text,
 })
 end
-
-function ao.AddModule(as,at)
-return safe("AddModule",function()
-table.insert(as.Modules,at)
-at.Object.Parent=modulescontainer
 end)
+
+ax:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
+if an.Expanded then
+local ay=ax.AbsoluteContentSize.Y/z.Scale
+aw.Size=UDim2.new(1,0,0,ay)
+ao.Size=UDim2.fromOffset(220,45+ay)
+aq.Size=UDim2.fromOffset(3,45+ay)
+end
+end)
+end)
+if not success then
+warn("[ModuleCategory] Event connections failed:",err)
 end
 
-function ao.CreateModule(as,at)
-local au=ac:CreateModule(at)
-as:AddModule(au)
-return au
+an.Object=ao
+an.Container=aw
+
+return an
+end)
+
+if not an then
+warn("[ModuleCategory] CreateModuleCategory failed:",ao)
+return nil
 end
-
-ao.Object=ap
-ao.Container=modulescontainer
-
-mprint{
-type="response",
-id=an.Name,
-res=ao,
-}
-
-return ao
 end
 
 ad:GetPropertyChangedSignal"Visible":Connect(function()
@@ -11259,11 +11573,6 @@ Size=UDim2.fromOffset(19,12),
 }
 }do
 c.Categories[ao.Name]=c.Categories.World:CreateModuleCategory(ao)
-mprint{
-type="receive",
-id=ao.Name,
-res=c.Categories[ao.Name]
-}
 end
 c:CreateCategory{
 Name="Legit",
