@@ -6113,6 +6113,7 @@ if not an then
 warn("[ModuleCategory] CreateModuleCategory failed:",ao)
 return nil
 end
+return an and ao
 end
 
 ad:GetPropertyChangedSignal"Visible":Connect(function()
