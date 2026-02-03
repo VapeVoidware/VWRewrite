@@ -188,7 +188,6 @@ writefile("vape/profiles/commit.txt", commit)
 --end
 
 local SAVE_BLACKLISTED = setmetatable({
-	"6872274481",
 	"main",
 	__cache = {},
 }, {
