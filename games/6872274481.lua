@@ -864,6 +864,9 @@ end),
 BlockBreaker=safeRequire("BlockBreaker",function()
 return ab.Controllers.BlockBreakController.blockBreaker
 end),
+BlockSelector=safeRequire("BlockSelector",function()
+return require(n.rbxts_include.node_modules["@easy-games"]["block-engine"].out.client.select["block-selector"]).BlockSelector
+end),
 BlockController=safeRequire("BlockController",function()
 return require(n.rbxts_include.node_modules["@easy-games"]["block-engine"].out).BlockEngine
 end),
