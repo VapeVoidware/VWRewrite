@@ -25,22 +25,6 @@ if shared.CheatEngineMode ~= nil then
 	CEMode = shared.CheatEngineMode
 end
 
-local CE_EXECUTORS = shared.CE_EXECUTORS or {
-	"solara",
-	"cryptic",
-	"xeno",
-	"ember",
-	"ronix",
-}
-local DEBUG_CHECK_TABLE = {
-	type = "table",
-	funcs = {
-		"getupvalue",
-		"getupvalues",
-		"getconstants",
-		"getproto",
-	},
-}
 getgenv().global = setmetatable({}, {
 	__index = function(self, key)
 		key = tostring(key)
@@ -67,6 +51,23 @@ getgenv().global = setmetatable({}, {
 		return "VOIDWARE_INTERNAL_GLOBAL_ENV"
 	end,
 })
+
+local CE_EXECUTORS = shared.CE_EXECUTORS or {
+	"solara",
+	"cryptic",
+	"xeno",
+	"ember",
+	"ronix",
+}
+local DEBUG_CHECK_TABLE = {
+	type = "table",
+	funcs = {
+		"getupvalue",
+		"getupvalues",
+		"getconstants",
+		"getproto",
+	},
+}
 local function checkExecutor()
 	if CEMode ~= nil then
 		return CEMode
@@ -176,7 +177,7 @@ end
 
 --if not shared.VapeDeveloper then
 local TESTING_COMMIT = "master"
-local PRODUCTION_COMMIT = "6220c44e18e94d003d4b94db4af97a805aac328b"
+local PRODUCTION_COMMIT = "7e31eab85f495f8d5a85d3d8c4cae9b517039dd2"
 local commit = shared.CustomCommit or (shared.TestingMode or shared.StagingMode) and TESTING_COMMIT or PRODUCTION_COMMIT
 if (isfile("vape/profiles/commit.txt") and readfile("vape/profiles/commit.txt") or "") ~= commit then
 	wipeFolder("vape")
