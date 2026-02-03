@@ -5707,8 +5707,9 @@ end
 
 local function safe(al,am)
 local an,ao=pcall(am)
+print(al,an,ao)
 if not an then
-warn("❌ CreateModuleCategory FAILED @",al,"\n",ao,"\n",debug.traceback())
+warn("❌ CreateModuleCategory FAILED @",al,"\n",ao,"\n")
 end
 return an
 end
