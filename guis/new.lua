@@ -5734,6 +5734,8 @@ ap.BorderSizePixel=0
 ap.Parent=ai
 end)
 
+print("categoryframe",ap,an.Name)
+
 safe("addTooltip",function()
 addTooltip(ap,an.Name.." Category")
 end)
@@ -5747,12 +5749,14 @@ safe("create headerbutton",function()
 aq=Instance.new"TextButton"
 aq.Parent=ap
 end)
+print("headerbutton",aq)
 
 local ar
 safe("create arrow + asset",function()
 ar=Instance.new"ImageLabel"
 ar.Image=t"vape/assets/new/expandup.png"
 end)
+print("arrow",ar)
 
 local function safeTween(as,...)
 local at={...}
