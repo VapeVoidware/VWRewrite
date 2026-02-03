@@ -196,18 +196,22 @@ local SAVE_BLACKLISTED = setmetatable({
 		if shared.VoidDev then
 			return false
 		end
+
 		if self.__cache[key] then
 			return self.__cache[key]
 		end
-		for _, v in self do
+
+		for _, v in ipairs(self) do
 			if type(v) == "table" then
 				continue
 			end
+
 			if string.find(string.lower(tostring(key)), string.lower(v)) then
 				self.__cache[key] = true
 				return true
 			end
 		end
+
 		self.__cache[key] = false
 		return false
 	end,
