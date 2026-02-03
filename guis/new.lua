@@ -10907,7 +10907,7 @@ end
 ah.Loaded=al
 ah.Categories.Main.Options.Bind:SetBind(ah.Keybind)
 
-if g.TouchEnabled and#ah.Keybind==1 and ah.Keybind[1]=="RightShift"then
+if c.isMobile then
 local ao=Instance.new"TextButton"
 ao.Size=UDim2.fromOffset(32,32)
 ao.Position=UDim2.new(1,-90,0,4)
