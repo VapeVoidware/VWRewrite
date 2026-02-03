@@ -834,6 +834,9 @@ return ak
 end
 
 L=setmetatable({
+SharedConstants=safeRequire("SharedConstants",function()
+return require(n.TS['shared-constants'])
+end),
 AbilityController=safeRequire("AbilityController",function()
 return ac.resolveDependency
 "@easy-games/game-core:client/controllers/ability/ability-controller@AbilityController"
