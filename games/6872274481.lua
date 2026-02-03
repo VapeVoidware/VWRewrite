@@ -4049,7 +4049,7 @@ end
 local function getProjectiles()
 local al={}
 for an,ao in F.inventory.inventory.items do
-local ap=L.ItemMeta[ao.itemType].projectileSource
+local ap=L.ItemMeta[ao.itemType]and L.ItemMeta[ao.itemType].projectileSource
 if not ap then
 continue
 end
