@@ -5705,261 +5705,87 @@ end)
 end
 end
 
+local function safe(al,am)
+local an,ao=pcall(am)
+if not an then
+warn("❌ CreateModuleCategory FAILED @",al,"\n",ao,"\n",debug.traceback())
+end
+return an
+end
+
 function ac.CreateModuleCategory(al,am)
+
 local an={
 Type="ModuleCategory",
 Expanded=false,
 Modules={},
-Name=am.Name
+Name=am.Name,
 }
 
-local ao=Instance.new"Frame"
+local ao
+safe("create categoryframe",function()
+ao=Instance.new"Frame"
 ao.Name=am.Name.."ModuleCategory"
 ao.Size=UDim2.fromOffset(220,45)
 ao.BackgroundColor3=am.BackgroundColor or l.Dark(n.Main,0.08)
 ao.BorderSizePixel=0
 ao.Parent=ai
+end)
 
-addTooltip(ao,am.Name.." "..(am.Name~="Special"and"Special Category"or"Category"))
+safe("addTooltip",function()
+addTooltip(ao,am.Name.." Category")
+end)
 
-if am.StrokeColor then
-local ap=Instance.new"UIStroke"
-ap.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
-ap.Color=am.StrokeColor
-ap.Thickness=am.StrokeThickness or 1
-ap.Transparency=am.StrokeTransparency or 0.5
-ap.Parent=ao
-end
-
+safe("addCorner",function()
 addCorner(ao,UDim.new(0,4))
+end)
 
-local ap=Instance.new"TextButton"
-ap.Name="Header"
-ap.Size=UDim2.fromOffset(220,45)
-ap.BackgroundTransparency=1
-ap.BorderSizePixel=0
-ap.AutoButtonColor=false
-ap.Text=""
+local ap
+safe("create headerbutton",function()
+ap=Instance.new"TextButton"
 ap.Parent=ao
-
-local aq=Instance.new"Frame"
-aq.Name="AccentBar"
-aq.Size=UDim2.fromOffset(3,45)
-aq.Position=UDim2.fromOffset(0,0)
-aq.BackgroundColor3=am.AccentColor or am.StrokeColor or Color3.fromRGB(100,150,255)
-aq.BorderSizePixel=0
-aq.Parent=ao
-
-local ar=Instance.new"UICorner"
-ar.CornerRadius=UDim.new(0,4)
-ar.Parent=aq
-
-local as=Instance.new"ImageLabel"
-as.Name="Icon"
-as.Size=am.Size or UDim2.fromOffset(20,20)
-as.Position=UDim2.fromOffset(15,15)
-as.BackgroundTransparency=1
-as.Image=am.Icon or""
-as.ImageColor3=n.Text
-as.Parent=ap
-
-local at=Instance.new"TextLabel"
-at.Name="Title"
-at.Size=UDim2.new(1,-90,0,45)
-at.Position=UDim2.fromOffset(45,0)
-at.BackgroundTransparency=1
-at.Text=am.Name
-at.TextXAlignment=Enum.TextXAlignment.Left
-at.TextColor3=n.Text
-at.TextSize=14
-at.FontFace=Font.new(n.Font.Family,Enum.FontWeight.SemiBold)
-at.Parent=ap
-
-local au=Instance.new"TextLabel"
-au.Name="Count"
-au.Size=UDim2.fromOffset(40,45)
-au.Position=UDim2.new(1,-85,0,0)
-au.BackgroundTransparency=1
-au.Text="0"
-au.TextXAlignment=Enum.TextXAlignment.Right
-au.TextColor3=l.Dark(n.Text,0.4)
-au.TextSize=12
-au.FontFace=n.Font
-au.Parent=ap
-
-local av=Instance.new"TextButton"
-av.Name="Arrow"
-av.Size=UDim2.fromOffset(45,45)
-av.Position=UDim2.new(1,-45,0,0)
-av.BackgroundTransparency=1
-av.Text=""
-av.Parent=ap
-
-local aw=Instance.new"ImageLabel"
-aw.Name="Arrow"
-aw.Size=UDim2.fromOffset(12,7)
-aw.Position=UDim2.fromOffset(17,19)
-aw.BackgroundTransparency=1
-aw.Image=t"vape/assets/new/expandup.png"
-aw.ImageColor3=n.Text
-aw.Rotation=180
-aw.Parent=av
-
-local ax=Instance.new"UIGradient"
-ax.Color=ColorSequence.new{
-ColorSequenceKeypoint.new(0,Color3.new(1,1,1)),
-ColorSequenceKeypoint.new(1,Color3.fromRGB(0.95,0.95,0.95))
-}
-ax.Rotation=90
-ax.Parent=ao
-
-local ay=Instance.new"Frame"
-ay.Name="ModulesContainer"
-ay.Size=UDim2.new(1,0,0,0)
-ay.Position=UDim2.fromOffset(0,45)
-ay.BackgroundTransparency=1
-ay.BorderSizePixel=0
-ay.Visible=false
-ay.ClipsDescendants=true
-ay.Parent=ao
-
-local az=Instance.new"UIListLayout"
-az.SortOrder=Enum.SortOrder.LayoutOrder
-az.HorizontalAlignment=Enum.HorizontalAlignment.Center
-az.Padding=UDim.new(0,2)
-az.Parent=ay
-
-local function updateCount()
-au.Text=tostring(#an.Modules)
-end
-
-function an.Toggle(aA,aB)
-if aB~=nil then
-if aB==aA.Expanded then return end
-aA.Expanded=aB
-else
-aA.Expanded=not aA.Expanded
-end
-
-local H=aA.Expanded and az.AbsoluteContentSize.Y/z.Scale or 0
-
-m:Tween(aw,TweenInfo.new(0.25,Enum.EasingStyle.Quad),{
-Rotation=aA.Expanded and 0 or 180,
-ImageColor3=aA.Expanded and(am.AccentColor or am.StrokeColor or Color3.fromRGB(100,150,255))or n.Text
-})
-
-m:Tween(as,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
-ImageColor3=aA.Expanded and(am.AccentColor or am.StrokeColor or Color3.fromRGB(100,150,255))or n.Text
-})
-
-m:Tween(aq,TweenInfo.new(0.3,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{
-Size=UDim2.fromOffset(3,aA.Expanded and(45+H)or 45)
-})
-
-m:Tween(ao,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
-BackgroundColor3=aA.Expanded and l.Dark(n.Main,0.12)or(am.BackgroundColor or l.Dark(n.Main,0.08))
-})
-
-ay.Visible=true
-m:Tween(ay,TweenInfo.new(0.3,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{
-Size=UDim2.new(1,0,0,H)
-})
-
-m:Tween(ao,TweenInfo.new(0.3,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{
-Size=UDim2.fromOffset(220,45+H)
-})
-
-if not aA.Expanded then
-task.delay(0.3,function()
-if not aA.Expanded then
-ay.Visible=false
-end
-end)
-end
-end
-
-function an.Load(aA,aB)
-for H,I in aB do
-local J=c.Modules[I]
-if J then
-aA:AddModule(J)
-end
-end
-end
-
-function an.AddModule(aA,aB)
-if not aB or not aB.Object then return end
-
-table.insert(aA.Modules,aB)
-updateCount()
-
-aB.Object.Parent=ay
-if aB.Children then
-aB.Children.Parent=ay
-end
-aB.ModuleCategory=an
-
-return aB
-end
-
-function an.SetVisible(aA,aB)
-if aB==nil then
-aB=not ao.Visible
-end
-ao.Visible=aB
-end
-an.Button={Toggle=function()end}
-
-function an.CreateModule(aA,aB)
-local H=ac:CreateModule(aB)
-aA:AddModule(H)
-return H
-end
-
-ap.Activated:Connect(function()
-an:Toggle()
 end)
 
-av.Activated:Connect(function()
-an:Toggle()
+local aq
+safe("create arrow + asset",function()
+aq=Instance.new"ImageLabel"
+aq.Image=t"vape/assets/new/expandup.png"
 end)
 
-ap.MouseEnter:Connect(function()
-if not an.Expanded then
-m:Tween(ao,TweenInfo.new(0.15),{
-BackgroundColor3=l.Light(am.BackgroundColor or n.Main,0.05)
-})
-m:Tween(aw,TweenInfo.new(0.15),{
-ImageColor3=am.AccentColor or am.StrokeColor or Color3.fromRGB(100,150,255)
-})
-end
+local function safeTween(ar,...)
+safe("tween → "..ar,function()
+m:Tween(...)
 end)
+end
 
-ap.MouseLeave:Connect(function()
-if not an.Expanded then
-m:Tween(ao,TweenInfo.new(0.15),{
-BackgroundColor3=am.BackgroundColor or l.Dark(n.Main,0.08)
-})
-m:Tween(aw,TweenInfo.new(0.15),{
-ImageColor3=n.Text
-})
-end
-end)
+function an.Toggle(ar,as)
 
-az:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
-if an.Expanded then
-local aA=az.AbsoluteContentSize.Y/z.Scale
-ay.Size=UDim2.new(1,0,0,aA)
-ao.Size=UDim2.fromOffset(220,45+aA)
-aq.Size=UDim2.fromOffset(3,45+aA)
+ar.Expanded=as~=nil and as or not ar.Expanded local at=
+
+ar.Expanded and modulelist.AbsoluteContentSize.Y/z.Scale or 0
+
+safeTween("arrow",aq,TweenInfo.new(0.25,Enum.EasingStyle.Quad),{
+Rotation=ar.Expanded and 0 or 180,
+})
+
+safeTween("icon",ae,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+ImageColor3=n.Text,
+})
 end
+
+function an.AddModule(ar,as)
+return safe("AddModule",function()
+table.insert(ar.Modules,as)
+as.Object.Parent=modulescontainer
 end)
+end
 
 an.Object=ao
-an.Container=ay
+an.Container=modulescontainer
 
 return an
 end
+
 
 ad:GetPropertyChangedSignal"Visible":Connect(function()
 local al=ac
@@ -11080,6 +10906,7 @@ ah.TextStrokeTransparency=0.5
 ah.FontFace=n.Font
 ah.Parent=u
 c.TutorialAPI={
+tutorialType=2,
 isActive=false,
 label=ah,
 flickerTextEffect=flickerTextEffect,
