@@ -177,7 +177,7 @@ end
 
 --if not shared.VapeDeveloper then
 local TESTING_COMMIT = "master"
-local PRODUCTION_COMMIT = "7e31eab85f495f8d5a85d3d8c4cae9b517039dd2"
+local PRODUCTION_COMMIT = "ade975168ecd4e361e2a29e9623ac8eee12ce9d3"
 local commit = shared.CustomCommit or (shared.TestingMode or shared.StagingMode) and TESTING_COMMIT or PRODUCTION_COMMIT
 if (isfile("vape/profiles/commit.txt") and readfile("vape/profiles/commit.txt") or "") ~= commit then
 	wipeFolder("vape")
