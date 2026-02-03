@@ -5734,8 +5734,6 @@ ap.BorderSizePixel=0
 ap.Parent=ai
 end)
 
-print("categoryframe",ap,an.Name)
-
 safe("addTooltip",function()
 addTooltip(ap,an.Name.." Category")
 end)
@@ -5749,14 +5747,12 @@ safe("create headerbutton",function()
 aq=Instance.new"TextButton"
 aq.Parent=ap
 end)
-print("headerbutton",aq)
 
 local ar
 safe("create arrow + asset",function()
 ar=Instance.new"ImageLabel"
 ar.Image=t"vape/assets/new/expandup.png"
 end)
-print("arrow",ar)
 
 local function safeTween(as,...)
 local at={...}
@@ -5789,6 +5785,12 @@ end
 
 ao.Object=ap
 ao.Container=modulescontainer
+
+mprint{
+type="response",
+id=an.Name,
+res=ao,
+}
 
 return ao
 end
@@ -11251,6 +11253,11 @@ Size=UDim2.fromOffset(19,12),
 }
 }do
 c.Categories[ao.Name]=c.Categories.World:CreateModuleCategory(ao)
+mprint{
+type="receive",
+id=ao.Name,
+res=c.Categories[ao.Name]
+}
 end
 c:CreateCategory{
 Name="Legit",
