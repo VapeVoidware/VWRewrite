@@ -132,10 +132,10 @@ local function finishLoading()
 			local teleportScript = [[
 				shared.vapereload = true
 				task.wait(2.5)
-				if shared.VapeDeveloper then
+				if shared.VapeDeveloper and isfile('vape/loader.lua') then
 					loadstring(readfile('vape/loader.lua'), 'loader')()
 				else
-					loadstring(game:HttpGet('https://raw.githubusercontent.com/'..tostring(shared.REPO_OWNER)..'/VWRewrite/'..readfile('vape/profiles/commit.txt')..'/loader.lua', true), 'loader')()
+					loadstring(game:HttpGet('https://raw.githubusercontent.com/VapeVoidware/VWRewrite/'..readfile('vape/profiles/commit.txt')..'/loader.lua', true), 'loader')()
 				end
 			]]
 			for _, v in pairs(TELEPORT_META) do
