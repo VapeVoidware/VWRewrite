@@ -5783,6 +5783,12 @@ at.Object.Parent=modulescontainer
 end)
 end
 
+function ao.CreateModule(as,at)
+local au=ac:CreateModule(at)
+as:AddModule(au)
+return au
+end
+
 ao.Object=ap
 ao.Container=modulescontainer
 
