@@ -15,7 +15,7 @@ end
 local function downloadFile(path, func)
 	if not isfile(path) then
 		local suc, res = pcall(function() 
-			return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('vape/profiles/commit.txt')..'/'..select(1, path:gsub('vape/', '')), true) 
+			return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true) 
 		end)
 		if not suc or res == '404: Not Found' then 
 			error(res) 
@@ -29,15 +29,15 @@ local function downloadFile(path, func)
 end
 
 vape.Place = 11630038968
-if isfile('vape/games/'..vape.Place..'.lua') then
-	loadstring(readfile('vape/games/'..vape.Place..'.lua'), 'bridge duel')()
+if isfile('newvape/games/'..vape.Place..'.lua') then
+	loadstring(readfile('newvape/games/'..vape.Place..'.lua'), 'bridge duel')()
 else
 	if not shared.VapeDeveloper then
 		local suc, res = pcall(function() 
-			return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('vape/profiles/commit.txt')..'/games/'..vape.Place..'.lua', true) 
+			return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/games/'..vape.Place..'.lua', true) 
 		end)
 		if suc and res ~= '404: Not Found' then
-			loadstring(downloadFile('vape/games/'..vape.Place..'.lua'), 'bridge duel')()
+			loadstring(downloadFile('newvape/games/'..vape.Place..'.lua'), 'bridge duel')()
 		end
 	end
 end

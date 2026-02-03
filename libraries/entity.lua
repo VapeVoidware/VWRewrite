@@ -37,6 +37,21 @@ local entitylib = {
 	})
 }
 
+entitylib._cache = {
+	AllPosition = { time = 0, key = nil, result = nil },
+	EntityPosition = { time = 0, key = nil, result = nil },
+}
+
+local CACHE_DURATION = 0.5
+
+local function makeKey(tbl)
+	local parts = {}
+	for i, v in tbl do
+		parts[#parts + 1] = tostring(i) .. "=" .. tostring(v)
+	end
+	return table.concat(parts, ";")
+end
+
 local cloneref = cloneref or function(obj)
 	return obj
 end
@@ -44,6 +59,13 @@ local playersService = cloneref(game:GetService('Players'))
 local inputService = cloneref(game:GetService('UserInputService'))
 local lplr = playersService.LocalPlayer
 local gameCamera = workspace.CurrentCamera
+
+local function getMousePosition()
+	if inputService.TouchEnabled then
+		return gameCamera.ViewportSize / 2
+	end
+	return inputService.GetMouseLocation(inputService)
+end
 
 local function loopClean(tbl)
 	for i, v in tbl do
@@ -118,7 +140,7 @@ end
 
 entitylib.EntityMouse = function(entitysettings)
 	if entitylib.isAlive then
-		local mouseLocation, sortingTable = inputService.GetMouseLocation(inputService), {}
+		local mouseLocation, sortingTable = entitysettings.MouseOrigin or getMousePosition(), {}
 		for _, v in entitylib.List do
 			if not entitysettings.Players and v.Player then continue end
 			if not entitysettings.NPCs and v.NPC then continue end
@@ -134,7 +156,7 @@ entitylib.EntityMouse = function(entitysettings)
 				})
 			end
 		end
-		
+
 		table.sort(sortingTable, entitysettings.Sort or function(a, b)
 			return a.Magnitude < b.Magnitude
 		end)
@@ -153,68 +175,130 @@ entitylib.EntityMouse = function(entitysettings)
 end
 
 entitylib.EntityPosition = function(entitysettings)
-	if entitylib.isAlive then
-		local localPosition, sortingTable = entitysettings.Origin or entitylib.character.HumanoidRootPart.Position, {}
-		for _, v in entitylib.List do
-			if not entitysettings.Players and v.Player then continue end
-			if not entitysettings.NPCs and v.NPC then continue end
-			if not v.Targetable then continue end
-			local mag = (v[entitysettings.Part].Position - localPosition).Magnitude
-			if mag > entitysettings.Range then continue end
-			if entitylib.isVulnerable(v) then
-				table.insert(sortingTable, {
-					Entity = v,
-					Magnitude = v.Target and -1 or mag
-				})
-			end
-		end
-
-		table.sort(sortingTable, entitysettings.Sort or function(a, b)
-			return a.Magnitude < b.Magnitude
-		end)
-
-		for _, v in sortingTable do
-			if entitysettings.Wallcheck then
-				if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallcheck) then continue end
-			end
-			table.clear(entitysettings)
-			table.clear(sortingTable)
-			return v.Entity
-		end
-		table.clear(sortingTable)
+	if not entitylib.isAlive then
+		table.clear(entitysettings)
+		return
 	end
+
+	local cache = entitylib._cache.EntityPosition
+	local key = makeKey(entitysettings)
+
+	if cache.key == key and (tick() - cache.time) < CACHE_DURATION then
+		return cache.result
+	end
+
+	local localPosition, sortingTable = entitysettings.Origin or entitylib.character.HumanoidRootPart.Position, {}
+	for _, v in entitylib.List do
+		if not entitysettings.Players and v.Player then
+			continue
+		end
+		if not entitysettings.NPCs and v.NPC then
+			continue
+		end
+		if not v.Targetable then
+			continue
+		end
+
+		local mag = (v[entitysettings.Part].Position - localPosition).Magnitude
+		if mag > entitysettings.Range then
+			continue
+		end
+
+		if entitylib.isVulnerable(v) then
+			table.insert(sortingTable, { Entity = v, Magnitude = v.Target and -1 or mag })
+		end
+	end
+
+	table.sort(sortingTable, entitysettings.Sort or function(a, b)
+		return a.Magnitude < b.Magnitude
+	end)
+
+	for _, v in sortingTable do
+		if entitysettings.Wallcheck then
+			if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallcheck) then
+				continue
+			end
+		end
+
+		table.clear(entitysettings)
+		table.clear(sortingTable)
+
+		cache.key = key
+		cache.time = tick()
+		cache.result = v.Entity
+
+		return v.Entity
+	end
+
 	table.clear(entitysettings)
+	table.clear(sortingTable)
+
+	cache.key = key
+	cache.time = tick()
+	cache.result = nil
 end
 
 entitylib.AllPosition = function(entitysettings)
-	local returned = {}
-	if entitylib.isAlive then
-		local localPosition, sortingTable = entitysettings.Origin or entitylib.character.HumanoidRootPart.Position, {}
-		for _, v in entitylib.List do
-			if not entitysettings.Players and v.Player then continue end
-			if not entitysettings.NPCs and v.NPC then continue end
-			if not v.Targetable then continue end
-			local mag = (v[entitysettings.Part].Position - localPosition).Magnitude
-			if mag > entitysettings.Range then continue end
-			if entitylib.isVulnerable(v) then
-				table.insert(sortingTable, {Entity = v, Magnitude = v.Target and -1 or mag})
-			end
-		end
+	local cache = entitylib._cache.AllPosition
+	local key = makeKey(entitysettings)
 
-		table.sort(sortingTable, entitysettings.Sort or function(a, b)
-			return a.Magnitude < b.Magnitude
-		end)
-
-		for _, v in sortingTable do
-			if entitysettings.Wallcheck then
-				if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallcheck) then continue end
-			end
-			table.insert(returned, v.Entity)
-			if #returned >= (entitysettings.Limit or math.huge) then break end
-		end
-		table.clear(sortingTable)
+	if cache.key == key and (tick() - cache.time) < CACHE_DURATION then
+		return cache.result
 	end
+
+	local returned = {}
+
+	if not entitylib.isAlive then
+		table.clear(entitysettings)
+		return returned
+	end
+
+	local localPosition, sortingTable = entitysettings.Origin or entitylib.character.HumanoidRootPart.Position, {}
+	for _, v in entitylib.List do
+		if not entitysettings.Players and v.Player then
+			continue
+		end
+		if not entitysettings.NPCs and v.NPC then
+			continue
+		end
+		if not v.Targetable then
+			continue
+		end
+
+		local mag = (v[entitysettings.Part].Position - localPosition).Magnitude
+		if mag > entitysettings.Range then
+			continue
+		end
+
+		if entitylib.isVulnerable(v) then
+			table.insert(sortingTable, { Entity = v, Magnitude = v.Target and -1 or mag })
+		end
+	end
+
+	table.sort(sortingTable, entitysettings.Sort or function(a, b)
+		return a.Magnitude < b.Magnitude
+	end)
+
+	for _, v in sortingTable do
+		if entitysettings.Wallcheck then
+			if entitylib.Wallcheck(localPosition, v.Entity[entitysettings.Part].Position, entitysettings.Wallcheck) then
+				continue
+			end
+		end
+
+		table.insert(returned, v.Entity)
+		if #returned >= (entitysettings.Limit or math.huge) then
+			break
+		end
+	end
+
+	table.clear(sortingTable)
 	table.clear(entitysettings)
+
+	cache.key = key
+	cache.time = tick()
+	cache.result = returned
+
 	return returned
 end
 
@@ -255,11 +339,14 @@ entitylib.addEntity = function(char, plr, teamfunc)
 				entitylib.Events.LocalAdded:Fire(entity)
 			else
 				entity.Targetable = entitylib.targetCheck(entity)
-
+				entity.isAlive = true
 				for _, v in entitylib.getUpdateConnections(entity) do
 					table.insert(entity.Connections, v:Connect(function()
 						entity.Health = hum.Health
 						entity.MaxHealth = hum.MaxHealth
+						if entity.MaxHealth - entity.Health <= 0 then
+							entity.isAlive = false
+						end
 						entitylib.Events.EntityUpdated:Fire(entity)
 					end))
 				end
@@ -309,7 +396,7 @@ entitylib.removeEntity = function(char, localcheck)
 			task.cancel(entitylib.EntityThreads[char])
 			entitylib.EntityThreads[char] = nil
 		end
-		
+
 		local entity, ind = entitylib.getEntity(char)
 		if ind then
 			for _, v in entity.Connections do

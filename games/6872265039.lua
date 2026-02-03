@@ -1,4 +1,5 @@
-local run = function(func) func() end
+local VoidwareLoader = shared.VoidwareLoader or { wrap = function(_, func) return func end }
+local run = VoidwareLoader:wrap(function(func) func() end)
 local cloneref = cloneref or function(obj) return obj end
 
 local playersService = cloneref(game:GetService('Players'))
@@ -10,6 +11,14 @@ local vape = shared.vape
 local entitylib = vape.Libraries.entity
 local sessioninfo = vape.Libraries.sessioninfo
 local bedwars = {}
+
+for _, v in vape.Modules do
+	if v.Category == "Combat" or v.Category == "Minigames" then
+		vape:Remove(i)
+	end
+end
+
+if shared.CheatEngineMode then return end
 
 local function notif(...)
 	return vape:CreateNotification(...)
@@ -36,7 +45,8 @@ run(function()
 	bedwars = setmetatable({
 		Client = Client,
 		CrateItemMeta = debug.getupvalue(Flamework.resolveDependency('client/controllers/global/reward-crate/crate-controller@CrateController').onStart, 3),
-		Store = require(lplr.PlayerScripts.TS.ui.store).ClientStore
+		Store = require(lplr.PlayerScripts.TS.ui.store).ClientStore,
+		AppController = require(replicatedStorage['rbxts_include']['node_modules']['@easy-games']['game-core'].out.client.controllers['app-controller']).AppController
 	}, {
 		__index = function(self, ind)
 			rawset(self, ind, Knit.Controllers[ind])
@@ -53,12 +63,6 @@ run(function()
 		table.clear(bedwars)
 	end)
 end)
-
-for _, v in vape.Modules do
-	if v.Category == 'Combat' or v.Category == 'Minigames' then
-		vape:Remove(i)
-	end
-end
 
 run(function()
 	local Sprint
@@ -124,28 +128,28 @@ run(function()
 	})
 end)
 
-VoidwareFunctions.GlobaliseObject("bedwars", bedwars)
-VoidwareFunctions.GlobaliseObject("GlobalBedwars", bedwars)
-
-VoidwareFunctions.GlobaliseObject("VapeBWLoaded", true)
 local function createMonitoredTable(originalTable, onChange)
-    local proxy = {}
-    local mt = {
-        __index = originalTable,
-        __newindex = function(t, key, value)
-            local oldValue = originalTable[key]
-            originalTable[key] = value
-            if onChange then
-                onChange(key, oldValue, value)
-            end
-        end
-    }
-    setmetatable(proxy, mt)
-    return proxy
+	local proxy = {}
+	local mt = {
+		__index = originalTable,
+		__newindex = function(t, key, value)
+			local oldValue = originalTable[key]
+			originalTable[key] = value
+			if onChange then
+				onChange(key, oldValue, value)
+			end
+		end,
+	}
+	setmetatable(proxy, mt)
+	return proxy
 end
+
 local function onChange2(key, oldValue, newValue)
-	VoidwareFunctions.GlobaliseObject("bedwars", bedwars)
-	VoidwareFunctions.GlobaliseObject("GlobalBedwars", bedwars)
+	getgenv().GlobalBedwars = bedwars
+	shared.GlobalBedwars = bedwars
 end
 
 bedwars = createMonitoredTable(bedwars, onChange2)
+
+getgenv().GlobalBedwars = bedwars
+shared.GlobalBedwars = bedwars

@@ -9,7 +9,7 @@ local isfile = isfile or function(file)
 end
 local function downloadFile(path, func)
 	if not isfile(path) then
-		local suc, res = pcall(function() return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('vape/profiles/commit.txt')..'/'..select(1, path:gsub('vape/', '')), true) end)
+		local suc, res = pcall(function() return game:HttpGet('https://raw.githubusercontent.com/7GrandDadPGN/VapeV4ForRoblox/'..readfile('newvape/profiles/commit.txt')..'/'..select(1, path:gsub('newvape/', '')), true) end)
 		if not suc or res == '404: Not Found' then error(res) end
 		if path:find('.lua') then res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n'..res end
 		writefile(path, res)
@@ -38,7 +38,7 @@ local whitelist = vape.Libraries.whitelist
 local prediction = vape.Libraries.prediction
 local targetinfo = vape.Libraries.targetinfo
 local sessioninfo = vape.Libraries.sessioninfo
-local vm = loadstring(downloadFile('vape/libraries/vm.lua'), 'vm')()
+local vm = loadstring(downloadFile('newvape/libraries/vm.lua'), 'vm')()
 
 local jb = {}
 local InfNitro = {Enabled = false}
@@ -285,7 +285,7 @@ run(function()
 		Draw = 'TaseReplicate',
 		Gun = 'PopTires',
 		LocalScript2 = 'LookAngle',
-		LocomotiveFront = 'SelfDamage',
+		LocalScript = 'SelfDamage',
 		onPressed = 'FlipVehicle',
 		OnJump = 'GetOut',
 		OnJump1 = 'GetOut',
@@ -742,11 +742,10 @@ run(function()
 end)
 	
 run(function()
-	local InfiniteNitro
 	local nitrotable = debug.getupvalue(jb.VehicleController.NitroShopVisible, 1)
 	local oldnitro
 	
-	InfiniteNitro = vape.Categories.Utility:CreateModule({
+	InfNitro = vape.Categories.Utility:CreateModule({
 		Name = 'InfiniteNitro',
 		Function = function(callback)
 			if callback then
@@ -755,7 +754,7 @@ run(function()
 				repeat
 					nitrotable.Nitro = 250
 					task.wait(0.1)
-				until not InfiniteNitro.Enabled
+				until not InfNitro.Enabled
 			else
 				nitrotable.Nitro = oldnitro
 				jb.VehicleController.updateSpdBarRatio(oldnitro / 250)
