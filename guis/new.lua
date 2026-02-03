@@ -5707,7 +5707,6 @@ end
 
 local function safe(al,am)
 local an,ao=pcall(am)
-print(al,an,ao)
 if not an then
 warn("❌ CreateModuleCategory FAILED @",al,"\n",ao,"\n")
 end
@@ -5715,59 +5714,61 @@ return an
 end
 
 function ac.CreateModuleCategory(al,am)
+local an=am
+mprint(an)
 
-local an={
+local ao={
 Type="ModuleCategory",
 Expanded=false,
 Modules={},
-Name=am.Name,
+Name=an.Name,
 }
 
-local ao
+local ap
 safe("create categoryframe",function()
-ao=Instance.new"Frame"
-ao.Name=am.Name.."ModuleCategory"
-ao.Size=UDim2.fromOffset(220,45)
-ao.BackgroundColor3=am.BackgroundColor or l.Dark(n.Main,0.08)
-ao.BorderSizePixel=0
-ao.Parent=ai
+ap=Instance.new"Frame"
+ap.Name=an.Name.."ModuleCategory"
+ap.Size=UDim2.fromOffset(220,45)
+ap.BackgroundColor3=an.BackgroundColor or l.Dark(n.Main,0.08)
+ap.BorderSizePixel=0
+ap.Parent=ai
 end)
 
 safe("addTooltip",function()
-addTooltip(ao,am.Name.." Category")
+addTooltip(ap,an.Name.." Category")
 end)
 
 safe("addCorner",function()
-addCorner(ao,UDim.new(0,4))
-end)
-
-local ap
-safe("create headerbutton",function()
-ap=Instance.new"TextButton"
-ap.Parent=ao
+addCorner(ap,UDim.new(0,4))
 end)
 
 local aq
-safe("create arrow + asset",function()
-aq=Instance.new"ImageLabel"
-aq.Image=t"vape/assets/new/expandup.png"
+safe("create headerbutton",function()
+aq=Instance.new"TextButton"
+aq.Parent=ap
 end)
 
-local function safeTween(ar,...)
-local as={...}
-safe("tween → "..ar,function()
-m:Tween(unpack(as))
+local ar
+safe("create arrow + asset",function()
+ar=Instance.new"ImageLabel"
+ar.Image=t"vape/assets/new/expandup.png"
+end)
+
+local function safeTween(as,...)
+local at={...}
+safe("tween → "..as,function()
+m:Tween(unpack(at))
 end)
 end
 
-function an.Toggle(ar,as)
+function ao.Toggle(as,at)
 
-ar.Expanded=as~=nil and as or not ar.Expanded local at=
+as.Expanded=at~=nil and at or not as.Expanded local au=
 
-ar.Expanded and modulelist.AbsoluteContentSize.Y/z.Scale or 0
+as.Expanded and modulelist.AbsoluteContentSize.Y/z.Scale or 0
 
-safeTween("arrow",aq,TweenInfo.new(0.25,Enum.EasingStyle.Quad),{
-Rotation=ar.Expanded and 0 or 180,
+safeTween("arrow",ar,TweenInfo.new(0.25,Enum.EasingStyle.Quad),{
+Rotation=as.Expanded and 0 or 180,
 })
 
 safeTween("icon",ae,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
@@ -5775,17 +5776,17 @@ ImageColor3=n.Text,
 })
 end
 
-function an.AddModule(ar,as)
+function ao.AddModule(as,at)
 return safe("AddModule",function()
-table.insert(ar.Modules,as)
-as.Object.Parent=modulescontainer
+table.insert(as.Modules,at)
+at.Object.Parent=modulescontainer
 end)
 end
 
-an.Object=ao
-an.Container=modulescontainer
+ao.Object=ap
+ao.Container=modulescontainer
 
-return an
+return ao
 end
 
 ad:GetPropertyChangedSignal"Visible":Connect(function()

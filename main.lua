@@ -206,6 +206,7 @@ local function mprint(tbl, indent, visited)
 		end
 	end
 end
+getgenv().mprint = mprint
 
 local VoidwareLoader
 local createCustomSignal = function(key, delay)
