@@ -5722,6 +5722,14 @@ ao.Name=am.Name.."ModuleCategory"
 ao.Size=UDim2.fromOffset(220,45)
 ao.BackgroundColor3=am.BackgroundColor or l.Dark(n.Main,0.08)
 ao.BorderSizePixel=0
+warn("CreateModuleCategory: Children: "..tostring(ai))
+if ai~=nil and type(ai)=="table"then
+mprint(ai)
+end
+if not(ai~=nil and ai.Parent~=nil)then
+error(`{am.Name}: Category Children are invalid!`)
+return
+end
 ao.Parent=ai
 end)
 if not success then
