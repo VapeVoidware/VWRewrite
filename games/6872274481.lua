@@ -68,6 +68,9 @@ end
 
 pcall(function()
 for e,f in game:GetChildren()do
+if tostring(f)=="CoreGui"then
+continue
+end
 getgenv()[f.Name]=a.Services[f.Name]
 end
 end)
