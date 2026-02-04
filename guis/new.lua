@@ -5994,6 +5994,10 @@ warn("[ModuleCategory] Toggle failed:",err)
 end
 end
 
+function an.Expand(ay)
+ay:Toggle()
+end
+
 function an.Load(ay,az)
 success,err=pcall(function()
 for aA,aB in az do
@@ -10749,7 +10753,7 @@ end
 if aq.Pinned~=ar.Pinned then
 ar:Pin()
 end
-if aq.Expanded~=nil and aq.Expanded~=ar.Expanded then
+if aq.Expanded~=nil and aq.Expanded~=ar.Expanded and ar.Expand~=nil then
 ar:Expand()
 end
 if aq.List and(#ar.List>0 or#aq.List>0)then
@@ -10815,7 +10819,7 @@ end
 if aq.Pinned~=ar.Pinned then
 ar:Pin()
 end
-if aq.Expanded~=nil and aq.Expanded~=ar.Expanded then
+if aq.Expanded~=nil and aq.Expanded~=ar.Expanded and ar.Expand~=nil then
 ar:Expand()
 end
 if ar.Button~=nil and aq.Enabled~=nil and(ar.Button.Enabled~=aq.Enabled)then
