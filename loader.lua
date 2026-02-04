@@ -319,7 +319,7 @@ getgenv().pload = function(name, id, found)
 	if not suc and found then
 		warn(`Load Error: [{tostring(id or name)}] {res}`)
 		if shared.ACTIVE_LOADER then
-			shared.ACTIVE_LOADER:Abort(`Couldn't load {(id or name)} [3] :c`)
+			shared.ACTIVE_LOADER:Abort(`Couldn't load {(id or name)} [3] :c \n {tostring(res)}`)
 			if shared.vape then
 				pcall(function()
 					shared.vape:DisableSaving()
