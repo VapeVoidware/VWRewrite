@@ -68,6 +68,26 @@ local DEBUG_CHECK_TABLE = {
 		"getproto",
 	},
 }
+local AEB_EXECUTORS = shared.AEB_EXECUTORS or {
+	"xeno",
+}
+local function checkAutoExecute()
+	local executor = "UNKNOWN"
+	local res = select(
+		2,
+		pcall(function()
+			return string.lower(tostring(identifyexecutor()))
+		end)
+	)
+	if not res then
+		return true
+	end
+	executor = res
+	if table.find(AEB_EXECUTORS, executor) then
+		shared.FORCE_DISABLED_QUEUE_ON_TELEPORT = true
+	end
+end
+pcall(checkAutoExecute)
 local function checkExecutor()
 	if CEMode ~= nil then
 		return CEMode

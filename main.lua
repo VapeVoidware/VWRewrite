@@ -113,7 +113,7 @@ local function finishLoading()
 
 	local teleportedServers
 	vape:Clean(playersService.LocalPlayer.OnTeleport:Connect(function()
-		if (not teleportedServers) and not shared.VapeIndependent and not shared.DISABLED_QUEUE_ON_TELEPORT then
+		if (not teleportedServers) and not shared.VapeIndependent and not shared.DISABLED_QUEUE_ON_TELEPORT and not shared.FORCE_DISABLED_QUEUE_ON_TELEPORT then
 			teleportedServers = true
 			local teleportScript = [[
 				shared.vapereload = true
