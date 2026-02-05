@@ -8824,7 +8824,7 @@ if C("vape/profiles/"..c.Profile..c.Place..".txt")and delfile then
 delfile("vape/profiles/"..c.Profile..c.Place..".txt")
 end
 shared.vapereload=true
-if shared.VapeDeveloper then
+if shared.VapeDeveloper and C"vape/loader.lua"then
 loadstring(readfile"vape/loader.lua","loader")()
 else
 loadstring(
@@ -11495,7 +11495,7 @@ if C("vape/profiles/"..c.Profile..c.Place..".txt")and delfile then
 delfile("vape/profiles/"..c.Profile..c.Place..".txt")
 end
 shared.vapereload=true
-if shared.VapeDeveloper then
+if shared.VapeDeveloper and C"vape/loader.lua"then
 loadstring(readfile"vape/loader.lua","loader")()
 else
 loadstring(
@@ -11521,7 +11521,7 @@ am:CreateButton{
 Name="Reinject",
 Function=function()
 shared.vapereload=true
-if shared.VapeDeveloper then
+if shared.VapeDeveloper and C"vape/loader.lua"then
 loadstring(readfile"vape/loader.lua","loader")()
 else
 loadstring(
