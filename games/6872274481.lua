@@ -1843,93 +1843,143 @@ local aa
 local ab
 local ac={}
 local ad
+local ae=false
 
 local function AutoClick()
 if ad then
 task.cancel(ad)
 end
-
 ad=task.delay(0.14285714285714285,function()
 repeat
 if not L.AppController:isLayerOpen(L.UILayers.MAIN)then
-local ae=L.BlockPlacementController.blockPlacer
-if F.hand.toolType=='block'and ae then
-if(workspace:GetServerTimeNow()-L.BlockCpsController.lastPlaceTimestamp)>=(4.1666666666666664E-2)then
-local af=ae.clientManager:getBlockSelector():getMouseInfo(0)
-if af and af.placementPosition==af.placementPosition then
-task.spawn(ae.placeBlock,ae,af.placementPosition)
+local af=L.BlockPlacementController.blockPlacer
+if F.hand.toolType=="block"and af then
+if
+(workspace:GetServerTimeNow()-L.BlockCpsController.lastPlaceTimestamp)
+>=(4.1666666666666664E-2)
+then
+local ag=af.clientManager:getBlockSelector():getMouseInfo(0)
+if ag and ag.placementPosition==ag.placementPosition then
+task.spawn(af.placeBlock,af,ag.placementPosition)
 end
 end
-elseif F.hand.toolType=='sword'then
+elseif F.hand.toolType=="sword"then
 L.SwordController:swingSwordAtMouse(0.39)
 end
 end
-
-task.wait(1/(F.hand.toolType=='block'and ac or ab).GetRandomValue())
-until not aa.Enabled
+task.wait(1/(F.hand.toolType=="block"and ac or ab).GetRandomValue())
+until not aa.Enabled and not ae
 end)
 end
 
 aa=u.Categories.Combat:CreateModule{
-Name='AutoClicker',
-Function=function(ae)
-if ae then
-aa:Clean(k.InputBegan:Connect(function(af)
-if af.UserInputType==Enum.UserInputType.MouseButton1 then
+Name="AutoClicker",
+Function=function(af)
+if af then
+
+aa:Clean(k.InputBegan:Connect(function(ag)
+if ag.UserInputType==Enum.UserInputType.MouseButton1 then
+AutoClick()
+end
+end))
+aa:Clean(k.InputEnded:Connect(function(ag)
+if ag.UserInputType==Enum.UserInputType.MouseButton1 and ad then
+task.cancel(ad)
+ad=nil
+end
+end))
+
+
+if k.TouchEnabled then
+task.spawn(function()
+local ag=pcall(function()
+local ag=s.PlayerGui:WaitForChild("MobileUI",5)
+if ag then
+local ah=ag:FindFirstChild"2"
+if ah then
+
+aa:Clean(ah.InputBegan:Connect(function(ai)
+if
+ai.UserInputType==Enum.UserInputType.Touch
+or ai.UserInputType==Enum.UserInputType.MouseButton1
+then
+ae=true
 AutoClick()
 end
 end))
 
-aa:Clean(k.InputEnded:Connect(function(af)
-if af.UserInputType==Enum.UserInputType.MouseButton1 and ad then
-task.cancel(ad)
-ad=nil
-end
-end))
 
-if k.TouchEnabled then
-pcall(function()
-aa:Clean(s.PlayerGui.MobileUI['2'].MouseButton1Down:Connect(AutoClick))
-aa:Clean(s.PlayerGui.MobileUI['2'].MouseButton1Up:Connect(function()
+aa:Clean(ah.InputEnded:Connect(function(ai)
+if
+ai.UserInputType==Enum.UserInputType.Touch
+or ai.UserInputType==Enum.UserInputType.MouseButton1
+then
+ae=false
 if ad then
 task.cancel(ad)
 ad=nil
 end
+end
 end))
+
+
+aa:Clean(ah.TouchTap:Connect(function()
+
+if not ae then
+ae=true
+AutoClick()
+task.wait(0.1)
+ae=false
+if ad then
+task.cancel(ad)
+ad=nil
+end
+end
+end))
+end
+end
+end)
+if not ag then
+warn"AutoClicker: Failed to setup mobile support"
+end
 end)
 end
 else
+ae=false
 if ad then
 task.cancel(ad)
 ad=nil
 end
 end
 end,
-Tooltip='Hold attack button to automatically click'
+Tooltip="Hold attack button to automatically click",
 }
+
 ab=aa:CreateTwoSlider{
-Name='CPS',
+Name="CPS",
 Min=1,
 Max=9,
 DefaultMin=7,
-DefaultMax=7
+DefaultMax=7,
 }
+
 aa:CreateToggle{
-Name='Place Blocks',
+Name="Place Blocks",
 Default=true,
-Function=function(ae)
+Function=function(af)
 if ac.Object then
-ac.Object.Visible=ae
+ac.Object.Visible=af
 end
-end
+end,
 }
+
 ac=aa:CreateTwoSlider{
-Name='Block CPS',
+Name="Block CPS",
 Min=1,
 Max=12,
 DefaultMin=12,
 DefaultMax=12,
-Darker=true
+Darker=true,
 }
 end)
 
@@ -9614,107 +9664,142 @@ Default=true
 end)
 
 b(function()
-local af
-local ag
-local ah
-local ai
-local aq
-local ar={}
-local as,at
-
-af=u.Legit:CreateModule{
-Name='Viewmodel',
+local af={Value=8}
+local ag={Value=8}
+local ah={Value=-2}
+local ai={Value=0}
+local aq={Value=0}
+local ar={Value=0}
+local as
+local at
+local au=u.Categories.Render:CreateModule{
+Name="NoBob",
 Function=function(au)
-local av=r:FindFirstChild'Viewmodel'
+local av=r:FindFirstChild"Viewmodel"
+if av then
 if au then
-as=L.ViewmodelController.playAnimation
-at=av and av.RightHand.RightWrist.C1 or CFrame.identity
-if aq.Enabled then
-L.ViewmodelController.playAnimation=function(aw,ax,...)
-if L.AnimationType and ax==L.AnimationType.FP_WALK then return end
-return as(aw,ax,...)
+at=L.ViewmodelController.playAnimation
+L.ViewmodelController.playAnimation=function(aw,ax,ay)
+if ax==L.AnimationType.FP_WALK then
+return
 end
+return at(aw,ax,ay)
 end
-
-L.InventoryViewmodelController:handleStore(L.Store:getState())
-if av then
-r.Viewmodel.RightHand.RightWrist.C1=at*CFrame.Angles(math.rad(ar[1].Value),math.rad(ar[2].Value),math.rad(ar[3].Value))
-end
-s.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_DEPTH_OFFSET',-ag.Value)
-s.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_HORIZONTAL_OFFSET',ah.Value)
-s.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_VERTICAL_OFFSET',ai.Value)
+L.ViewmodelController:setHeldItem(
+s.Character
+and s.Character:FindFirstChild"HandInvItem"
+and s.Character.HandInvItem.Value
+and s.Character.HandInvItem.Value:Clone()
+)
+s.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute(
+"ConstantManager_DEPTH_OFFSET",
+-(af.Value/10)
+)
+s.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute(
+"ConstantManager_HORIZONTAL_OFFSET",
+(ag.Value/10)
+)
+s.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute(
+"ConstantManager_VERTICAL_OFFSET",
+(ah.Value/10)
+)
+as=av.RightHand.RightWrist.C1
+av.RightHand.RightWrist.C1=as
+*CFrame.Angles(math.rad(ai.Value),math.rad(aq.Value),math.rad(ar.Value))
 else
-L.ViewmodelController.playAnimation=as
-if av then
-av.RightHand.RightWrist.C1=at
+L.ViewmodelController.playAnimation=at
+s.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute(
+"ConstantManager_DEPTH_OFFSET",
+0
+)
+s.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute(
+"ConstantManager_HORIZONTAL_OFFSET",
+0
+)
+s.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute(
+"ConstantManager_VERTICAL_OFFSET",
+0
+)
+av.RightHand.RightWrist.C1=as
 end
-
-L.InventoryViewmodelController:handleStore(L.Store:getState())
-s.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_DEPTH_OFFSET',0)
-s.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_HORIZONTAL_OFFSET',0)
-s.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_VERTICAL_OFFSET',0)
-as=nil
 end
 end,
-Tooltip='Changes the viewmodel animations'
+Tooltip="Removes the ugly bobbing when you move and makes sword farther",
 }
-ag=af:CreateSlider{
-Name='Depth',
+af=au:CreateSlider{
+Name="Depth",
 Min=0,
-Max=2,
-Default=0.8,
-Decimal=10,
-Function=function(au)
-if af.Enabled then
-s.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_DEPTH_OFFSET',-au)
+Max=24,
+Default=8,
+Function=function(av)
+if au.Enabled then
+s.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute(
+"ConstantManager_DEPTH_OFFSET",
+-(av/10)
+)
 end
-end
+end,
 }
-ah=af:CreateSlider{
-Name='Horizontal',
+ag=au:CreateSlider{
+Name="Horizontal",
 Min=0,
-Max=2,
-Default=0.8,
-Decimal=10,
-Function=function(au)
-if af.Enabled then
-s.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_HORIZONTAL_OFFSET',au)
+Max=24,
+Default=8,
+Function=function(av)
+if au.Enabled then
+s.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute(
+"ConstantManager_HORIZONTAL_OFFSET",
+(av/10)
+)
 end
-end
+end,
 }
-ai=af:CreateSlider{
-Name='Vertical',
-Min=-0.2,
-Max=2,
-Default=-0.2,
-Decimal=10,
-Function=function(au)
-if af.Enabled then
-s.PlayerScripts.TS.controllers.global.viewmodel['viewmodel-controller']:SetAttribute('ConstantManager_VERTICAL_OFFSET',au)
+ah=au:CreateSlider{
+Name="Vertical",
+Min=0,
+Max=24,
+Default=-2,
+Function=function(av)
+if au.Enabled then
+s.PlayerScripts.TS.controllers.global.viewmodel["viewmodel-controller"]:SetAttribute(
+"ConstantManager_VERTICAL_OFFSET",
+(av/10)
+)
 end
-end
+end,
 }
-for au,av in{'Rotation X','Rotation Y','Rotation Z'}do
-table.insert(ar,af:CreateSlider{
-Name=av,
+ai=au:CreateSlider{
+Name="RotX",
 Min=0,
 Max=360,
-Function=function(aw)
-if af.Enabled then
-r.Viewmodel.RightHand.RightWrist.C1=at*CFrame.Angles(math.rad(ar[1].Value),math.rad(ar[2].Value),math.rad(ar[3].Value))
+Function=function(av)
+if au.Enabled then
+r.Viewmodel.RightHand.RightWrist.C1=as
+*CFrame.Angles(math.rad(ai.Value),math.rad(aq.Value),math.rad(ar.Value))
 end
+end,
+}
+aq=au:CreateSlider{
+Name="RotY",
+Min=0,
+Max=360,
+Function=function(av)
+if au.Enabled then
+r.Viewmodel.RightHand.RightWrist.C1=as
+*CFrame.Angles(math.rad(ai.Value),math.rad(aq.Value),math.rad(ar.Value))
 end
-})
+end,
+}
+ar=au:CreateSlider{
+Name="RotZ",
+Min=0,
+Max=360,
+Function=function(av)
+if au.Enabled then
+r.Viewmodel.RightHand.RightWrist.C1=as
+*CFrame.Angles(math.rad(ai.Value),math.rad(aq.Value),math.rad(ar.Value))
 end
-aq=af:CreateToggle{
-Name='No Bobbing',
-Default=true,
-Function=function()
-if af.Enabled then
-af:Toggle()
-af:Toggle()
-end
-end
+end,
 }
 end)
 
