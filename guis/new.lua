@@ -398,12 +398,16 @@ local x=false
 local y=function()end
 
 local z
-q.Name=q.Name or l:GenerateGUID(false)
+local A=false
+if not q.Name then
+A=true
+q.Name=l:GenerateGUID(false)
+end
 z=p.GuiColorSyncAPI[q.Name]or q:CreateToggle{
 Name="GUI Color Sync",
-Function=function(A)
-t(A)
-if A then
+Function=function(B)
+t(B)
+if B then
 y()
 end
 end,
@@ -412,49 +416,55 @@ Default=s.Default
 }
 p.GuiColorSyncAPI[q.Name]=z
 
-for A,B in{u,v,w}do
-B:ConnectCallback(function()
+for B,C in{u,v,w}do
+C:ConnectCallback(function()
 if z.Enabled and not x then
-InfoNotification(`GUI Sync - {q.Name}`,"Disabled due to color slider change! Re-enable if you want :D",5)
+local D
+if A then
+D="GUI Sync"
+else
+D=`GUI Sync - {q.Name}`
+end
+InfoNotification(D,"Disabled due to color slider change! Re-enable if you want :D",5)
 z:Toggle()
 end
 end)
 end
 
-y=connectguicolorchange(function(A,B,C)
+y=connectguicolorchange(function(B,C,D)
 if not z.Enabled then return end
-local D={Hue=A,Sat=B,Value=C}
+local E={Hue=B,Sat=C,Value=D}
 
 x=true
 
 if w then
-local E=D
+local F=E
 
 if s.Color1HueShift then
-local F=(A+s.Color1HueShift)%1
-E={Hue=F,Sat=B,Value=C}
+local G=(B+s.Color1HueShift)%1
+F={Hue=G,Sat=C,Value=D}
 end
-local F=(A+(s.Color2HueShift or 0.1))%1
-local G=(A+(s.Color3HueShift or 0.2))%1
-local H={Hue=F,Sat=B,Value=C}
-local I={Hue=G,Sat=B,Value=C}
+local G=(B+(s.Color2HueShift or 0.1))%1
+local H=(B+(s.Color3HueShift or 0.2))%1
+local I={Hue=G,Sat=C,Value=D}
+local J={Hue=H,Sat=C,Value=D}
 
-u:SetValue(E.Hue,E.Sat,E.Value)
-v:SetValue(H.Hue,H.Sat,H.Value)
-w:SetValue(I.Hue,I.Sat,I.Value)
+u:SetValue(F.Hue,F.Sat,F.Value)
+v:SetValue(I.Hue,I.Sat,I.Value)
+w:SetValue(J.Hue,J.Sat,J.Value)
 elseif v then
-local E=D
-local F=(A+(s.Color2HueShift or 0.1))%1
-local G={Hue=F,Sat=B,Value=C}
+local F=E
+local G=(B+(s.Color2HueShift or 0.1))%1
+local H={Hue=G,Sat=C,Value=D}
 
-u:SetValue(E.Hue,E.Sat,E.Value)
-v:SetValue(G.Hue,G.Sat,G.Value)
+u:SetValue(F.Hue,F.Sat,F.Value)
+v:SetValue(H.Hue,H.Sat,H.Value)
 else
 if s.Color1HueShift then
-local E=(A+s.Color1HueShift)%1
-D={Hue=E,Sat=B,Value=C}
+local F=(B+s.Color1HueShift)%1
+E={Hue=F,Sat=C,Value=D}
 end
-u:SetValue(D.Hue,D.Sat,D.Value)
+u:SetValue(E.Hue,E.Sat,E.Value)
 end
 
 x=false
@@ -904,6 +914,7 @@ end)
 end
 end)
 end
+d.makeDraggable=makeDraggable
 
 local function makeDraggable2(H,I)
 H.InputBegan:Connect(function(J)
@@ -942,6 +953,7 @@ end)
 end
 end)
 end
+d.makeDraggable2=makeDraggable2
 
 local function setupGuiMoveCheck(H,I)
 local J=false
@@ -7875,9 +7887,13 @@ end)
 
 Q.Activated:Connect(function()
 az.Visible=false
+am:Fire()
 at=false
+if av then
 av=false
+else
 ap()
+end
 end)
 
 am:Connect(function()
@@ -8442,7 +8458,7 @@ Title="Delete Config",
 ActionWord='<b><font color="#ff6b6b">Deleting</font></b>',
 DoneWord='<b><font color="#7CFF7C">Deleted</font></b>',
 FailWord='<b><font color="#ffb86b">Failed</font></b>',
-PromptNote='<br/><font color="#aaaaaa">This action cannot be undone.</font>',
+PromptNote='<br/><font color="#ff6b6b">This action cannot be undone.</font>',
 Accent=Color3.fromRGB(180,40,40),
 }
 
@@ -8493,7 +8509,7 @@ local be=d.Profile or"Unknown Profile"
 d:CreatePrompt{
 Title="Update Config",
 Text=string.format(
-'Overwrite <b><font color="rgb(150,150,255)">"%s"</font></b> with your current profile <b><font color="rgb(100,200,100)">"%s"</font></b>?\n\n<font color="rgb(180,180,180)">This will update the config with your current settings and GUI color.</font>',
+'Overwrite <b><font color="rgb(150,150,255)">"%s"</font></b> with your current profile <b><font color="rgb(100,200,100)">"%s"</font></b>?\n<font color="rgb(180,180,180)">This will update the config with your current settings and GUI color.</font>',
 aW,
 be
 ),
@@ -8586,7 +8602,7 @@ else
 
 d:CreatePrompt{
 Title=bc.Title,
-Text=([[Are you sure you want to delete "%s"?%s]]):format(aW,bc.PromptNote),
+Text=([[Are you sure you want to delete "%s"?%s]]):format('<br/><font color="#ffffff">'..aW..'</font>',bc.PromptNote),
 ConfirmText="DELETE",
 CancelText="CANCEL",
 OnConfirm=function()
