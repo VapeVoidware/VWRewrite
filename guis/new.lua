@@ -31,15 +31,11 @@ FavoriteNotifications={},
 BindNotifications={},
 Version="4.18",
 Windows={},
-Indicators={},
+Indicators={}
 }
 d.DefaultColor=Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
-for e,f in
-{"PreloadEvent","GUIColorChanged","SelfDestructEvent","VisibilityChanged","OnLoadEvent","ProfileChangedEvent","MainGuiSettingsOpenedEvent"}
-do
-if d[f]then
-continue
-end
+for e,f in{"PreloadEvent","GUIColorChanged","SelfDestructEvent","VisibilityChanged","OnLoadEvent","ProfileChangedEvent","MainGuiSettingsOpenedEvent"}do
+if d[f]then continue end
 d[f]=b(f)
 end
 d.libraries=setmetatable(d.Libraries,{
@@ -55,25 +51,17 @@ if not d.Libraries[f]then
 d.Libraries[f]=g
 end
 rawset(e,f,g)
-end,
+end
 })
 function d.connectOnLoad(e,f)
 e.loadconns=e.loadconns or{}
-if f==nil then
-return
-end
-if type(f)~="function"then
-return
-end
-if e.loadconns[tostring(f)]then
-return
-end
+if f==nil then return end
+if type(f)~="function"then return end
+if e.loadconns[tostring(f)]then return end
 e.loadconns[tostring(f)]=f
 end
 function d.onload(e)
-if not e.loadconns then
-return
-end
+if not e.loadconns then return end
 e.ProfileChangedEvent:Fire()
 for f,g in e.loadconns do
 task.spawn(pcall,g,d)
@@ -210,20 +198,16 @@ end
 
 local function flickerTextEffect(p,q,r)
 if q==true and p.TextTransparency==0 then
-n
-:Tween(p,TweenInfo.new(0.15),{
+n:Tween(p,TweenInfo.new(0.15),{
 TextTransparency=1,
-}).Completed
-:Wait()
+}).Completed:Wait()
 end
 if r~=nil then
 p.Text=r
 end
-n
-:Tween(p,TweenInfo.new(0.15),{
+n:Tween(p,TweenInfo.new(0.15),{
 TextTransparency=q and 0 or 1,
-}).Completed
-:Wait()
+}).Completed:Wait()
 end
 
 local function flickerImageEffect(p,q,r)
@@ -245,19 +229,19 @@ w.Parent=p
 
 task.spawn(function()
 n:Tween(w,TweenInfo.new(r),{
-Scale=1.2,
+Scale=1.2
 })
 while tick()-s<q and p.Parent do
 n:Tween(p,TweenInfo.new(r),{
 ImageTransparency=0,
-ImageColor3=Color3.fromRGB(255,255,255),
+ImageColor3=Color3.fromRGB(255,255,255)
 })
 
 task.wait(r)
 
 n:Tween(p,TweenInfo.new(r),{
 ImageTransparency=v,
-ImageColor3=u,
+ImageColor3=u
 })
 
 task.wait(r)
@@ -313,7 +297,7 @@ end
 
 local function wrap(p)
 return a:wrap(p,{
-name="wrap:api",
+name="wrap:api"
 })
 end
 d.wrap=wrap
@@ -336,7 +320,7 @@ return{
 run=function()
 p(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
 end,
-conn=s,
+conn=s
 }
 end
 return s
@@ -389,8 +373,7 @@ local y=function()end
 
 local z
 q.Name=q.Name or l:GenerateGUID(false)
-z=p.GuiColorSyncAPI[q.Name]
-or q:CreateToggle{
+z=p.GuiColorSyncAPI[q.Name]or q:CreateToggle{
 Name="GUI Color Sync",
 Function=function(A)
 t(A)
@@ -399,27 +382,21 @@ y()
 end
 end,
 Tooltip=s.Tooltip or"Syncs with the gui theme color",
-Default=s.Default,
+Default=s.Default
 }
 p.GuiColorSyncAPI[q.Name]=z
 
 for A,B in{u,v,w}do
 B:ConnectCallback(function()
 if z.Enabled and not x then
-InfoNotification(
-`GUI Sync - {q.Name}`,
-"Disabled due to color slider change! Re-enable if you want :D",
-5
-)
+InfoNotification(`GUI Sync - {q.Name}`,"Disabled due to color slider change! Re-enable if you want :D",5)
 z:Toggle()
 end
 end)
 end
 
 y=connectguicolorchange(function(A,B,C)
-if not z.Enabled then
-return
-end
+if not z.Enabled then return end
 local D={Hue=A,Sat=B,Value=C}
 
 x=true
@@ -535,7 +512,7 @@ local C={
 ["vape/assets/new/vape.png"]="rbxassetid://14373395239",
 ["vape/assets/new/warning.png"]="rbxassetid://14368361552",
 ["vape/assets/new/worldicon.png"]="rbxassetid://14368362492",
-["vape/assets/new/star.png"]="rbxassetid://137405505909578",
+["vape/assets/new/star.png"]="rbxassetid://137405505909578"
 }
 
 local D=isfile
@@ -623,9 +600,7 @@ end
 
 
 local function addTooltip(F,G)
-if d.isMobile then
-return
-end
+if d.isMobile then return end
 if not G then
 return
 end
@@ -788,9 +763,7 @@ end)
 end)
 G=G or 5
 local K=tick()
-repeat
-task.wait()
-until I~=nil or tick()-K>=G
+repeat task.wait()until I~=nil or tick()-K>=G
 if I==nil then
 I=false
 J="TIMEOUT_EXCEEDED"
@@ -808,15 +781,13 @@ local G=shared.CACHED_ICON_LIBRARY
 if not G then
 F(function()
 local H,I=pcall(function()
-local H=loadstring(
-d.http_function"https://raw.githubusercontent.com/Footagesus/Icons/main/Main-v2.lua"
-)()
+local H=loadstring(d.http_function"https://raw.githubusercontent.com/Footagesus/Icons/main/Main-v2.lua")()
 H.SetIconsType"lucide"
 return H
 end)
 if not H then
 pcall(function()
-d:CreateNotification("Vape | Icons","Failure loading custom icons :c",5,"alert")
+d:CreateNotification("Vape | Icons","Failure loading custom icons :c",5,'alert')
 end)
 warn(`[Icons Failure]: {tostring(G)}`)
 end
@@ -825,9 +796,7 @@ shared.CACHED_ICON_LIBRARY=G
 end,3)
 end
 local function getCustomIcon(H)
-if not G then
-return false
-end
+if not G then return false end
 local I,J=pcall(function()
 return G.GetIcon(H)
 end)
@@ -843,10 +812,10 @@ local J=getCustomIcon(H)
 if J~=false then
 return J
 else
-return""
+return''
 end
 end
-return C[H]or getCustomIcon(H)or select(2,pcall(t,H))or""
+return C[H]or getCustomIcon(H)or select(2,pcall(t,H))or''
 end
 
 local function makeDraggable(H,I)
@@ -1033,7 +1002,7 @@ H={
 Button=function(I,J,K)
 local L={
 Name=I.Name,
-Visible=I.Visible==nil or I.Visible,
+Visible=I.Visible==nil or I.Visible
 }
 local M=Instance.new"TextButton"
 M.Name=I.Name.."Button"
@@ -1091,8 +1060,7 @@ return L
 end,
 ColorSlider=function(I,J,K)
 if I.Color then
-I.DefaultHue,I.DefaultSat,I.DefaultValue=
-I.Color:ToHSV()
+I.DefaultHue,I.DefaultSat,I.DefaultValue=I.Color:ToHSV()
 end
 local L={
 Type="ColorSlider",
@@ -1369,7 +1337,7 @@ if ac==nil then
 ac=J.Visible
 end
 n:Tween(ab,TweenInfo.new(0.1,Enum.EasingStyle.Quad),{
-Size=ac and UDim2.fromOffset(14,14)or UDim2.fromOffset(0,0),
+Size=ac and UDim2.fromOffset(14,14)or UDim2.fromOffset(0,0)
 })
 end)
 end
@@ -1416,9 +1384,7 @@ end
 end
 
 function L.ConnectCallback(af,ag)
-if not(ag~=nil and type(ag)=="function")then
-return
-end
+if not(ag~=nil and type(ag)=="function")then return end
 if L._InternalCallback and shared.VoidDev then
 warn(debug.traceback(`Overriding InternalCallback!!!`))
 end
@@ -1548,10 +1514,7 @@ or Enum.UserInputType.Touch
 then
 L:SetValue(
 math.clamp((ah.Position.X-P.AbsolutePosition.X)/P.AbsoluteSize.X,0,1),
-nil,
-nil,
-nil,
-true
+nil,nil,nil,true
 )
 if L._InternalCallback then
 L._InternalCallback()
@@ -1874,17 +1837,8 @@ end
 
 P.Visible=false
 
-af.Size=aa.Size~=nil
-and aa.Size+UDim2.fromOffset(0,#Q*26)
-or UDim2.new(1,0,0,40+(#Q*26))
-J.Size=aa.Size~=nil
-and UDim2.new(
-aa.Size.X.Scale,
-aa.Size.X.Offset,
-aa.Size.Y.Scale,
-0
-)+UDim2.fromOffset(0,#Q*26)
-or UDim2.new(1,0,0,#Q*26)
+af.Size=aa.Size~=nil and aa.Size+UDim2.fromOffset(0,#Q*26)or UDim2.new(1,0,0,40+(#Q*26))
+J.Size=aa.Size~=nil and UDim2.new(aa.Size.X.Scale,aa.Size.X.Offset,aa.Size.Y.Scale,0)+UDim2.fromOffset(0,#Q*26)or UDim2.new(1,0,0,#Q*26)
 return
 end
 
@@ -1924,9 +1878,7 @@ local V=T>0 and T or 1
 local W=L*26
 local X=O and 26 or 0
 local Y=math.min(W,V*26)
-af.Size=aa.Size
-and aa.Size+UDim2.fromOffset(0,X+Y)
-or UDim2.new(1,0,0,40+X+Y)
+af.Size=aa.Size and aa.Size+UDim2.fromOffset(0,X+Y)or UDim2.new(1,0,0,40+X+Y)
 J.Size=UDim2.new(1,0,0,X+Y)
 
 M.Position=UDim2.fromOffset(0,X)
@@ -2121,7 +2073,7 @@ if K==nil then
 K=ab.Visible
 end
 n:Tween(J,TweenInfo.new(0.1,Enum.EasingStyle.Quad),{
-Size=K and UDim2.fromOffset(14,14)or UDim2.fromOffset(0,0),
+Size=K and UDim2.fromOffset(14,14)or UDim2.fromOffset(0,0)
 })
 end)
 end
@@ -3195,7 +3147,7 @@ Type="Toggle",
 Enabled=false,
 Index=getTableSize(ac.Options),
 Name=aa.Name,
-Toggled=c(`{tostring(aa.Name)}_{tostring(ac.Name)}`)
+Toggled=c(`{tostring(aa.Name)}_{tostring(ac.Name)}`),
 }
 
 local ae=false
@@ -3267,9 +3219,7 @@ function ad.SetValue(ai,aj)
 if aj==nil then
 aj=not ai.Enabled
 end
-if ai.Enabled==aj then
-return
-end
+if ai.Enabled==aj then return end
 ai:Toggle()
 end
 
@@ -3915,9 +3865,7 @@ at.Object=au
 
 function at.Toggle(ax,ay)
 if ay~=nil then
-if ay==ax.Enabled then
-return
-end
+if ay==ax.Enabled then return end
 ax.Enabled=ay
 else
 ax.Enabled=not ax.Enabled
@@ -4048,8 +3996,8 @@ function as.CreateToggle(L,M)
 local N={
 Enabled=false,
 Index=getTableSize(as.Toggles),
-Name=M.Name,
-Toggled=c(`{tostring(M.Name)}_Overlays`)
+Toggled=c(`{tostring(M.Name)}_Overlays`),
+Name=M.Name
 }
 
 local O=false
@@ -4975,7 +4923,7 @@ ExtraText=am.ExtraText,
 Name=am.Name,
 Category=ab.Name,
 SavingID=am.SavingID,
-Toggled=c(`{tostring(am.Name)}_{tostring(ab.Name)}_{tostring(am.SavingID)}_{tostring(am.ExtraText)}`)
+Toggled=c(`{tostring(am.Name)}_{tostring(ac.Name)}_{tostring(am.SavingID)}_{tostring(am.ExtraText)}`),
 }
 am.Tooltip=am.Tooltip or am.Name
 
@@ -5010,7 +4958,7 @@ ar.FontFace=o.Font
 
 connectvisibilitychange(function(as)
 n:Tween(ar,TweenInfo.new(0.5,Enum.EasingStyle.Quad),{
-BackgroundTransparency=as and 0 or 1,
+BackgroundTransparency=as and 0 or 1
 })
 end)
 
@@ -5102,13 +5050,10 @@ az.Transparency=0
 az.Thickness=2
 az.Color=Color3.fromRGB(255,255,0)
 az.Parent=aq
-az.Enabled=false
 local aA=az
 connectvisibilitychange(function(aB)
 aA.Enabled=an.StarActive
-if not aA.Enabled then
-return
-end
+if not aA.Enabled then return end
 n:Tween(aA,TweenInfo.new(0.5,Enum.EasingStyle.Quad),{
 Thickness=aB and 2 or 0,
 })
@@ -5131,7 +5076,7 @@ aB[I.Category]=aB[I.Category]or{starred={},normal={}}
 local J={
 name=I.Name,
 
-textSize=E(I.Name,I.Object.TextSize,I.Object.Font).X,
+textSize=E(I.Name,I.Object.TextSize,I.Object.Font).X
 }
 
 if I.StarActive then
@@ -5185,8 +5130,7 @@ an.StarActive=false
 else
 an.StarActive=not an.StarActive
 end
-ay.BackgroundColor3=an.StarActive and Color3.fromRGB(255,255,127)
-or Color3.fromRGB(255,255,255)
+ay.BackgroundColor3=an.StarActive and Color3.fromRGB(255,255,127)or Color3.fromRGB(255,255,255)
 aA.Enabled=an.StarActive
 ay.Visible=an.StarActive or ap or as.Visible
 if not aC then
@@ -5250,9 +5194,7 @@ addMaid(an)
 local K
 local L
 
-an.OptionsVisibilityChanged=a.createCustomSignal(
-`OPTIONS_VISIBILITY_CHANGE_{tostring(am.Name)}_{tostring(ab.Name)}`
-)
+an.OptionsVisibilityChanged=a.createCustomSignal(`OPTIONS_VISIBILITY_CHANGE_{tostring(am.Name)}_{tostring(ab.Name)}`)
 
 local function openOptions()
 if K then
@@ -5376,7 +5318,7 @@ end
 if not N then
 d:UpdateTextGUI()
 end
-task.spawn(am.Function,M.Enabled,N)
+task.spawn(am.Function,M.Enabled)
 end
 
 for M,N in H do
@@ -5459,13 +5401,7 @@ as:GetPropertyChangedSignal"Visible":Connect(function()
 local M=as.Visible
 if M then
 if count(an.Options)<=0 then
-d:CreateNotification(
-"Vape",
-`<font color="#ff8080"><b>⚠ No options found</b></font> for <font color="#7db8ff"><b>{tostring(
-am.Name
-)}</b></font> :c`,
-3
-)
+d:CreateNotification("Vape",`<font color="#ff8080"><b>⚠ No options found</b></font> for <font color="#7db8ff"><b>{tostring(am.Name)}</b></font> :c`,3)
 as.Visible=false
 end
 end
@@ -5508,10 +5444,7 @@ TweenInfo.new(Q,Enum.EasingStyle.Linear),
 repeat
 M=(h:GetMouseLocation()-P).Magnitude<10
 task.wait()
-until(tick()-O)>Q
-or not M
-or not v.Visible
-or d.Loaded==nil
+until(tick()-O)>Q or not M or not v.Visible or d.Loaded==nil
 
 if R and R.Parent then
 R:Destroy()
@@ -5684,7 +5617,9 @@ end
 an.Object=aq
 an.Children=as
 
+if not am.NoSave then
 d.Modules[am.SavingID or am.Name]=an
+end
 
 updateModuleSorting()
 
@@ -5707,9 +5642,7 @@ function an.Restart(M)
 if M.Enabled then
 M:Toggle()
 task.wait(0.1)
-if M.Enabled then
-return
-end
+if M.Enabled then return end
 M:Toggle()
 end
 end
@@ -5719,9 +5652,7 @@ end
 
 function ac.Expand(al,am)
 if am~=nil then
-if am==al.Expanded then
-return
-end
+if am==al.Expanded then return end
 al.Expanded=am
 else
 al.Expanded=not al.Expanded
@@ -5796,9 +5727,7 @@ Expanded=false,
 Modules={},
 Name=am.Name,
 CategoryApi=ac,
-ExpandEvent=c(
-`ModuleCategory_ExpandEvent_{tostring(am.Name)}_{tostring(ac.Name)}`
-),
+ExpandEvent=c(`ModuleCategory_ExpandEvent_{tostring(am.Name)}_{tostring(ac.Name)}`),
 UpExpand=am.UpExpand or false,
 }
 
@@ -5875,6 +5804,7 @@ ap.Position=UDim2.new(0,0,1,0)
 else
 ap.Position=UDim2.fromOffset(0,0)
 end
+
 ap.BackgroundTransparency=1
 ap.BorderSizePixel=0
 ap.AutoButtonColor=false
@@ -5894,6 +5824,7 @@ aq.Name="AccentBar"
 aq.Size=UDim2.fromOffset(3,45)
 
 aq.Position=an.UpExpand and UDim2.new(0,0,1,-45)or UDim2.fromOffset(0,0)
+
 aq.BackgroundColor3=am.AccentColor
 or am.StrokeColor
 or Color3.fromRGB(100,150,255)
@@ -5988,6 +5919,7 @@ av.Image=u"vape/assets/new/expandup.png"
 av.ImageColor3=o.Text
 
 av.Rotation=an.UpExpand and 0 or 180
+
 av.Parent=au
 end)
 if not success then
@@ -6021,6 +5953,7 @@ aw.Position=UDim2.new(0,0,1,-45)
 else
 aw.Position=UDim2.fromOffset(0,45)
 end
+
 aw.BackgroundTransparency=1
 aw.BorderSizePixel=0
 aw.Visible=false
@@ -6032,8 +5965,8 @@ ax.SortOrder=Enum.SortOrder.LayoutOrder
 ax.HorizontalAlignment=Enum.HorizontalAlignment.Center
 ax.Padding=UDim.new(0,2)
 
-ax.VerticalAlignment=an.UpExpand and Enum.VerticalAlignment.Bottom
-or Enum.VerticalAlignment.Top
+ax.VerticalAlignment=an.UpExpand and Enum.VerticalAlignment.Bottom or Enum.VerticalAlignment.Top
+
 ax.Parent=aw
 end)
 if not success then
@@ -6068,7 +6001,6 @@ local aA=ay.Expanded and ax.AbsoluteContentSize.Y/A.Scale or 0
 task.spawn(function()
 flickerTextEffect(as,true,am.Name)
 end)
-
 
 local aB=ay.UpExpand and 180 or 0
 local aC=ay.UpExpand and 0 or 180
@@ -6260,7 +6192,6 @@ ax:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
 if an.Expanded then
 local ay=ax.AbsoluteContentSize.Y/A.Scale
 aw.Size=UDim2.new(1,0,0,ay)
-
 ao.Size=UDim2.fromOffset(220,45+ay)
 
 if an.UpExpand then
@@ -6288,9 +6219,7 @@ end
 
 ad:GetPropertyChangedSignal"Visible":Connect(function()
 local al=ac
-if al.LockedVisibility==nil then
-return
-end
+if al.LockedVisibility==nil then return end
 if ad.Visible~=al.LockedVisibility then
 ad.Visible=al.LockedVisibility
 end
@@ -6301,7 +6230,7 @@ Name=ab.Name,
 Icon=ab.Icon,
 Size=ab.Size,
 Window=ad,
-Default=ab.Visible,
+Default=ab.Visible
 }
 function ac.ToggleCategoryButton(al,am)
 ac.Button:Toggle(am)
@@ -6309,12 +6238,8 @@ end
 if ac.Button~=nil and ac.Button.Object~=nil and ac.Button.Object.Parent~=nil then
 ac.Button.Object:GetPropertyChangedSignal"Visible":Connect(function()
 local al=ac
-if al.LockedVisibility==nil then
-return
-end
-if al.LockedVisibility then
-return
-end
+if al.LockedVisibility==nil then return end
+if al.LockedVisibility then return end
 ac.Button.Object.Visible=false
 end)
 end
@@ -6456,11 +6381,7 @@ function()
 if ab=="en"then
 return{}
 end
-if
-tostring(shared.environment)=="translator_env"
-and isfolder"voidware_translations"
-and D(`voidware_translations/{ab}.json`)
-then
+if tostring(shared.environment)=="translator_env"and isfolder"voidware_translations"and D(`voidware_translations/{ab}.json`)then
 return decode(readfile(`voidware_translations/{ab}.json`))
 end
 return decode(
@@ -6585,10 +6506,12 @@ ag.Pinned=true
 ag.CategorySize=100
 ag.Size=UDim2.fromOffset(14,14)
 end
+
 local ai
 ai={
 Type="Overlay",
 Expanded=false,
+UpExpand=ag.UpExpand or false,
 Button=af.Overlays:CreateToggle{
 Name=ag.Name,
 Function=function(aj)
@@ -6631,6 +6554,7 @@ ai.WindowXOffset=(ag.CategorySize or 220)
 local aj=addBlur(ah)
 addCorner(ah)
 makeDraggable(ah)
+
 local ak=Instance.new"ImageLabel"
 ak.Name="Icon"
 ak.Size=ag.Size
@@ -6639,6 +6563,7 @@ ak.BackgroundTransparency=1
 ak.Image=ag.Icon
 ak.ImageColor3=o.Text
 ak.Parent=ah
+
 local al=Instance.new"TextLabel"
 al.Name="Title"
 al.Size=UDim2.new(1,-32,0,41)
@@ -6650,6 +6575,7 @@ al.TextColor3=o.Text
 al.TextSize=13
 al.FontFace=o.Font
 al.Parent=ah
+
 local am=Instance.new"ImageButton"
 am.Name="Pin"
 am.Size=UDim2.fromOffset(16,16)
@@ -6660,6 +6586,7 @@ am.Image=u"vape/assets/new/pin.png"
 am.ImageColor3=m.Dark(o.Text,0.43)
 am.Parent=ah
 am.Visible=not ag.Pinned
+
 local an=Instance.new"TextButton"
 an.Name="Dots"
 an.Size=UDim2.fromOffset(17,40)
@@ -6667,6 +6594,7 @@ an.Position=UDim2.new(1,-17,0,0)
 an.BackgroundTransparency=1
 an.Text=""
 an.Parent=ah
+
 local ao=Instance.new"ImageLabel"
 ao.Name="Dots"
 ao.Size=UDim2.fromOffset(3,16)
@@ -6675,16 +6603,25 @@ ao.BackgroundTransparency=1
 ao.Image=u"vape/assets/new/dots.png"
 ao.ImageColor3=m.Light(o.Main,0.37)
 ao.Parent=an
+
 local ap=Instance.new"Frame"
 ap.Name="CustomChildren"
 ap.Size=UDim2.new(1,0,0,200)
 ap.Position=UDim2.fromScale(0,1)
 ap.BackgroundTransparency=1
 ap.Parent=ah
+
 local aq=Instance.new"ScrollingFrame"
 aq.Name="Children"
 aq.Size=UDim2.new(1,0,1,-41)
+
+if ai.UpExpand then
+aq.AnchorPoint=Vector2.new(0,1)
+aq.Position=UDim2.new(0,0,1,-4)
+else
 aq.Position=UDim2.fromOffset(0,37)
+end
+
 aq.BackgroundColor3=m.Dark(o.Main,0.02)
 aq.BorderSizePixel=0
 aq.Visible=false
@@ -6692,10 +6629,13 @@ aq.ScrollBarThickness=2
 aq.ScrollBarImageTransparency=0.75
 aq.CanvasSize=UDim2.new()
 aq.Parent=ah
+
 local ar=Instance.new"UIListLayout"
 ar.SortOrder=Enum.SortOrder.LayoutOrder
 ar.HorizontalAlignment=Enum.HorizontalAlignment.Center
+ar.VerticalAlignment=ai.UpExpand and Enum.VerticalAlignment.Bottom or Enum.VerticalAlignment.Top
 ar.Parent=aq
+
 addMaid(ai)
 
 function ai.Expand(as,at)
@@ -6705,17 +6645,33 @@ end
 as.Expanded=not as.Expanded
 aq.Visible=as.Expanded
 ao.ImageColor3=as.Expanded and o.Text or m.Light(o.Main,0.37)
+
+local au=ar.AbsoluteContentSize.Y/A.Scale
+local av=math.min(41+au,601)
+
 if as.Expanded then
+if as.UpExpand then
 n:Tween(ah,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
-Size=UDim2.fromOffset(
-220,
-math.min(41+ar.AbsoluteContentSize.Y/A.Scale,601)
-)
+Size=UDim2.fromOffset(ah.Size.X.Offset,av),
+Position=UDim2.fromOffset(ah.Position.X.Offset,ah.Position.Y.Offset-(av-41)),
 })
 else
 n:Tween(ah,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
-Size=UDim2.fromOffset(ai.WindowXOffset,41),
+Size=UDim2.fromOffset(ah.Size.X.Offset,av),
 })
+end
+else
+if as.UpExpand then
+local aw=ah.Size.Y.Offset
+n:Tween(ah,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+Size=UDim2.fromOffset(as.WindowXOffset,41),
+Position=UDim2.fromOffset(ah.Position.X.Offset,ah.Position.Y.Offset+(aw-41)),
+})
+else
+n:Tween(ah,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+Size=UDim2.fromOffset(as.WindowXOffset,41),
+})
+end
 end
 end
 
@@ -6726,6 +6682,7 @@ as.Pinned=true
 end
 am.ImageColor3=as.Pinned and o.Text or m.Dark(o.Text,0.43)
 end
+
 if ag.Pinned then
 ai.Pinned=true
 end
@@ -6789,10 +6746,17 @@ setthreadidentity(8)
 end
 aq.CanvasSize=UDim2.fromOffset(0,ar.AbsoluteContentSize.Y/A.Scale)
 if ai.Expanded then
-ah.Size=UDim2.fromOffset(
-ah.Size.X.Offset,
-math.min(41+ar.AbsoluteContentSize.Y/A.Scale,601)
-)
+local as=ar.AbsoluteContentSize.Y/A.Scale
+local at=math.min(41+as,601)
+
+if ai.UpExpand then
+local au=ah.Size.Y.Offset
+local av=at-au
+ah.Size=UDim2.fromOffset(ah.Size.X.Offset,at)
+ah.Position=UDim2.fromOffset(ah.Position.X.Offset,ah.Position.Y.Offset-av)
+else
+ah.Size=UDim2.fromOffset(ah.Size.X.Offset,at)
+end
 end
 end)
 af:Clean(v:GetPropertyChangedSignal"Visible":Connect(function()
@@ -6869,15 +6833,11 @@ ay.Visible=(getgenv().username~=nil and getgenv().password~=nil)
 addCorner(ay)
 
 ay.MouseEnter:Connect(function()
-if av then
-return
-end
+if av then return end
 g:Create(ay,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(10,160,120)}):Play()
 end)
 ay.MouseLeave:Connect(function()
-if av then
-return
-end
+if av then return end
 g:Create(ay,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(5,134,105)}):Play()
 end)
 
@@ -6984,8 +6944,7 @@ if R:IsA"TextButton"then
 R.BackgroundColor3=Color3.fromRGB(40,40,40)
 end
 end
-P.BackgroundColor3=
-Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
+P.BackgroundColor3=Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
 end)
 end
 J.CanvasSize=UDim2.fromOffset(0,L.AbsoluteContentSize.Y+10)
@@ -7073,15 +7032,11 @@ T.ZIndex=2
 addCorner(T)
 
 T.MouseEnter:Connect(function()
-if at then
-return
-end
+if at then return end
 g:Create(T,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(220,50,50)}):Play()
 end)
 T.MouseLeave:Connect(function()
-if at then
-return
-end
+if at then return end
 g:Create(T,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(180,40,40)}):Play()
 end)
 
@@ -7103,15 +7058,11 @@ addCorner(U)
 
 
 U.MouseEnter:Connect(function()
-if au then
-return
-end
+if au then return end
 g:Create(U,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(130,100,230)}):Play()
 end)
 U.MouseLeave:Connect(function()
-if au then
-return
-end
+if au then return end
 g:Create(U,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(100,80,200)}):Play()
 end)
 
@@ -7125,7 +7076,7 @@ for W,X in ai do
 if X.instance and X.deleteIcon and X.canDelete and not X.specialDelete then
 X.deleteIcon.Image=u("trash",true)
 n:Tween(X.deleteIcon,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
-BackgroundColor3=Color3.fromRGB(60,60,60),
+BackgroundColor3=Color3.fromRGB(60,60,60)
 })
 local Y=X.deleteIcon:FindFirstChild"UpdateStroke"
 if Y then
@@ -7145,7 +7096,7 @@ if X.instance and X.deleteIcon and X.canDelete and not X.specialDelete then
 V=V+1
 X.deleteIcon.Image=u("upload",true)
 n:Tween(X.deleteIcon,TweenInfo.new(0.3,Enum.EasingStyle.Quad),{
-BackgroundColor3=Color3.fromRGB(70,60,140),
+BackgroundColor3=Color3.fromRGB(70,60,140)
 })
 
 
@@ -7156,7 +7107,7 @@ Y.Thickness=0
 Y.Transparency=1
 n:Tween(Y,TweenInfo.new(0.3,Enum.EasingStyle.Quad),{
 Thickness=1.5,
-Transparency=0.3,
+Transparency=0.3
 })
 Y.Parent=X.deleteIcon
 end
@@ -7178,9 +7129,7 @@ end
 end
 
 al:Connect(function(V)
-if V=="Update"then
-return
-end
+if V=="Update"then return end
 if au then
 flickerTextEffect(U,true,"UPDATE CONFIG")
 n:Tween(U,TweenInfo.new(0.15),{
@@ -7210,7 +7159,7 @@ else
 
 flickerTextEffect(U,true,"STOP UPDATING")
 n:Tween(U,TweenInfo.new(0.15),{
-BackgroundColor3=m.Dark(Color3.fromRGB(100,80,200),0.3),
+BackgroundColor3=m.Dark(Color3.fromRGB(100,80,200),0.3)
 })
 aq()
 end
@@ -7250,7 +7199,7 @@ local _={}
 
 local aD={
 ["6872265039"]="BW Lobby",
-["6872274481"]="BW Game",
+["6872274481"]="BW Game"
 }
 
 local function createPlaceFilterButton(aE,aF)
@@ -7541,9 +7490,7 @@ at=false
 end)
 
 al:Connect(function(aF)
-if aF=="Delete"then
-return
-end
+if aF=="Delete"then return end
 if at then
 flickerTextEffect(T,true,"DELETE CONFIG")
 n:Tween(T,TweenInfo.new(0.15),{
@@ -7638,8 +7585,8 @@ Body=l:JSONEncode{
 username=getgenv().username,
 password=getgenv().password,
 config=W,
-place=tostring(d.Place or game.PlaceId),
-},
+place=tostring(d.Place or game.PlaceId)
+}
 }
 end)
 
@@ -7679,22 +7626,12 @@ end
 
 local aF="vape/profiles/"..M..d.Place..".txt"
 if not D(aF)then
-d:CreateNotification(
-"Vape",
-"Failed to read config file. Please choose different profile :c",
-6,
-"warning"
-)
+d:CreateNotification("Vape","Failed to read config file. Please choose different profile :c",6,"warning")
 return
 end
 local aG,aH=pcall(readfile,aF)
 if not(aG and aH~=nil)then
-d:CreateNotification(
-"Vape",
-"Failed to read config file. Please choose different profile :c",
-6,
-"warning"
-)
+d:CreateNotification("Vape","Failed to read config file. Please choose different profile :c",6,"warning")
 return
 end
 
@@ -7718,7 +7655,7 @@ return request{
 Url="https://configs.vapevoidware.xyz/configs",
 Method="POST",
 Headers={["Content-Type"]="application/json"},
-Body=l:JSONEncode(aI),
+Body=l:JSONEncode(aI)
 }
 end)
 
@@ -7781,9 +7718,7 @@ end
 end)
 
 al:Connect(function(aF)
-if aF=="Upload"then
-return
-end
+if aF=="Upload"then return end
 if av then
 flickerTextEffect(ay,true,"UPLOAD CONFIG")
 n:Tween(ay,TweenInfo.new(0.15),{
@@ -8094,7 +8029,7 @@ end
 if aV~=nil then
 aT.Text=aV
 end
-end,
+end
 }
 
 S=function()
@@ -8136,13 +8071,9 @@ end
 if aj~=nil then
 local aY={"all"}
 for aZ,a_ in table.clone(aW)do
-if not a_.username then
-continue
-end
+if not a_.username then continue end
 a_.username=tostring(a_.username)
-if table.find(aY,a_.username)then
-continue
-end
+if table.find(aY,a_.username)then continue end
 table.insert(aY,a_.username)
 end
 aj:SetValues(aY,"all")
@@ -8177,9 +8108,7 @@ end
 end)
 
 R=function(aW,aX,aY)
-if ai[aW]then
-return
-end
+if ai[aW]then return end
 ai[aW]=table.clone(aY)
 
 local aZ=false
@@ -8212,9 +8141,7 @@ end
 
 local a3=a1 and a2~=nil and"config"or"gui"
 local function getStrokeColor()
-return a3=="gui"
-and Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
-or a2
+return a3=="gui"and Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)or a2
 end
 
 local a4=Instance.new"UIStroke"
@@ -8291,8 +8218,7 @@ local ba=Instance.new"TextButton"
 ba.Parent=a0
 ba.BackgroundColor3=Color3.fromRGB(5,134,105)
 connectguicolorchange(function(bb,bc,bd)
-ba.BackgroundColor3=a9 and m.Dark(Color3.fromHSV(bb,bc,bd),0.3)
-or Color3.fromHSV(bb,bc,bd)
+ba.BackgroundColor3=a9 and m.Dark(Color3.fromHSV(bb,bc,bd),0.3)or Color3.fromHSV(bb,bc,bd)
 end)
 ba.Size=a_ and UDim2.new(1,-64,0,38)or UDim2.new(1,-24,0,38)
 ba.Position=UDim2.new(0,12,1,-50)
@@ -8320,7 +8246,7 @@ local bb,bc,bd=d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value
 local be=a9 and m.Dark(Color3.fromHSV(bb,bc,bd),0.3)or Color3.fromHSV(bb,bc,bd)
 g
 :Create(ba,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
-BackgroundColor3=be,
+BackgroundColor3=be
 })
 :Play()
 end)
@@ -8371,21 +8297,17 @@ be.Transparency=0.3
 be.Parent=bd
 else
 bd.MouseEnter:Connect(function()
-g
-:Create(bd,TweenInfo.new(0.15),{
+g:Create(bd,TweenInfo.new(0.15),{
 BackgroundColor3=Color3.fromRGB(180,40,40),
 ImageColor3=Color3.fromRGB(255,255,255),
-})
-:Play()
+}):Play()
 end)
 
 bd.MouseLeave:Connect(function()
-g
-:Create(bd,TweenInfo.new(0.15),{
+g:Create(bd,TweenInfo.new(0.15),{
 BackgroundColor3=Color3.fromRGB(60,60,60),
 ImageColor3=Color3.fromRGB(220,220,220),
-})
-:Play()
+}):Play()
 end)
 end
 
@@ -8605,11 +8527,9 @@ local bb=ai[aW]
 if bb then
 local bc=`{bb.name} ({bb.username})`
 local bd=d.Profiles
-if bd~=nil and type(bd)=="table"then
+if(bd~=nil and type(bd)=="table")then
 for be,bf in bd do
-if type(bf)~="table"then
-continue
-end
+if type(bf)~="table"then continue end
 if bf.Name==bc then
 ba.Text="REINSTALL"
 a9=true
@@ -8630,11 +8550,7 @@ if bb then
 local bc=string.format("%s (%s)",bb.name,bb.username)
 local bd,be=bb.link:match"^(.-/)([^/]+)$"
 if not bd or not be then
-errorNotification(
-"Voidware | Configs",
-`Invalid URL for {tostring(aW)}. Please report this to a developer in discord.gg/voidware`,
-10
-)
+errorNotification("Voidware | Configs",`Invalid URL for {tostring(aW)}. Please report this to a developer in discord.gg/voidware`,10)
 warn("Invalid URL:",bb.link)
 return
 end local
@@ -8642,11 +8558,7 @@ bf, bg=pcall(function()
 return bd..l:UrlEncode(be)
 end)
 if not bg then
-errorNotification(
-"Voidware | Configs",
-`Couldn't resolve the url for {tostring(aW)}. Please report this to a developer in discord.gg/voidware`,
-10
-)
+errorNotification("Voidware | Configs",`Couldn't resolve the url for {tostring(aW)}. Please report this to a developer in discord.gg/voidware`,10)
 warn(`Invalid URL resolve: {tostring(bg)}`)
 return
 end
@@ -8679,7 +8591,7 @@ Hue=bk,
 Sat=bl,
 Value=bm,
 CustomColor=true,
-Rainbow=false,
+Rainbow=false
 }
 shared[`FORCE_PROFILE_GUI_COLOR_SET_{tostring(bc)}`]=bj
 end
@@ -8840,9 +8752,7 @@ v.Visible=false
 aX=true
 end
 local aY=d
-if not aY.UpdateGUI then
-return
-end
+if not aY.UpdateGUI then return end
 aY:UpdateGUI(aY.GUIColor.Hue,aY.GUIColor.Sat,aY.GUIColor.Value)
 end)
 
@@ -8908,17 +8818,17 @@ if not an then
 an=true
 aj.MouseEnter:Connect(function()
 n:Tween(am,TweenInfo.new(0.15),{
-Thickness=3,
+Thickness=3
 })
 end)
 aj.MouseLeave:Connect(function()
 n:Tween(am,TweenInfo.new(0.15),{
-Thickness=0,
+Thickness=0
 })
 end)
 end
 return ao
-end,
+end
 }
 end
 aj.Text=""
@@ -8984,8 +8894,7 @@ ar.Size=UDim2.fromOffset(16,16)
 ar.Position=UDim2.new(1,-52,0,13)
 ar.BackgroundTransparency=1
 ar.AutoButtonColor=false
-ar.Image=ah.Name~="Profiles"and u"vape/assets/new/customsettings.png"
-or u"vape/assets/new/worldicon.png"
+ar.Image=ah.Name~="Profiles"and u"vape/assets/new/customsettings.png"or u"vape/assets/new/worldicon.png"
 ar.ImageColor3=m.Dark(o.Text,0.43)
 ar.Parent=aj
 if ah.Profiles then
@@ -9017,22 +8926,17 @@ av=H.Button({
 Name="Sync to 'default' profile",
 Function=function()
 local ax=d.Profile
-d.Profile="default"
-d:Save"default"
-d:Load(true,"default")
-local ay=
-Color3ToHex(Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value))
+d.Profile='default'
+d:Save'default'
+d:Load(true,'default')
+local ay=Color3ToHex(Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value))
 local az="#ffffff"
-local aA=([[Transferred Data from <font color="%s"><b>%s</b></font> to <font color="%s"><b>default</b></font> Profile]]):format(
-ay,
-tostring(ax),
-az
-)
+local aA=([[Transferred Data from <font color="%s"><b>%s</b></font> to <font color="%s"><b>default</b></font> Profile]]):format(ay,tostring(ax),az)
 d:CreateNotification("Vape",aA,3)
 end,
 Tooltip="Transfers your current profile to the 'default' one",
 Visible=false,
-BackgroundTransparency=1,
+BackgroundTransparency=1
 },ap,{Options={}})
 aw=H.Button({
 Name="Create new profile",
@@ -9086,7 +8990,7 @@ loadstring(readfile"vape/loader.lua","loader")()
 else
 loadstring(
 d.http_function(
-"https://raw.githubusercontent.com/VapeVoidware/VWRewrite/"
+'https://raw.githubusercontent.com/VapeVoidware/VWRewrite/'
 ..readfile"vape/profiles/commit.txt"
 .."/loader.lua",
 true
@@ -9094,7 +8998,7 @@ true
 )()
 end
 end,
-OnCancel=function()end,
+OnCancel=function()end
 }
 end,
 Tooltip="This will set your profile to the default settings of Vape",
@@ -9141,9 +9045,7 @@ aB.Parent=ap
 ah.Function=ah.Function or function()end
 
 local function profilesButtonRefresh()
-if not ah.Profiles then
-return
-end
+if not ah.Profiles then return end
 local aC=ag.Profile
 if not aC then
 if shared.VoidDev then
@@ -9169,9 +9071,7 @@ end
 else
 table.insert(d.Profiles,{Name=aD,Bind={}})
 end
-if d.ConfigsAPIRefresh then
-pcall(d.ConfigsAPIRefresh)
-end
+if d.ConfigsAPIRefresh then pcall(d.ConfigsAPIRefresh)end
 profilesButtonRefresh()
 else
 local aE=table.find(aC.List,aD)
@@ -9608,7 +9508,7 @@ Name=ah.Name,
 Icon=ah.CategoryIcon,
 Size=ah.CategorySize,
 Window=aj,
-Default=ah.Profiles,
+Default=ah.Profiles
 }
 
 ai.Object=aj
@@ -9710,62 +9610,118 @@ v.Visible=false
 ag.Legit.Window.Visible=true
 ag.Legit.Window.Position=UDim2.new(0.5,-350,0.5,-194)
 end)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+local ap=false
+local aq
 al:GetPropertyChangedSignal"Text":Connect(function()
-for ap,aq in am:GetChildren()do
-if aq:IsA"TextButton"then
-aq:Destroy()
+if aq~=nil then
+pcall(function()
+task.cancel(aq)
+end)
+aq=nil
 end
+for ar,as in am:GetChildren()do
+if as:IsA"TextButton"then
+as:Destroy()
+end
+end
+if al.Text=="Type to search..."then
+return
 end
 if al.Text==""then
+if not ap then
+flickerTextEffect(al,true,"Type to search...")
+end
 return
 end
 
-for ap,aq in ag.Modules do
-if ap:lower():find(al.Text:lower())then
-local ar=aq.Object:Clone()
-ar.Bind:Destroy()
-ar.Activated:Connect(function()
-aq:Toggle()
+aq=task.spawn(function()
+for ar,as in ag.Modules do
+if ar:lower():find(al.Text:lower())then
+local at=as.Object:Clone()
+at.Bind:Destroy()
+at.Activated:Connect(function()
+as:Toggle()
 end)
 
-ar.MouseButton2Click:Connect(function()
-aq.Object.Parent.Parent.Visible=true
-local as=aq.Object.Parent
-createHighlight(aq.Object)
-local at=aq.ModuleCategory
-if at~=nil then
+at.MouseButton2Click:Connect(function()
+as.Object.Parent.Parent.Visible=true
+local au=as.Object.Parent
+createHighlight(as.Object)
+local av=as.ModuleCategory
+if av~=nil then
 
-at:Toggle(true)
+av:Toggle(true)
 end
-local au=aq.CategoryApi
-if au~=nil then
+local aw=as.CategoryApi
+if aw~=nil then
 
-au:ToggleCategoryButton(true)
+aw:ToggleCategoryButton(true)
 end
 
-n:Tween(as,TweenInfo.new(0.5),{
+n:Tween(au,TweenInfo.new(0.5),{
 CanvasPosition=Vector2.new(
 0,
-(aq.Object.LayoutOrder*40)-(math.min(as.CanvasSize.Y.Offset,600)/2)
+(as.Object.LayoutOrder*40)-(math.min(au.CanvasSize.Y.Offset,600)/2)
 ),
 })
 end)
 
-ar.Parent=am
+at.Parent=am
+at.Name=ar:lower()
 task.spawn(function()
 repeat
 pcall(function()
-for as,at in{"Text","TextColor3","BackgroundColor3"}do
-ar[at]=aq.Object[at]
+for au,av in{"Text","TextColor3","BackgroundColor3"}do
+at[av]=as.Object[av]
 end
-ar.UIGradient.Color=aq.Object.UIGradient.Color
-ar.UIGradient.Enabled=aq.Object.UIGradient.Enabled
-ar.Dots.Dots.ImageColor3=aq.Object.Dots.Dots.ImageColor3
+at.UIGradient.Color=as.Object.UIGradient.Color
+at.UIGradient.Enabled=as.Object.UIGradient.Enabled
+at.Dots.Dots.ImageColor3=as.Object.Dots.Dots.ImageColor3
 end)
 task.wait()
-until not ar.Parent
+until not at.Parent
 end)
 end
+end
+end)
+end)
+al.Focused:Connect(function()
+ap=true
+if al.Text=="Type to search..."then
+al.Text=""
+end
+end)
+al.FocusLost:Connect(function()
+ap=false
+if al.Text==""then
+flickerTextEffect(al,true,"Type to search...")
 end
 end)
 ao:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
@@ -9774,6 +9730,9 @@ setthreadidentity(8)
 end
 am.CanvasSize=UDim2.fromOffset(0,ao.AbsoluteContentSize.Y/A.Scale)
 ah.Size=UDim2.fromOffset(220,math.min(37+ao.AbsoluteContentSize.Y/A.Scale,437))
+end)
+d.PreloadEvent:Connect(function()
+flickerTextEffect(al,true,"Type to search...")
 end)
 
 ag.Legit.Icon=aj
@@ -10727,10 +10686,7 @@ at.Name="Progress"
 at.Size=UDim2.new(1,-13,0,2)
 at.Position=UDim2.new(0,3,1,-4)
 at.ZIndex=5
-at.BackgroundColor3=ag.NotificationsBackground
-and ag.NotificationsBackground.Enabled
-and Color3.fromHSV(ag.GUIColor.Hue,ag.GUIColor.Sat,ag.GUIColor.Value)
-or al=="alert"and Color3.fromRGB(250,50,56)
+at.BackgroundColor3=ag.NotificationsBackground and ag.NotificationsBackground.Enabled and Color3.fromHSV(ag.GUIColor.Hue,ag.GUIColor.Sat,ag.GUIColor.Value)or al=="alert"and Color3.fromRGB(250,50,56)
 or al=="warning"and Color3.fromRGB(236,129,43)
 or Color3.fromRGB(220,220,220)
 at.BorderSizePixel=0
@@ -10995,14 +10951,9 @@ al=false
 end
 ah.Profile=aj or ak.Profile or"default"
 
-local an=shared[`FORCE_PROFILE_GUI_COLOR_SET_{tostring(ah.Profile)}`]
-or(ak.GUIColor~=nil and type(ak.GUIColor)=="table"and ak.GUIColor[ah.Profile])
+local an=shared[`FORCE_PROFILE_GUI_COLOR_SET_{tostring(ah.Profile)}`]or(ak.GUIColor~=nil and type(ak.GUIColor)=="table"and ak.GUIColor[ah.Profile])
 if an then
-ah.GUIColor:SetValue(
-an.Hue,
-an.Sat,
-an.Value
-)
+ah.GUIColor:SetValue(an.Hue,an.Sat,an.Value)
 shared[`FORCE_PROFILE_GUI_COLOR_SET_{tostring(ah.Profile)}`]=nil
 end
 
@@ -11116,17 +11067,10 @@ local ar=ah.Modules[ap]
 if not ar then
 continue
 end
-if ar.NoSave then continue end
 if ar.Options and aq.Options then
 ah:LoadOptions(ar,aq.Options)
 end
-if
-ar.StarActive~=nil
-and aq.Favorited~=nil
-and ar.StarActive~=aq.Favorited
-and ar.ToggleStar~=nil
-and type(ar.ToggleStar)=="function"
-then
+if ar.StarActive~=nil and aq.Favorited~=nil and ar.StarActive~=aq.Favorited and ar.ToggleStar~=nil and type(ar.ToggleStar)=="function"then
 ar:ToggleStar(true)
 end
 if aq.Enabled~=ar.Enabled then
@@ -11237,9 +11181,7 @@ local am=ai.Options[ak]
 if not am then
 continue
 end
-if am.NoSave then
-continue
-end
+if am.NoSave then continue end
 am:Load(al)
 end
 end
@@ -11272,11 +11214,13 @@ end
 end
 end
 
+
 function d.Remove(ah,ai)
-local aj=(ah.Modules[ai]and ah.Modules or ah.Legit.Modules[ai]and ah.Legit.Modules)local ak=
-ah.Modules[ai]and"Modules"
-or ah.Legit.Modules[ai]and"Legit"
-or ah.Categories and"Categories"
+local aj=(
+ah.Modules[ai]and ah.Modules
+or ah.Legit.Modules[ai]and ah.Legit.Modules
+)local ak=
+ah.Modules[ai]and"Modules"or ah.Legit.Modules[ai]and"Legit"or ah.Categories and"Categories"
 if aj and aj[ai]then
 
 local al=aj[ai]
@@ -11298,18 +11242,16 @@ end
 end
 
 function d.SavePosition(ah,ai)
-if not ai then
-return nil
-end
+if not ai then return nil end
 return{
 X={
 Scale=ai.Position.X.Scale,
-Offset=ai.Position.X.Offset,
+Offset=ai.Position.X.Offset
 },
 Y={
 Scale=ai.Position.Y.Scale,
-Offset=ai.Position.Y.Offset,
-},
+Offset=ai.Position.Y.Offset
+}
 }
 end
 
@@ -11321,9 +11263,7 @@ end
 local ak={X={Scale=0,Offset=0},Y={Scale=0,Offset=0}}
 local function load(al,am)
 for an,ao in{"Scale","Offset"}do
-if not am[ao]then
-continue
-end
+if not am[ao]then continue end
 ak[al][ao]=am[ao]
 end
 end
@@ -11337,9 +11277,6 @@ end
 end
 end
 ai.Position=UDim2.new(ak.X.Scale,ak.X.Offset,ak.Y.Scale,ak.Y.Offset)
-
-
-
 end
 
 function d.Save(ah,ai,aj)
@@ -11350,13 +11287,13 @@ local ak={
 Categories={},
 Profile=ai or ah.Profile,
 Profiles=ah.Profiles,
-Keybind=ah.Keybind,
+Keybind=ah.Keybind
 }
 ak.GUIColor=ah.GUI_DATA and ah.GUI_DATA.GUIColor or{}
 ak.GUIColor[ah.Profile]={
 Hue=ah.GUIColor.Hue,
 Sat=ah.GUIColor.Sat,
-Value=ah.GUIColor.Value,
+Value=ah.GUIColor.Value
 }
 local al={
 Modules={},
@@ -11378,7 +11315,6 @@ ListEnabled=an.ListEnabled,
 end
 
 for am,an in ah.Modules do
-if an.NoSave then continue end
 al.Modules[an.SavingID or am]={
 Enabled=an.Enabled,
 Favorited=an.StarActive,
@@ -11398,10 +11334,7 @@ Options=d:SaveOptions(an,an.Options),
 end
 end
 
-writefile(
-"vape/profiles/"..str(game.GameId).."_"..str(ah.Place)..".gui.txt",
-l:JSONEncode(ak)
-)
+writefile("vape/profiles/"..str(game.GameId).."_"..str(ah.Place)..".gui.txt",l:JSONEncode(ak))
 writefile("vape/profiles/"..ah.Profile..ah.Place..".txt",l:JSONEncode(al))
 end
 
@@ -11420,9 +11353,7 @@ for ak,al in ai.Options do
 if not al.Save then
 continue
 end
-if al.NoSave then
-continue
-end
+if al.NoSave then continue end
 al:Save(aj)
 end
 return aj
@@ -11432,9 +11363,7 @@ function d.Uninject(ah,ai)
 local aj=print
 local ak=function(...)
 local ak={...}
-if not shared.UninjectDebug then
-return
-end
+if not shared.UninjectDebug then return end
 aj(unpack(ak))
 end
 ak"save started"
@@ -11559,22 +11488,20 @@ ai.label.AnchorPoint=Vector2.new(0.5,0)
 ai.addedBlur={
 Destroy=function()
 ai.label.BackgroundTransparency=1
-end,
+end
 }
 n:Tween(ai.label,TweenInfo.new(1.5),{
 TextSize=30,
-Position=UDim2.fromScale(0.5,0.6),
+Position=UDim2.fromScale(0.5,0.6)
 })
 ai:setText"Welcome to Voidware!"
 ai.label.Parent=w
 end,
 tweenToSecondPosition=function(ai)
-if not ai.isActive then
-return
-end
+if not ai.isActive then return end
 ai.GlobeIconWait=false
 n:Tween(ai.label,TweenInfo.new(1.5),{
-Position=UDim2.fromScale(0.5,0.78),
+Position=UDim2.fromScale(0.5,0.78)
 })
 end,
 revertTutorialMode=function(ai,aj)
@@ -11583,11 +11510,9 @@ ai.GlobeIconWait=false
 ai.isActive=false
 ai.label.TextScaled=true
 ai.label.AutomaticSize=Enum.AutomaticSize.None
-n
-:Tween(ai.label,TweenInfo.new(0.5),{
-Position=UDim2.fromScale(0.5,0.97),
-}).Completed
-:Connect(function()
+n:Tween(ai.label,TweenInfo.new(0.5),{
+Position=UDim2.fromScale(0.5,0.97)
+}).Completed:Connect(function()
 ai:setText(ai.defaultText)
 ai.label.Parent=v
 end)
@@ -11596,11 +11521,9 @@ d:CreateNotification("Tutorial Complete!","Thank you for using Voidware <3",10)
 end
 end,
 setText=function(ai,aj)
-if not ai.isActive and aj~=ai.defaultText then
-return
-end
+if not ai.isActive and aj~=ai.defaultText then return end
 ai.flickerTextEffect(ai.label,true,aj)
-end,
+end
 }
 d.VisibilityChanged:Connect(function()
 if d.TutorialAPI.isActive and d.TutorialAPI.GlobeIconWait and not x.Visible then
@@ -11723,9 +11646,7 @@ Default=true,
 Tooltip="Makes Voidware auto execute every time you teleport",
 Function=function(an)
 shared.DISABLED_QUEUE_ON_TELEPORT=not an
-if not d.Notifications then
-return
-end
+if not d.Notifications then return end
 d:CreateNotification(
 "Voidware",
 "Auto Execute"
@@ -11734,7 +11655,7 @@ d:CreateNotification(
 .."<font color='#FFFFFF'>!</font>",
 5
 )
-end,
+end
 }
 d.TranslationDropdown=am:CreateDropdown{
 Name="Language",
@@ -11802,7 +11723,7 @@ loadstring(readfile"vape/loader.lua","loader")()
 else
 loadstring(
 d.http_function(
-"https://raw.githubusercontent.com/VapeVoidware/VWRewrite/"
+'https://raw.githubusercontent.com/VapeVoidware/VWRewrite/'
 ..readfile"vape/profiles/commit.txt"
 .."/loader.lua",
 true
@@ -11871,29 +11792,27 @@ Icon=u"vape/assets/new/worldicon.png",
 Size=UDim2.fromOffset(14,14),
 Visible=true,
 }
-for an,ao in
-{
+for an,ao in{
 {
 Name="Inventory",
 Icon=u"vape/assets/new/inventoryicon.png",
 Size=UDim2.fromOffset(15,14),
-GuiColorSync=true
+GuiColorSync=true,
 },
 {
 Name="Minigames",
 Icon=u"vape/assets/new/miniicon.png",
 Size=UDim2.fromOffset(19,12),
-GuiColorSync=true
-},
+GuiColorSync=true,
 }
-do
+}do
 d.Categories[ao.Name]=d.Categories.World:CreateModuleCategory(ao)
 end
 d:CreateCategory{
 Name="Legit",
 Icon=u"vape/assets/new/legittab.png",
 Size=UDim2.fromOffset(14,14),
-Visible=true,
+Visible=true
 }
 d.Categories.Main:CreateDivider"misc"
 d.PreloadEvent:Connect(function()
@@ -11994,14 +11913,14 @@ if ar then
 d.TutorialAPI:activateTutorial()
 ar:setup()
 n:Tween(ar.scale,TweenInfo.new(0.15),{
-Scale=1.1,
+Scale=1.1
 })
 n:Tween(ar.stroke,TweenInfo.new(0.15),{
-Thickness=3,
+Thickness=3
 })
 ar.window.MouseLeave:Once(function()
 n:Tween(ar.scale,TweenInfo.new(0.15),{
-Scale=1,
+Scale=1
 })
 end)
 v.Visible=true
@@ -12017,12 +11936,7 @@ v.Visible=true
 d.TutorialAPI:activateTutorial()
 d.TutorialAPI:tweenToSecondPosition()
 task.wait(1)
-d.TutorialAPI:setText(
-d.VapeButton and"Press the button in the top right to open GUI"
-or"Press "
-..table.concat(d.Keybind," + "):upper()
-.." to open & close the GUI"
-)
+d.TutorialAPI:setText(d.VapeButton and"Press the button in the top right to open GUI"or"Press "..table.concat(d.Keybind," + "):upper().." to open & close the GUI")
 task.wait(3)
 d.TutorialAPI:revertTutorialMode(true)
 end,
@@ -12055,9 +11969,10 @@ Name="Overlays",
 Icon=u"vape/assets/new/overlaysicon.png",
 Size=UDim2.fromOffset(24,18),
 GuiColorSync=true,
-UpExpand=true
+UpExpand=true,
 }
 ar.ExpandEvent:Connect(function()
+print"expand event"
 local as=d.Categories.Main.MainGui
 for at,au in as:GetChildren()do
 if au:IsA"TextButton"then
@@ -12066,7 +11981,7 @@ au.Visible=true
 end
 local av=n:Tween(au,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
 Size=UDim2.fromOffset(220,ar.Expanded and 0 or 40),
-TextTransparency=ar.Expanded and 1 or 0
+TextTransparency=ar.Expanded and 1 or 0,
 })
 if ar.Expanded then
 av.Completed:Once(function()
@@ -12216,7 +12131,7 @@ Default=15,
 Tooltip="Adjusts the tooltip's text size",
 Function=function(av)
 z.TextSize=av
-end,
+end
 }
 at:CreateButton{
 Name="Reset GUI positions",
@@ -12240,16 +12155,12 @@ MinigamesCategory=8,
 LegitCategory=9,
 ProfilesCategoryList=10,
 TargetsCategoryList=11,
-FriendsCategoryList=12,
+FriendsCategoryList=12
 }
 local ax={}
 for ay,az in d.Categories do
-if az.Type=="Overlay"then
-continue
-end
-if av and az.Object.Name=="ProfilesCategoryList"then
-continue
-end
+if az.Type=="Overlay"then continue end
+if av and az.Object.Name=="ProfilesCategoryList"then continue end
 table.insert(ax,az)
 end
 table.sort(ax,function(ay,az)
@@ -12404,7 +12315,7 @@ end,
 Default=true,
 NoDefaultCallback=true,
 Darker=true,
-Visible=aE.Enabled,
+Visible=aE.Enabled
 }
 local aF=aw:CreateToggle{
 Name="Animations",
@@ -12447,7 +12358,7 @@ Function=function()
 d:UpdateTextGUI()
 end,
 Darker=true,
-Visible=aK.Enabled,
+Visible=aK.Enabled
 }
 aJ=aw:CreateToggle{
 Name="Tint",
@@ -12457,7 +12368,7 @@ end,
 Default=true,
 NoDefaultCallback=true,
 Darker=true,
-Visible=aK.Enabled,
+Visible=aK.Enabled
 }
 local aL
 local aM=aw:CreateToggle{
@@ -12816,7 +12727,7 @@ Visible=false,
 }
 d:setupguicolorsync(a4,{
 Color1=bk,
-Default=true,
+Default=true
 })
 a4:CreateToggle{
 Name="Border",
