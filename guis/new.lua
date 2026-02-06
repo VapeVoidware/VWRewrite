@@ -38,6 +38,11 @@ for e,f in{"PreloadEvent","GUIColorChanged","SelfDestructEvent","VisibilityChang
 if d[f]then continue end
 d[f]=b(f)
 end
+for e,f in{"Categories","Modules","Overlays"}do
+if d[f]==nil then
+d[f]={}
+end
+end
 d.libraries=setmetatable(d.Libraries,{
 __index=function(e,f)
 local g=d.Libraries[f]
@@ -68,9 +73,6 @@ task.spawn(pcall,g,d)
 e.loadconns[f]=nil
 end
 end
-
-d.Categories={}
-d.Modules={}
 
 local e=cloneref or function(e)
 return e
@@ -302,6 +304,30 @@ name="wrap:api"
 end
 d.wrap=wrap
 
+local function connectDoubleClick(p,q,s)
+local t=0
+s=s or 0.25
+if not(q~=nil and type(q)=="function")then
+q=function()end
+else
+d.wrap(q)
+end
+
+warn("connectDoubleClick set up for",p)
+
+p.Activated:Connect(function()
+local u=tick()
+
+print(u-t,s)
+if u-t<=s then
+q()
+end
+
+t=u
+end)
+end
+d.connectDoubleClick=connectDoubleClick
+
 local function connectguicolorchange(p,q)
 p=wrap(p)
 local s
@@ -404,8 +430,12 @@ x=true
 if w then
 local E=D
 
-local F=(A+0.1)%1
-local G=(A+0.2)%1
+if s.Color1HueShift then
+local F=(A+s.Color1HueShift)%1
+E={Hue=F,Sat=B,Value=C}
+end
+local F=(A+(s.Color2HueShift or 0.1))%1
+local G=(A+(s.Color3HueShift or 0.2))%1
 local H={Hue=F,Sat=B,Value=C}
 local I={Hue=G,Sat=B,Value=C}
 
@@ -414,12 +444,16 @@ v:SetValue(H.Hue,H.Sat,H.Value)
 w:SetValue(I.Hue,I.Sat,I.Value)
 elseif v then
 local E=D
-local F=(A+0.1)%1
+local F=(A+(s.Color2HueShift or 0.1))%1
 local G={Hue=F,Sat=B,Value=C}
 
 u:SetValue(E.Hue,E.Sat,E.Value)
 v:SetValue(G.Hue,G.Sat,G.Value)
 else
+if s.Color1HueShift then
+local E=(A+s.Color1HueShift)%1
+D={Hue=E,Sat=B,Value=C}
+end
 u:SetValue(D.Hue,D.Sat,D.Value)
 end
 
@@ -870,6 +904,108 @@ end)
 end
 end)
 end
+
+local function makeDraggable2(H,I)
+H.InputBegan:Connect(function(J)
+if not I.Visible then
+return
+end
+
+if
+J.UserInputType==Enum.UserInputType.MouseButton1
+or J.UserInputType==Enum.UserInputType.Touch
+then
+
+local K=J.Position
+local L=I.Position
+
+local M
+M=h.InputChanged:Connect(function(N)
+if
+N.UserInputType==Enum.UserInputType.MouseMovement
+or N.UserInputType==Enum.UserInputType.Touch
+then
+
+local O=N.Position-K
+
+I.Position=UDim2.fromOffset(L.X.Offset+O.X,L.Y.Offset+O.Y)
+end
+end)
+
+J.Changed:Connect(function()
+if J.UserInputState==Enum.UserInputState.End then
+if M then
+M:Disconnect()
+end
+end
+end)
+end
+end)
+end
+
+local function setupGuiMoveCheck(H,I)
+local J=false
+local K
+H.InputBegan:Connect(function()
+J=true
+K=I.Position.X.Offset
+end)
+H.InputEnded:Connect(function()
+J=false
+
+end)
+return function()
+return K==nil or I.Position.X.Offset-K<2.1
+end
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 local function randomString()
 local H={}
@@ -4831,6 +4967,7 @@ end
 function d.CreateCategory(aa,ab)
 local ac={
 Type="Category",
+OriginalCategory=true,
 Expanded=false,
 }
 
@@ -4845,7 +4982,7 @@ ad.Text=""
 ad.Parent=v
 addBlur(ad)
 addCorner(ad)
-makeDraggable(ad)
+
 local ae=Instance.new"ImageLabel"
 ae.Name="Icon"
 ae.Size=ab.Size
@@ -4867,635 +5004,641 @@ af.FontFace=o.Font
 af.Parent=ad
 local ag=Instance.new"TextButton"
 ag.Name="Arrow"
-ag.Size=UDim2.fromOffset(40,40)
-ag.Position=UDim2.new(1,-40,0,0)
+
+
+ag.Size=UDim2.new(1,0,0,41)
+ag.Position=UDim2.fromOffset(0,0)
 ag.BackgroundTransparency=1
 ag.Text=""
 ag.Parent=ad
-local ah=Instance.new"ImageLabel"
-ah.Name="Arrow"
-ah.Size=UDim2.fromOffset(9,4)
-ah.Position=UDim2.fromOffset(20,18)
-ah.BackgroundTransparency=1
-ah.Image=u"vape/assets/new/expandup.png"
-ah.ImageColor3=Color3.fromRGB(140,140,140)
-ah.Rotation=180
-ah.Parent=ag
-local ai=Instance.new"ScrollingFrame"
-ai.Name="Children"
-ai.Size=UDim2.new(1,0,1,-41)
-ai.Position=UDim2.fromOffset(0,37)
+makeDraggable2(ag,ad)
+local ah=setupGuiMoveCheck(ag,ad)
+local ai=Instance.new"ImageLabel"
+ai.Name="Arrow"
+ai.Size=UDim2.fromOffset(9,4)
+
+ai.Position=UDim2.new(0.9,0,0,18)
 ai.BackgroundTransparency=1
-ai.BorderSizePixel=0
-ai.Visible=false
-ai.ScrollBarThickness=2
-ai.ScrollBarImageTransparency=0.75
-ai.CanvasSize=UDim2.new()
-ai.ClipsDescendants=true
-ai.Parent=ad
-local aj=Instance.new"Frame"
-aj.Name="Divider"
-aj.Size=UDim2.new(1,0,0,1)
+ai.Image=u"vape/assets/new/expandup.png"
+ai.ImageColor3=Color3.fromRGB(140,140,140)
+ai.Rotation=180
+ai.Parent=ag
+local aj=Instance.new"ScrollingFrame"
+aj.Name="Children"
+aj.Size=UDim2.new(1,0,1,-41)
 aj.Position=UDim2.fromOffset(0,37)
-aj.BackgroundColor3=Color3.new(1,1,1)
-aj.BackgroundTransparency=0.928
+aj.BackgroundTransparency=1
 aj.BorderSizePixel=0
 aj.Visible=false
+aj.ScrollBarThickness=2
+aj.ScrollBarImageTransparency=0.75
+aj.CanvasSize=UDim2.new()
+aj.ClipsDescendants=true
 aj.Parent=ad
-local ak=Instance.new"UIListLayout"
-ak.SortOrder=Enum.SortOrder.LayoutOrder
-ak.HorizontalAlignment=Enum.HorizontalAlignment.Center
-ak.Parent=ai
+local ak=Instance.new"Frame"
+ak.Name="Divider"
+ak.Size=UDim2.new(1,0,0,1)
+ak.Position=UDim2.fromOffset(0,37)
+ak.BackgroundColor3=Color3.new(1,1,1)
+ak.BackgroundTransparency=0.928
+ak.BorderSizePixel=0
+ak.Visible=false
+ak.Parent=ad
+local al=Instance.new"UIListLayout"
+al.SortOrder=Enum.SortOrder.LayoutOrder
+al.HorizontalAlignment=Enum.HorizontalAlignment.Center
+al.Parent=aj
 
-function ac.CreateModule(al,am)
-am.Function=a:wrap(am.Function,{
+function ac.CreateModule(am,an)
+an.Function=a:wrap(an.Function,{
 type="module",
-name=am.Name,
+name=an.Name,
 category=ab.Name,
 })
-d:Remove(am.Name)
-local an={
+d:Remove(an.Name)
+local ao={
 Enabled=false,
 Options={},
 Bind={},
+NoSave=an.NoSave,
 Index=getTableSize(d.Modules),
-ExtraText=am.ExtraText,
-Name=am.Name,
+ExtraText=an.ExtraText,
+Name=an.Name,
 Category=ab.Name,
-SavingID=am.SavingID,
-Toggled=c(`{tostring(am.Name)}_{tostring(ac.Name)}_{tostring(am.SavingID)}_{tostring(am.ExtraText)}`),
+SavingID=an.SavingID,
+Toggled=c(`{tostring(an.Name)}_{tostring(ac.Name)}_{tostring(an.SavingID)}_{tostring(an.ExtraText)}`),
 }
-am.Tooltip=am.Tooltip or am.Name
+an.Tooltip=an.Tooltip or an.Name
 
-local ao=am.DisplayName or am.Name
-local ap=false
-local aq=Instance.new"TextButton"
-aq.Name=am.Name
-aq.Size=UDim2.fromOffset(220,40)
-aq.BackgroundColor3=o.Main
-aq.BorderSizePixel=0
-aq.AutoButtonColor=false
-aq.Text="            "..ao
-aq.TextXAlignment=Enum.TextXAlignment.Left
-aq.TextColor3=m.Dark(o.Text,0.16)
-aq.TextSize=14
-aq.FontFace=o.Font
-aq.Parent=ai
-if am.Premium then
-local ar=Instance.new"TextLabel"
-ar.Parent=aq
-ar.SizeConstraint=Enum.SizeConstraint.RelativeXX
-ar.AutomaticSize=Enum.AutomaticSize.X
-ar.Size=UDim2.new(0,0,0,21)
-ar.BackgroundColor3=Color3.new(1,1,1)
+local ap=an.DisplayName or an.Name
+local aq=false
+local ar=Instance.new"TextButton"
+ar.Name=an.Name
+ar.Size=UDim2.fromOffset(220,40)
+ar.BackgroundColor3=o.Main
+ar.BorderSizePixel=0
+ar.AutoButtonColor=false
+ar.Text="            "..ap
+ar.TextXAlignment=Enum.TextXAlignment.Left
+ar.TextColor3=m.Dark(o.Text,0.16)
 ar.TextSize=14
-ar.TextTransparency=1
-ar.AnchorPoint=Vector2.new(0,0.5)
-ar.Text="Premium"
-ar.Position=UDim2.new(0,128,0.5,0)
-ar.TextColor3=Color3.new(0,0,0)
 ar.FontFace=o.Font
+ar.Parent=aj
+if an.Premium then
+local as=Instance.new"TextLabel"
+as.Parent=ar
+as.SizeConstraint=Enum.SizeConstraint.RelativeXX
+as.AutomaticSize=Enum.AutomaticSize.X
+as.Size=UDim2.new(0,0,0,21)
+as.BackgroundColor3=Color3.new(1,1,1)
+as.TextSize=14
+as.TextTransparency=1
+as.AnchorPoint=Vector2.new(0,0.5)
+as.Text="Premium"
+as.Position=UDim2.new(0,128,0.5,0)
+as.TextColor3=Color3.new(0,0,0)
+as.FontFace=o.Font
 
-connectvisibilitychange(function(as)
-n:Tween(ar,TweenInfo.new(0.5,Enum.EasingStyle.Quad),{
-BackgroundTransparency=as and 0 or 1
+connectvisibilitychange(function(at)
+n:Tween(as,TweenInfo.new(0.5,Enum.EasingStyle.Quad),{
+BackgroundTransparency=at and 0 or 1
 })
 end)
 
-addCorner(ar,UDim.new(0,5))
+addCorner(as,UDim.new(0,5))
 
-local as=ar:Clone()
-as.Parent=ar
-as.Position=UDim2.new()
-as.Size=UDim2.fromScale(1,1)
-as.BackgroundTransparency=1
-as.AnchorPoint=Vector2.new()
-as.AutomaticSize=Enum.AutomaticSize.None
-as.TextSize=12
-as.TextTransparency=0
-as.SizeConstraint=Enum.SizeConstraint.RelativeXY
+local at=as:Clone()
+at.Parent=as
+at.Position=UDim2.new()
+at.Size=UDim2.fromScale(1,1)
+at.BackgroundTransparency=1
+at.AnchorPoint=Vector2.new()
+at.AutomaticSize=Enum.AutomaticSize.None
+at.TextSize=12
+at.TextTransparency=0
+at.SizeConstraint=Enum.SizeConstraint.RelativeXY
 
-table.insert(d.Indicators,ar)
+table.insert(d.Indicators,as)
 end
-local ar=Instance.new"UIGradient"
-ar.Rotation=90
-ar.Enabled=false
-ar.Parent=aq
-local as=Instance.new"Frame"
-local at=Instance.new"TextButton"
-addTooltip(aq,am.Tooltip)
-addTooltip(at,"Click to bind")
-at.Name="Bind"
-at.Size=UDim2.fromOffset(20,21)
-at.Position=UDim2.new(1,-36,0,9)
-at.AnchorPoint=Vector2.new(1,0)
-at.BackgroundColor3=Color3.new(1,1,1)
-at.BackgroundTransparency=0.92
-at.BorderSizePixel=0
-at.AutoButtonColor=false
-at.Visible=false
-at.Text=""
-addCorner(at,UDim.new(0,4))
-local au=Instance.new"ImageLabel"
-au.Name="Icon"
-au.Size=UDim2.fromOffset(12,12)
-au.Position=UDim2.new(0.5,-6,0,5)
-au.BackgroundTransparency=1
-au.Image=u"vape/assets/new/bind.png"
-au.ImageColor3=m.Dark(o.Text,0.43)
-au.Parent=at
-local av=Instance.new"TextLabel"
-av.Size=UDim2.fromScale(1,1)
-av.Position=UDim2.fromOffset(0,1)
+local as=Instance.new"UIGradient"
+as.Rotation=90
+as.Enabled=false
+as.Parent=ar
+local at=Instance.new"Frame"
+local au=Instance.new"TextButton"
+addTooltip(ar,an.Tooltip)
+addTooltip(au,"Click to bind")
+au.Name="Bind"
+au.Size=UDim2.fromOffset(20,21)
+au.Position=UDim2.new(1,-36,0,9)
+au.AnchorPoint=Vector2.new(1,0)
+au.BackgroundColor3=Color3.new(1,1,1)
+au.BackgroundTransparency=0.92
+au.BorderSizePixel=0
+au.AutoButtonColor=false
+au.Visible=false
+au.Text=""
+addCorner(au,UDim.new(0,4))
+local av=Instance.new"ImageLabel"
+av.Name="Icon"
+av.Size=UDim2.fromOffset(12,12)
+av.Position=UDim2.new(0.5,-6,0,5)
 av.BackgroundTransparency=1
-av.Visible=false
-av.Text=""
-av.TextColor3=m.Dark(o.Text,0.43)
-av.TextSize=12
-av.FontFace=o.Font
-av.Parent=at
-local aw=Instance.new"ImageLabel"
-aw.Name="Cover"
-aw.Size=UDim2.fromOffset(154,40)
+av.Image=u"vape/assets/new/bind.png"
+av.ImageColor3=m.Dark(o.Text,0.43)
+av.Parent=au
+local aw=Instance.new"TextLabel"
+aw.Size=UDim2.fromScale(1,1)
+aw.Position=UDim2.fromOffset(0,1)
 aw.BackgroundTransparency=1
 aw.Visible=false
-aw.Image=u"vape/assets/new/bindbkg.png"
-aw.ScaleType=Enum.ScaleType.Slice
-aw.SliceCenter=Rect.new(0,0,141,40)
-aw.Parent=aq
-local ax=Instance.new"TextLabel"
-ax.Name="Text"
-ax.Size=UDim2.new(1,-10,1,-3)
+aw.Text=""
+aw.TextColor3=m.Dark(o.Text,0.43)
+aw.TextSize=12
+aw.FontFace=o.Font
+aw.Parent=au
+local ax=Instance.new"ImageLabel"
+ax.Name="Cover"
+ax.Size=UDim2.fromOffset(154,40)
 ax.BackgroundTransparency=1
-ax.Text="PRESS A KEY TO BIND"
-ax.TextColor3=o.Text
-ax.TextSize=11
-ax.FontFace=o.Font
-ax.Parent=aw
-at.Parent=aq
+ax.Visible=false
+ax.Image=u"vape/assets/new/bindbkg.png"
+ax.ScaleType=Enum.ScaleType.Slice
+ax.SliceCenter=Rect.new(0,0,141,40)
+ax.Parent=ar
+local ay=Instance.new"TextLabel"
+ay.Name="Text"
+ay.Size=UDim2.new(1,-10,1,-3)
+ay.BackgroundTransparency=1
+ay.Text="PRESS A KEY TO BIND"
+ay.TextColor3=o.Text
+ay.TextSize=11
+ay.FontFace=o.Font
+ay.Parent=ax
+au.Parent=ar
 
-local ay=at:Clone()
-ay.Parent=aq
-ay.Name="Star"
-ay.Icon.Image=u"vape/assets/new/star.png"
-ay.BackgroundColor3=Color3.fromRGB(255,255,255)
-ay.Visible=false
-ay.BackgroundTransparency=0
-ay.Position=UDim2.new(1,-70,0,9)
-addTooltip(ay,"Click to favorite")
+local az=au:Clone()
+az.Parent=ar
+az.Name="Star"
+az.Icon.Image=u"vape/assets/new/star.png"
+az.BackgroundColor3=Color3.fromRGB(255,255,255)
+az.Visible=false
+az.BackgroundTransparency=0
+az.Position=UDim2.new(1,-70,0,9)
+addTooltip(az,"Click to favorite")
 
-local az=Instance.new"UIStroke"
-az.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
-az.Transparency=0
-az.Thickness=2
-az.Color=Color3.fromRGB(255,255,0)
-az.Parent=aq
-local aA=az
-connectvisibilitychange(function(aB)
-aA.Enabled=an.StarActive
-if not aA.Enabled then return end
-n:Tween(aA,TweenInfo.new(0.5,Enum.EasingStyle.Quad),{
-Thickness=aB and 2 or 0,
+local aA=Instance.new"UIStroke"
+aA.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
+aA.Transparency=0
+aA.Thickness=2
+aA.Color=Color3.fromRGB(255,255,0)
+aA.Parent=ar
+local aB=aA
+connectvisibilitychange(function(aC)
+aB.Enabled=ao.StarActive
+if not aB.Enabled then return end
+n:Tween(aB,TweenInfo.new(0.5,Enum.EasingStyle.Quad),{
+Thickness=aC and 2 or 0,
 })
 end)
 
-an.InternalAddOnChange=Instance.new"BindableEvent"
-an.InternalAddOnChange.Event:Connect(function()
-ay.Position=at.Visible and UDim2.new(1,-70,0,9)or UDim2.new(1,-36,0,9)
+ao.InternalAddOnChange=Instance.new"BindableEvent"
+ao.InternalAddOnChange.Event:Connect(function()
+az.Position=au.Visible and UDim2.new(1,-70,0,9)or UDim2.new(1,-36,0,9)
 end)
-at:GetPropertyChangedSignal"Visible":Connect(function()
-an.InternalAddOnChange:Fire()
+au:GetPropertyChangedSignal"Visible":Connect(function()
+ao.InternalAddOnChange:Fire()
 end)
 
 local function updateModuleSorting()
-local aB={}
+local aC={}
 
-for aC,I in d.Modules do
-aB[I.Category]=aB[I.Category]or{starred={},normal={}}
+for I,J in d.Modules do
+aC[J.Category]=aC[J.Category]or{starred={},normal={}}
 
-local J={
-name=I.Name,
+local K={
+name=J.Name,
 
-textSize=E(I.Name,I.Object.TextSize,I.Object.Font).X
+textSize=E(J.Name,J.Object.TextSize,J.Object.Font).X
 }
 
-if I.StarActive then
-table.insert(aB[I.Category].starred,J)
+if J.StarActive then
+table.insert(aC[J.Category].starred,K)
 else
-table.insert(aB[I.Category].normal,J)
+table.insert(aC[J.Category].normal,K)
 end
 end
 
-local function sortByTextSize(aC,I)
-if aC.textSize==I.textSize then
-return aC.name>I.name
+local function sortByTextSize(I,J)
+if I.textSize==J.textSize then
+return I.name>J.name
 end
-return aC.textSize>I.textSize
-end
-
-for aC,I in aB do
-table.sort(I.starred,sortByTextSize)
-table.sort(I.normal,sortByTextSize)
-
-local J={}
-for K,L in I.starred do
-table.insert(J,L.name)
-end
-for K,L in I.normal do
-table.insert(J,L.name)
+return I.textSize>J.textSize
 end
 
-for K,L in J do
-if d.Modules[L]then
-d.Modules[L].Index=K
-d.Modules[L].Object.LayoutOrder=K
-d.Modules[L].Children.LayoutOrder=K
+for I,J in aC do
+table.sort(J.starred,sortByTextSize)
+table.sort(J.normal,sortByTextSize)
+
+local K={}
+for L,M in J.starred do
+table.insert(K,M.name)
+end
+for L,M in J.normal do
+table.insert(K,M.name)
+end
+
+for L,M in K do
+if d.Modules[M]then
+d.Modules[M].Index=L
+d.Modules[M].Object.LayoutOrder=L
+d.Modules[M].Children.LayoutOrder=L
 end
 end
 end
 end
 
-for aB,aC in{ay,at}do
-aC:GetPropertyChangedSignal"Visible":Connect(function()
-if aC.Visible and am.Premium then
-aC.Visible=false
+for aC,I in{az,au}do
+I:GetPropertyChangedSignal"Visible":Connect(function()
+if I.Visible and an.Premium then
+I.Visible=false
 end
 end)
 end
 
-an.StarActive=false
-function an.ToggleStar(aB,aC)
-if am.Premium then
-an.StarActive=false
+ao.StarActive=false
+function ao.ToggleStar(aC,I)
+if an.Premium then
+ao.StarActive=false
 else
-an.StarActive=not an.StarActive
+ao.StarActive=not ao.StarActive
 end
-ay.BackgroundColor3=an.StarActive and Color3.fromRGB(255,255,127)or Color3.fromRGB(255,255,255)
-aA.Enabled=an.StarActive
-ay.Visible=an.StarActive or ap or as.Visible
-if not aC then
+az.BackgroundColor3=ao.StarActive and Color3.fromRGB(255,255,127)or Color3.fromRGB(255,255,255)
+aB.Enabled=ao.StarActive
+az.Visible=ao.StarActive or aq or at.Visible
+if not I then
 if d.FavoriteNotifications~=nil and d.FavoriteNotifications.Enabled then
 d:CreateNotification(
 "Module Favorite",
-tostring(am.Name)
+tostring(an.Name)
 .."<font color='#FFFFFF'> has been </font>"
-..(an.StarActive and"<font color='#FAFF5A'>Favorited</font>"or"<font color='#FF5A5A'>Unfaved</font>")
+..(ao.StarActive and"<font color='#FAFF5A'>Favorited</font>"or"<font color='#FF5A5A'>Unfaved</font>")
 .."<font color='#FFFFFF'>!</font>",
 0.75
 )
 end
 end
-an.InternalAddOnChange:Fire()
+ao.InternalAddOnChange:Fire()
 updateModuleSorting()
 end
-if am.Star and not am.Premium then
-an:ToggleStar(true)
+if an.Star and not an.Premium then
+ao:ToggleStar(true)
 end
 
-local aB=Instance.new"TextButton"
-aB.Name="Dots"
-aB.Size=UDim2.fromOffset(25,40)
-aB.Position=UDim2.new(1,-25,0,0)
-aB.BackgroundTransparency=1
-aB.Text=""
-aB.Parent=aq
-local aC=Instance.new"ImageLabel"
+local aC=Instance.new"TextButton"
 aC.Name="Dots"
-aC.Size=UDim2.fromOffset(3,16)
-aC.Position=UDim2.fromOffset(4,12)
+aC.Size=UDim2.fromOffset(25,40)
+aC.Position=UDim2.new(1,-25,0,0)
 aC.BackgroundTransparency=1
-aC.Image=u"vape/assets/new/dots.png"
-aC.ImageColor3=m.Light(o.Main,0.37)
-aC.Parent=aB
-as.Name=am.Name.."Children"
-as.Size=UDim2.new(1,0,0,0)
-as.BackgroundColor3=m.Dark(o.Main,0.02)
-as.BorderSizePixel=0
-as.Visible=false
-as.Parent=ai
-as.ClipsDescendants=true
-an.Children=as
-local I=Instance.new"UIListLayout"
-I.SortOrder=Enum.SortOrder.LayoutOrder
-I.HorizontalAlignment=Enum.HorizontalAlignment.Center
-I.Parent=as
-local J=Instance.new"Frame"
-J.Name="Divider"
-J.Size=UDim2.new(1,0,0,1)
-J.Position=UDim2.new(0,0,1,-1)
-J.BackgroundColor3=Color3.new(0.19,0.19,0.19)
-J.BackgroundTransparency=0.52
-J.BorderSizePixel=0
-J.Visible=false
-J.Parent=aq
-am.Function=am.Function or function()end
-addMaid(an)
+aC.Text=""
+aC.Parent=ar
+local I=Instance.new"ImageLabel"
+I.Name="Dots"
+I.Size=UDim2.fromOffset(3,16)
+I.Position=UDim2.fromOffset(4,12)
+I.BackgroundTransparency=1
+I.Image=u"vape/assets/new/dots.png"
+I.ImageColor3=m.Light(o.Main,0.37)
+I.Parent=aC
+at.Name=an.Name.."Children"
+at.Size=UDim2.new(1,0,0,0)
+at.BackgroundColor3=m.Dark(o.Main,0.02)
+at.BorderSizePixel=0
+at.Visible=false
+at.Parent=aj
+at.ClipsDescendants=true
+ao.Children=at
+local J=Instance.new"UIListLayout"
+J.SortOrder=Enum.SortOrder.LayoutOrder
+J.HorizontalAlignment=Enum.HorizontalAlignment.Center
+J.Parent=at
+local K=Instance.new"Frame"
+K.Name="Divider"
+K.Size=UDim2.new(1,0,0,1)
+K.Position=UDim2.new(0,0,1,-1)
+K.BackgroundColor3=Color3.new(0.19,0.19,0.19)
+K.BackgroundTransparency=0.52
+K.BorderSizePixel=0
+K.Visible=false
+K.Parent=ar
+an.Function=an.Function or function()end
+addMaid(ao)
 
-local K
 local L
+local M
 
-an.OptionsVisibilityChanged=a.createCustomSignal(`OPTIONS_VISIBILITY_CHANGE_{tostring(am.Name)}_{tostring(ab.Name)}`)
+ao.OptionsVisibilityChanged=a.createCustomSignal(`OPTIONS_VISIBILITY_CHANGE_{tostring(an.Name)}_{tostring(ab.Name)}`)
 
 local function openOptions()
-if K then
-K:Cancel()
-end
 if L then
 L:Cancel()
 end
+if M then
+M:Cancel()
+end
 
-as.Visible=true
-an.OptionsVisibilityChanged:Fire(true)
+at.Visible=true
+ao.OptionsVisibilityChanged:Fire(true)
 
-local M=I.AbsoluteContentSize.Y/A.Scale
+local N=J.AbsoluteContentSize.Y/A.Scale
 
-K=n:Tween(
-as,
+L=n:Tween(
+at,
 TweenInfo.new(0.25,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),
-{Size=UDim2.new(1,0,0,M)}
+{Size=UDim2.new(1,0,0,N)}
 )
 end
 
 local function closeOptions()
-if K then
-K:Cancel()
-end
 if L then
 L:Cancel()
 end
+if M then
+M:Cancel()
+end
 
-L=n:Tween(
-as,
+M=n:Tween(
+at,
 TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.In),
 {Size=UDim2.new(1,0,0,0)}
 )
 
-L.Completed:Once(function()
-as.Visible=false
+M.Completed:Once(function()
+at.Visible=false
 end)
 task.delay(0.1,function()
-an.OptionsVisibilityChanged:Fire(false)
+ao.OptionsVisibilityChanged:Fire(false)
 end)
 end
 
 
-function an.SetBind(M,N,O,P)
-if N.Mobile then
-createMobileButton(an,Vector2.new(N.X,N.Y))
+function ao.SetBind(N,O,P,Q)
+if O.Mobile then
+createMobileButton(ao,Vector2.new(O.X,O.Y))
 return
 end
 
-M.Bind=table.clone(N)
-if O then
-ax.Text=#N<=0 and"BIND REMOVED"or"BOUND TO"
-aw.Size=UDim2.fromOffset(E(ax.Text,ax.TextSize).X+20,40)
+N.Bind=table.clone(O)
+if P then
+ay.Text=#O<=0 and"BIND REMOVED"or"BOUND TO"
+ax.Size=UDim2.fromOffset(E(ay.Text,ay.TextSize).X+20,40)
 task.delay(1,function()
-aw.Visible=false
+ax.Visible=false
 end)
 end
 
-if#N<=0 then
-av.Visible=false
-au.Visible=true
-at.Size=UDim2.fromOffset(20,21)
-else
-at.Visible=true
+if#O<=0 then
+aw.Visible=false
 av.Visible=true
-au.Visible=false
-av.Text=table.concat(N," + "):upper()
-at.Size=UDim2.fromOffset(
-math.max(E(av.Text,av.TextSize,av.Font).X+10,20),
+au.Size=UDim2.fromOffset(20,21)
+else
+au.Visible=true
+aw.Visible=true
+av.Visible=false
+aw.Text=table.concat(O," + "):upper()
+au.Size=UDim2.fromOffset(
+math.max(E(aw.Text,aw.TextSize,aw.Font).X+10,20),
 21
 )
 end
 
-local Q=ax.Text
+local R=ay.Text
 
-if Q=="BOUND TO"then
-Q=([[Bound to (<b><font color="#ffffff">%s</font></b>)]]):format(tostring(av.Text))
-elseif Q=="BIND REMOVED"then
-Q="Bind Removed"
+if R=="BOUND TO"then
+R=([[Bound to (<b><font color="#ffffff">%s</font></b>)]]):format(tostring(aw.Text))
+elseif R=="BIND REMOVED"then
+R="Bind Removed"
 else
-Q=nil
+R=nil
 end
 
-if Q~=nil and am.Name~=nil then
-d:CreateNotification(am.Name,Q,1.5,"info")
+if R~=nil and an.Name~=nil then
+d:CreateNotification(an.Name,R,1.5,"info")
 end
-if#N>0 and not P then
-d:CheckBounds(av.Text,an.Name)
+if#O>0 and not Q then
+d:CheckBounds(aw.Text,ao.Name)
 end
-an.InternalAddOnChange:Fire()
+ao.InternalAddOnChange:Fire()
 end
 
-function an.Toggle(M,N)
+function ao.Toggle(N,O)
 if d.ThreadFix then
 setthreadidentity(8)
 end
-M.Enabled=not M.Enabled
-M.Toggled:Fire()
-J.Visible=M.Enabled
-ar.Enabled=M.Enabled
-aq.TextColor3=(ap or as.Visible)and o.Text
+N.Enabled=not N.Enabled
+N.Toggled:Fire()
+K.Visible=N.Enabled
+as.Enabled=N.Enabled
+ar.TextColor3=(aq or at.Visible)and o.Text
 or m.Dark(o.Text,0.16)
-aq.BackgroundColor3=(ap or as.Visible)and m.Light(o.Main,0.02)
+ar.BackgroundColor3=(aq or at.Visible)and m.Light(o.Main,0.02)
 or o.Main
-aC.ImageColor3=M.Enabled and Color3.fromRGB(50,50,50)or m.Light(o.Main,0.37)
-au.ImageColor3=m.Dark(o.Text,0.43)
-av.TextColor3=m.Dark(o.Text,0.43)
-if not M.Enabled then
-for O,P in M.Connections do
-if type(P)=="function"then
-pcall(P)
+I.ImageColor3=N.Enabled and Color3.fromRGB(50,50,50)or m.Light(o.Main,0.37)
+av.ImageColor3=m.Dark(o.Text,0.43)
+aw.TextColor3=m.Dark(o.Text,0.43)
+if not N.Enabled then
+for P,Q in N.Connections do
+if type(Q)=="function"then
+pcall(Q)
 else
 pcall(function()
-P:Disconnect()
+Q:Disconnect()
 end)
 end
 end
-table.clear(M.Connections)
+table.clear(N.Connections)
 end
-if not N then
+if not O then
 d:UpdateTextGUI()
 end
-task.spawn(am.Function,M.Enabled)
+task.spawn(an.Function,N.Enabled)
 end
 
-for M,N in H do
-an["Create"..M]=function(O,P)
-return N(P,as,an)
+for N,O in H do
+ao["Create"..N]=function(P,Q)
+return O(Q,at,ao)
 end
-an["Add"..M]=an["Create"..M]
+ao["Add"..N]=ao["Create"..N]
 end
 
-at.MouseEnter:Connect(function()
-av.Visible=false
-au.Visible=not av.Visible
-au.Image=u"vape/assets/new/edit.png"
-if not an.Enabled then
-au.ImageColor3=m.Dark(o.Text,0.16)
+au.MouseEnter:Connect(function()
+aw.Visible=false
+av.Visible=not aw.Visible
+av.Image=u"vape/assets/new/edit.png"
+if not ao.Enabled then
+av.ImageColor3=m.Dark(o.Text,0.16)
 end
 end)
-at.MouseLeave:Connect(function()
-av.Visible=#an.Bind>0
-au.Visible=not av.Visible
-au.Image=u"vape/assets/new/bind.png"
-if not an.Enabled then
-au.ImageColor3=m.Dark(o.Text,0.43)
+au.MouseLeave:Connect(function()
+aw.Visible=#ao.Bind>0
+av.Visible=not aw.Visible
+av.Image=u"vape/assets/new/bind.png"
+if not ao.Enabled then
+av.ImageColor3=m.Dark(o.Text,0.43)
 end
 end)
-at.Activated:Connect(function()
-ax.Text="PRESS A KEY TO BIND"
-aw.Size=UDim2.fromOffset(E(ax.Text,ax.TextSize).X+20,40)
-aw.Visible=true
-d.Binding=an
+au.Activated:Connect(function()
+ay.Text="PRESS A KEY TO BIND"
+ax.Size=UDim2.fromOffset(E(ay.Text,ay.TextSize).X+20,40)
+ax.Visible=true
+d.Binding=ao
 end)
-ay.Activated:Connect(function()
-an:ToggleStar()
+az.Activated:Connect(function()
+ao:ToggleStar()
 end)
-aB.MouseEnter:Connect(function()
-if not an.Enabled then
-aC.ImageColor3=o.Text
+aC.MouseEnter:Connect(function()
+if not ao.Enabled then
+I.ImageColor3=o.Text
 end
 end)
-aB.MouseLeave:Connect(function()
-if not an.Enabled then
-aC.ImageColor3=m.Light(o.Main,0.37)
+aC.MouseLeave:Connect(function()
+if not ao.Enabled then
+I.ImageColor3=m.Light(o.Main,0.37)
 end
 end)
-aB.Activated:Connect(function()
+aC.Activated:Connect(function()
 
-if as.Visible then
+if at.Visible then
 closeOptions()
 else
 openOptions()
 end
 end)
-aB.MouseButton2Click:Connect(function()
+aC.MouseButton2Click:Connect(function()
 
-if as.Visible then
+if at.Visible then
 closeOptions()
 else
 openOptions()
 end
 end)
-aq.MouseEnter:Connect(function()
-ap=true
-if not an.Enabled and not as.Visible then
-aq.TextColor3=o.Text
-aq.BackgroundColor3=m.Light(o.Main,0.02)
+ar.MouseEnter:Connect(function()
+aq=true
+if not ao.Enabled and not at.Visible then
+ar.TextColor3=o.Text
+ar.BackgroundColor3=m.Light(o.Main,0.02)
 end
-at.Visible=#an.Bind>0 or ap or as.Visible
-ay.Visible=an.StarActive or ap or as.Visible
+au.Visible=#ao.Bind>0 or aq or at.Visible
+az.Visible=ao.StarActive or aq or at.Visible
 end)
-aq.MouseLeave:Connect(function()
-ap=false
-if not an.Enabled and not as.Visible then
-aq.TextColor3=m.Dark(o.Text,0.16)
-aq.BackgroundColor3=o.Main
+ar.MouseLeave:Connect(function()
+aq=false
+if not ao.Enabled and not at.Visible then
+ar.TextColor3=m.Dark(o.Text,0.16)
+ar.BackgroundColor3=o.Main
 end
-at.Visible=#an.Bind>0 or ap or as.Visible
-ay.Visible=an.StarActive or ap or as.Visible
+au.Visible=#ao.Bind>0 or aq or at.Visible
+az.Visible=ao.StarActive or aq or at.Visible
 end)
-as:GetPropertyChangedSignal"Visible":Connect(function()
-local M=as.Visible
-if M then
-if count(an.Options)<=0 then
-d:CreateNotification("Vape",`<font color="#ff8080"><b>⚠ No options found</b></font> for <font color="#7db8ff"><b>{tostring(am.Name)}</b></font> :c`,3)
-as.Visible=false
+at:GetPropertyChangedSignal"Visible":Connect(function()
+local N=at.Visible
+if N then
+if count(ao.Options)<=0 then
+d:CreateNotification("Vape",`<font color="#ff8080"><b>⚠ No options found</b></font> for <font color="#7db8ff"><b>{tostring(an.Name)}</b></font> :c`,3)
+at.Visible=false
 end
 end
 end)
-aq.Activated:Connect(function()
-an:Toggle()
+ar.Activated:Connect(function()
+ao:Toggle()
 end)
-aq.MouseButton2Click:Connect(function()
+ar.MouseButton2Click:Connect(function()
 
-if as.Visible then
+if at.Visible then
 closeOptions()
 else
 openOptions()
 end
 end)
 if d.isMobile then
-local M=false
-local N
+local N=false
+local O
 
-aq.MouseButton1Down:Connect(function()
-M=true
-local O,P=tick(),h:GetMouseLocation()
-local Q=0.75
+ar.MouseButton1Down:Connect(function()
+N=true
+local P,Q=tick(),h:GetMouseLocation()
+local R=0.75
 
 
-local R=Instance.new"Frame"
-R.Name="HoldProgress"
-R.Size=UDim2.new(0,0,0,3)
-R.Position=UDim2.new(0,0,1,-3)
-R.BackgroundColor3=Color3.fromRGB(100,150,255)
-R.BorderSizePixel=0
-R.Parent=aq
+local S=Instance.new"Frame"
+S.Name="HoldProgress"
+S.Size=UDim2.new(0,0,0,3)
+S.Position=UDim2.new(0,0,1,-3)
+S.BackgroundColor3=Color3.fromRGB(100,150,255)
+S.BorderSizePixel=0
+S.Parent=ar
 
 n:Tween(
-R,
-TweenInfo.new(Q,Enum.EasingStyle.Linear),
+S,
+TweenInfo.new(R,Enum.EasingStyle.Linear),
 {Size=UDim2.new(1,0,0,3)}
 )
 
 repeat
-M=(h:GetMouseLocation()-P).Magnitude<10
+N=(h:GetMouseLocation()-Q).Magnitude<10
 task.wait()
-until(tick()-O)>Q or not M or not v.Visible or d.Loaded==nil
+until(tick()-P)>R or not N or not v.Visible or d.Loaded==nil
 
-if R and R.Parent then
-R:Destroy()
+if S and S.Parent then
+S:Destroy()
 end
 
-if M and v.Visible then
+if N and v.Visible then
 if d.ThreadFix then
 setthreadidentity(8)
 end
 
 
-N=Instance.new"Frame"
-N.Name="BindingOverlay"
-N.Size=UDim2.fromScale(1,1)
-N.Position=UDim2.fromScale(0,0)
-N.BackgroundColor3=Color3.fromRGB(0,0,0)
-N.BackgroundTransparency=0.5
-N.BorderSizePixel=0
-N.ZIndex=1000
-N.Parent=v.Parent
-
-local S=Instance.new"TextLabel"
-S.Size=UDim2.fromScale(0.8,0.2)
-S.Position=UDim2.fromScale(0.5,0.4)
-S.AnchorPoint=Vector2.new(0.5,0.5)
-S.BackgroundColor3=m.Dark(o.Main,0.1)
-S.BackgroundTransparency=0
-S.BorderSizePixel=0
-S.Text="TAP ANYWHERE TO SET BUTTON POSITION"
-S.TextColor3=o.Text
-S.TextSize=18
-S.TextWrapped=true
-S.FontFace=o.Font
-S.Parent=N
-
-addCorner(S,UDim.new(0,8))
+O=Instance.new"Frame"
+O.Name="BindingOverlay"
+O.Size=UDim2.fromScale(1,1)
+O.Position=UDim2.fromScale(0,0)
+O.BackgroundColor3=Color3.fromRGB(0,0,0)
+O.BackgroundTransparency=0.5
+O.BorderSizePixel=0
+O.ZIndex=1000
+O.Parent=v.Parent
 
 local T=Instance.new"TextLabel"
-T.Size=UDim2.fromScale(0.8,0.1)
-T.Position=UDim2.fromScale(0.5,0.55)
-T.AnchorPoint=Vector2.new(0.5,0)
-T.BackgroundTransparency=1
-T.Text="Module: "..am.Name
-T.TextColor3=Color3.fromRGB(150,200,255)
-T.TextSize=14
+T.Size=UDim2.fromScale(0.8,0.2)
+T.Position=UDim2.fromScale(0.5,0.4)
+T.AnchorPoint=Vector2.new(0.5,0.5)
+T.BackgroundColor3=m.Dark(o.Main,0.1)
+T.BackgroundTransparency=0
+T.BorderSizePixel=0
+T.Text="TAP ANYWHERE TO SET BUTTON POSITION"
+T.TextColor3=o.Text
+T.TextSize=18
+T.TextWrapped=true
 T.FontFace=o.Font
-T.Parent=N
+T.Parent=O
+
+addCorner(T,UDim.new(0,8))
+
+local U=Instance.new"TextLabel"
+U.Size=UDim2.fromScale(0.8,0.1)
+U.Position=UDim2.fromScale(0.5,0.55)
+U.AnchorPoint=Vector2.new(0.5,0)
+U.BackgroundTransparency=1
+U.Text="Module: "..an.Name
+U.TextColor3=Color3.fromRGB(150,200,255)
+U.TextSize=14
+U.FontFace=o.Font
+U.Parent=O
 
 
-local U=n:Tween(
-S,
+local V=n:Tween(
+T,
 TweenInfo.new(0.5,Enum.EasingStyle.Quad,Enum.EasingDirection.InOut,-1,true),
 {TextTransparency=0.3}
 )
@@ -5505,39 +5648,39 @@ z.Visible=false
 d:BlurCheck()
 
 
-for V,W in d.Modules do
-if W.Bind.Button then
-W.Bind.Button.Visible=true
-W.Bind.Button.BackgroundTransparency=0.7
+for W,X in d.Modules do
+if X.Bind.Button then
+X.Bind.Button.Visible=true
+X.Bind.Button.BackgroundTransparency=0.7
 end
 end
 
-local V
-V=h.InputBegan:Connect(function(W)
-if W.UserInputType==Enum.UserInputType.Touch then
+local W
+W=h.InputBegan:Connect(function(X)
+if X.UserInputType==Enum.UserInputType.Touch then
 if d.ThreadFix then
 setthreadidentity(8)
 end
 
 
-if U then
-U:Cancel()
+if V then
+V:Cancel()
 end
-if N then
-N:Destroy()
+if O then
+O:Destroy()
 end
 
 
 createMobileButton(
-an,
-W.Position+Vector3.new(0,j:GetGuiInset().Y,0)
+ao,
+X.Position+Vector3.new(0,j:GetGuiInset().Y,0)
 )
 
 
 d:CreateNotification(
 "Mobile Bind Created",
 "<font color='#FFFFFF'>Button for </font><font color='#7db8ff'><b>"
-..am.Name
+..an.Name
 .."</b></font><font color='#FFFFFF'> has been placed!</font>",
 2
 )
@@ -5546,39 +5689,39 @@ v.Visible=true
 d:BlurCheck()
 
 
-for X,Y in d.Modules do
-if Y.Bind.Button then
-Y.Bind.Button.Visible=false
-Y.Bind.Button.BackgroundTransparency=0
+for Y,Z in d.Modules do
+if Z.Bind.Button then
+Z.Bind.Button.Visible=false
+Z.Bind.Button.BackgroundTransparency=0
 end
 end
 
-V:Disconnect()
+W:Disconnect()
 end
 end)
 
 
 
-local W
+local X
 
-W=task.delay(15,function()
+X=task.delay(15,function()
+if W then
+W:Disconnect()
+end
+if O then
+O:Destroy()
+end
 if V then
-V:Disconnect()
-end
-if N then
-N:Destroy()
-end
-if U then
-U:Cancel()
+V:Cancel()
 end
 
 v.Visible=true
 d:BlurCheck()
 
-for X,Y in d.Modules do
-if Y.Bind.Button then
-Y.Bind.Button.Visible=false
-Y.Bind.Button.BackgroundTransparency=0
+for Y,Z in d.Modules do
+if Z.Bind.Button then
+Z.Bind.Button.Visible=false
+Z.Bind.Button.BackgroundTransparency=0
 end
 end
 
@@ -5590,36 +5733,34 @@ d:CreateNotification(
 end)
 else
 
-if R and R.Parent then
-R:Destroy()
+if S and S.Parent then
+S:Destroy()
 end
 end
 end)
 
-aq.MouseButton1Up:Connect(function()
-M=false
+ar.MouseButton1Up:Connect(function()
+N=false
 end)
 end
-I:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
+J:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
 if d.ThreadFix then
 setthreadidentity(8)
 end
-as.Size=UDim2.new(1,0,0,I.AbsoluteContentSize.Y/A.Scale)
+at.Size=UDim2.new(1,0,0,J.AbsoluteContentSize.Y/A.Scale)
 end)
 
-function an.SetVisible(M,N)
-if N==nil then
-N=not M.Object.Visible
+function ao.SetVisible(N,O)
+if O==nil then
+O=not N.Object.Visible
 end
-M.Object.Visible=N
+N.Object.Visible=O
 end
 
-an.Object=aq
-an.Children=as
+ao.Object=ar
+ao.Children=at
 
-if not am.NoSave then
-d.Modules[am.SavingID or am.Name]=an
-end
+d.Modules[an.SavingID or an.Name]=ao
 
 updateModuleSorting()
 
@@ -5638,32 +5779,51 @@ updateModuleSorting()
 
 
 
-function an.Restart(M)
-if M.Enabled then
-M:Toggle()
+function ao.Restart(N)
+if N.Enabled then
+N:Toggle()
 task.wait(0.1)
-if M.Enabled then return end
-M:Toggle()
+if N.Enabled then return end
+N:Toggle()
 end
 end
 
-return an
+return ao
 end
 
-function ac.Expand(al,am)
-if am~=nil then
-if am==al.Expanded then return end
-al.Expanded=am
+function ac.Expand(am,an)
+if an~=nil then
+if an==am.Expanded then return end
+am.Expanded=an
 else
-al.Expanded=not al.Expanded
+am.Expanded=not am.Expanded
 end
-ai.Visible=al.Expanded
-ah.Rotation=al.Expanded and 0 or 180
+n:Tween(ai,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+Rotation=am.Expanded and 0 or 180,
+})
+if not d.Loaded then
+aj.Visible=am.Expanded
 ad.Size=UDim2.fromOffset(
 220,
-al.Expanded and math.min(41+ak.AbsoluteContentSize.Y/A.Scale,601)or 41
+am.Expanded and math.min(41+al.AbsoluteContentSize.Y/A.Scale,601)or 41
 )
-aj.Visible=ai.CanvasPosition.Y>10 and ai.Visible
+else
+if am.Expanded then
+aj.Visible=true
+end
+n:Tween(ad,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+Size=UDim2.fromOffset(
+220,
+am.Expanded and math.min(41+al.AbsoluteContentSize.Y/A.Scale,601)or 41
+)
+})
+
+
+
+
+
+end
+ak.Visible=aj.CanvasPosition.Y>10 and aj.Visible
 end
 
 if not ac.Expanded and ab.Visible then
@@ -5671,79 +5831,86 @@ ac:Expand()
 end
 
 ag.Activated:Connect(function()
+
+
+
+print(ah())
+if not ah()then
+return
+end
 ac:Expand()
 end)
 ag.MouseButton2Click:Connect(function()
 ac:Expand()
 end)
 ag.MouseEnter:Connect(function()
-ah.ImageColor3=Color3.fromRGB(220,220,220)
+ai.ImageColor3=Color3.fromRGB(220,220,220)
 end)
 ag.MouseLeave:Connect(function()
-ah.ImageColor3=Color3.fromRGB(140,140,140)
+ai.ImageColor3=Color3.fromRGB(140,140,140)
 end)
-ai:GetPropertyChangedSignal"CanvasPosition":Connect(function()
+aj:GetPropertyChangedSignal"CanvasPosition":Connect(function()
 if aa.ThreadFix then
 setthreadidentity(8)
 end
-aj.Visible=ai.CanvasPosition.Y>10 and ai.Visible
+ak.Visible=aj.CanvasPosition.Y>10 and aj.Visible
 end)
-ad.InputBegan:Connect(function(al)
+ad.InputBegan:Connect(function(am)
 if
-al.Position.Y<ad.AbsolutePosition.Y+41
-and al.UserInputType==Enum.UserInputType.MouseButton2
+am.Position.Y<ad.AbsolutePosition.Y+41
+and am.UserInputType==Enum.UserInputType.MouseButton2
 then
 ac:Expand()
 end
 end)
-ak:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
+al:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
 if aa.ThreadFix then
 setthreadidentity(8)
 end
-ai.CanvasSize=UDim2.fromOffset(0,ak.AbsoluteContentSize.Y/A.Scale)
+aj.CanvasSize=UDim2.fromOffset(0,al.AbsoluteContentSize.Y/A.Scale)
 if ac.Expanded then
-ad.Size=UDim2.fromOffset(220,math.min(41+ak.AbsoluteContentSize.Y/A.Scale,601))
+ad.Size=UDim2.fromOffset(220,math.min(41+al.AbsoluteContentSize.Y/A.Scale,601))
 end
 end)
 
-function ac.SetVisible(al,am)
-if am==nil then
-am=not al.Object.Visible
+function ac.SetVisible(am,an)
+if an==nil then
+an=not am.Object.Visible
 end
-al.LockedVisibility=am
-al.Object.Visible=am
-if am==false then
+am.LockedVisibility=an
+am.Object.Visible=an
+if an==false then
 pcall(function()
-al.Button.Object.Visible=false
+am.Button.Object.Visible=false
 end)
 end
 end
 
-function ac.CreateModuleCategory(al,am)
-local an,ao=pcall(function()
-local an={
+function ac.CreateModuleCategory(am,an)
+local ao,ap=pcall(function()
+local ao={
 Type="ModuleCategory",
 Expanded=false,
 Modules={},
-Name=am.Name,
+Name=an.Name,
 CategoryApi=ac,
-ExpandEvent=c(`ModuleCategory_ExpandEvent_{tostring(am.Name)}_{tostring(ac.Name)}`),
-UpExpand=am.UpExpand or false,
+ExpandEvent=c(`ModuleCategory_ExpandEvent_{tostring(an.Name)}_{tostring(ac.Name)}`),
+UpExpand=an.UpExpand or false,
 }
 
 
-local ao
+local ap
 success,err=pcall(function()
-ao=Instance.new"Frame"
-ao.Name=am.Name.."ModuleCategory"
-ao.Size=UDim2.fromOffset(220,45)
-ao.BackgroundColor3=am.BackgroundColor or m.Dark(o.Main,0.08)
-ao.BorderSizePixel=0
-if not(ai~=nil and ai.Parent~=nil)then
-error(`{am.Name}: Category Children are invalid!`)
+ap=Instance.new"Frame"
+ap.Name=an.Name.."ModuleCategory"
+ap.Size=UDim2.fromOffset(220,45)
+ap.BackgroundColor3=an.BackgroundColor or m.Dark(o.Main,0.08)
+ap.BorderSizePixel=0
+if not(aj~=nil and aj.Parent~=nil)then
+error(`{an.Name}: Category Children are invalid!`)
 return
 end
-ao.Parent=ai
+ap.Parent=aj
 end)
 if not success then
 warn("[ModuleCategory] Frame creation failed:",err)
@@ -5753,10 +5920,10 @@ end
 
 success,err=pcall(function()
 addTooltip(
-ao,
-am.Name
+ap,
+an.Name
 .." "
-..(am.Name~="Special"and"Special Category"or"Category")
+..(an.Name~="Special"and"Special Category"or"Category")
 )
 end)
 if not success then
@@ -5764,17 +5931,17 @@ warn("[ModuleCategory] Tooltip failed:",err)
 end
 
 
-if am.StrokeColor then
+if an.StrokeColor then
 success,err=pcall(function()
-local ap=Instance.new"UIStroke"
-ap.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
-ap.Color=am.StrokeColor
-ap.Thickness=am.StrokeThickness or 1
-ap.Transparency=am.StrokeTransparency or 0.5
-ap.Parent=ao
-if am.GuiColorSync then
-connectguicolorchange(function(aq,ar,as)
-ap.Color=Color3.fromHSV(aq,ar,as)
+local aq=Instance.new"UIStroke"
+aq.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
+aq.Color=an.StrokeColor
+aq.Thickness=an.StrokeThickness or 1
+aq.Transparency=an.StrokeTransparency or 0.5
+aq.Parent=ap
+if an.GuiColorSync then
+connectguicolorchange(function(ar,as,at)
+aq.Color=Color3.fromHSV(ar,as,at)
 end)
 end
 end)
@@ -5785,31 +5952,31 @@ end
 
 
 success,err=pcall(function()
-addCorner(ao,UDim.new(0,4))
+addCorner(ap,UDim.new(0,4))
 end)
 if not success then
 warn("[ModuleCategory] Corner failed:",err)
 end
 
 
-local ap
+local aq
 success,err=pcall(function()
-ap=Instance.new"TextButton"
-ap.Name="Header"
-ap.Size=UDim2.fromOffset(220,45)
+aq=Instance.new"TextButton"
+aq.Name="Header"
+aq.Size=UDim2.fromOffset(220,45)
 
-if an.UpExpand then
-ap.AnchorPoint=Vector2.new(0,1)
-ap.Position=UDim2.new(0,0,1,0)
+if ao.UpExpand then
+aq.AnchorPoint=Vector2.new(0,1)
+aq.Position=UDim2.new(0,0,1,0)
 else
-ap.Position=UDim2.fromOffset(0,0)
+aq.Position=UDim2.fromOffset(0,0)
 end
 
-ap.BackgroundTransparency=1
-ap.BorderSizePixel=0
-ap.AutoButtonColor=false
-ap.Text=""
-ap.Parent=ao
+aq.BackgroundTransparency=1
+aq.BorderSizePixel=0
+aq.AutoButtonColor=false
+aq.Text=""
+aq.Parent=ap
 end)
 if not success then
 warn("[ModuleCategory] Header button creation failed:",err)
@@ -5817,110 +5984,110 @@ return
 end
 
 
-local aq
+local ar
 success,err=pcall(function()
-aq=Instance.new"Frame"
-aq.Name="AccentBar"
-aq.Size=UDim2.fromOffset(3,45)
+ar=Instance.new"Frame"
+ar.Name="AccentBar"
+ar.Size=UDim2.fromOffset(3,45)
 
-aq.Position=an.UpExpand and UDim2.new(0,0,1,-45)or UDim2.fromOffset(0,0)
+ar.Position=ao.UpExpand and UDim2.new(0,0,1,-45)or UDim2.fromOffset(0,0)
 
-aq.BackgroundColor3=am.AccentColor
-or am.StrokeColor
+ar.BackgroundColor3=an.AccentColor
+or an.StrokeColor
 or Color3.fromRGB(100,150,255)
-aq.BorderSizePixel=0
-aq.Parent=ao
+ar.BorderSizePixel=0
+ar.Parent=ap
 
-if am.GuiColorSync then
-connectguicolorchange(function(ar,as,at)
-aq.BackgroundColor3=Color3.fromHSV(ar,as,at)
+if an.GuiColorSync then
+connectguicolorchange(function(as,at,au)
+ar.BackgroundColor3=Color3.fromHSV(as,at,au)
 end)
 end
 
-local ar=Instance.new"UICorner"
-ar.CornerRadius=UDim.new(0,4)
-ar.Parent=aq
+local as=Instance.new"UICorner"
+as.CornerRadius=UDim.new(0,4)
+as.Parent=ar
 end)
 if not success then
 warn("[ModuleCategory] Accent bar creation failed:",err)
 end
 
 
-local ar
+local as
 success,err=pcall(function()
-ar=Instance.new"ImageLabel"
-ar.Name="Icon"
-ar.Size=am.Size or UDim2.fromOffset(20,20)
-ar.Position=UDim2.fromOffset(15,15)
-ar.BackgroundTransparency=1
-ar.Image=am.Icon or""
-ar.ImageColor3=o.Text
-ar.Parent=ap
+as=Instance.new"ImageLabel"
+as.Name="Icon"
+as.Size=an.Size or UDim2.fromOffset(20,20)
+as.Position=UDim2.fromOffset(15,15)
+as.BackgroundTransparency=1
+as.Image=an.Icon or""
+as.ImageColor3=o.Text
+as.Parent=aq
 end)
 if not success then
 warn("[ModuleCategory] Icon creation failed:",err)
 end
 
 
-local as
+local at
 success,err=pcall(function()
-as=Instance.new"TextLabel"
-as.Name="Title"
-as.Size=UDim2.new(1,-90,0,45)
-as.Position=UDim2.fromOffset(45,0)
-as.BackgroundTransparency=1
-as.Text=am.Name
-as.TextXAlignment=Enum.TextXAlignment.Left
-as.TextColor3=o.Text
-as.TextSize=14
-as.FontFace=Font.new(o.Font.Family,Enum.FontWeight.SemiBold)
-as.Parent=ap
+at=Instance.new"TextLabel"
+at.Name="Title"
+at.Size=UDim2.new(1,-90,0,45)
+at.Position=UDim2.fromOffset(45,0)
+at.BackgroundTransparency=1
+at.Text=an.Name
+at.TextXAlignment=Enum.TextXAlignment.Left
+at.TextColor3=o.Text
+at.TextSize=14
+at.FontFace=Font.new(o.Font.Family,Enum.FontWeight.SemiBold)
+at.Parent=aq
 end)
 if not success then
 warn("[ModuleCategory] Title creation failed:",err)
 end
 
 
-local at
+local au
 success,err=pcall(function()
-at=Instance.new"TextLabel"
-at.Name="Count"
-at.Size=UDim2.fromOffset(40,45)
-at.Position=UDim2.new(1,-85,0,0)
-at.BackgroundTransparency=1
-at.Text="0"
-at.TextXAlignment=Enum.TextXAlignment.Right
-at.TextColor3=m.Dark(o.Text,0.4)
-at.TextSize=12
-at.FontFace=o.Font
-at.Parent=ap
+au=Instance.new"TextLabel"
+au.Name="Count"
+au.Size=UDim2.fromOffset(40,45)
+au.Position=UDim2.new(1,-85,0,0)
+au.BackgroundTransparency=1
+au.Text="0"
+au.TextXAlignment=Enum.TextXAlignment.Right
+au.TextColor3=m.Dark(o.Text,0.4)
+au.TextSize=12
+au.FontFace=o.Font
+au.Parent=aq
 end)
 if not success then
 warn("[ModuleCategory] Count label creation failed:",err)
 end
 
 
-local au,av
+local av,aw
 success,err=pcall(function()
-au=Instance.new"TextButton"
-au.Name="Arrow"
-au.Size=UDim2.fromOffset(45,45)
-au.Position=UDim2.new(1,-45,0,0)
-au.BackgroundTransparency=1
-au.Text=""
-au.Parent=ap
-
-av=Instance.new"ImageLabel"
+av=Instance.new"TextButton"
 av.Name="Arrow"
-av.Size=UDim2.fromOffset(12,7)
-av.Position=UDim2.fromOffset(17,19)
+av.Size=UDim2.fromOffset(45,45)
+av.Position=UDim2.new(1,-45,0,0)
 av.BackgroundTransparency=1
-av.Image=u"vape/assets/new/expandup.png"
-av.ImageColor3=o.Text
+av.Text=""
+av.Parent=aq
 
-av.Rotation=an.UpExpand and 0 or 180
+aw=Instance.new"ImageLabel"
+aw.Name="Arrow"
+aw.Size=UDim2.fromOffset(12,7)
+aw.Position=UDim2.fromOffset(17,19)
+aw.BackgroundTransparency=1
+aw.Image=u"vape/assets/new/expandup.png"
+aw.ImageColor3=o.Text
 
-av.Parent=au
+aw.Rotation=ao.UpExpand and 0 or 180
+
+aw.Parent=av
 end)
 if not success then
 warn("[ModuleCategory] Arrow button creation failed:",err)
@@ -5928,46 +6095,46 @@ end
 
 
 success,err=pcall(function()
-local aw=Instance.new"UIGradient"
-aw.Color=ColorSequence.new{
+local ax=Instance.new"UIGradient"
+ax.Color=ColorSequence.new{
 ColorSequenceKeypoint.new(0,Color3.new(1,1,1)),
 ColorSequenceKeypoint.new(1,Color3.fromRGB(0.95,0.95,0.95)),
 }
-aw.Rotation=90
-aw.Parent=ao
+ax.Rotation=90
+ax.Parent=ap
 end)
 if not success then
 warn("[ModuleCategory] Gradient creation failed:",err)
 end
 
 
-local aw,ax
+local ax,ay
 success,err=pcall(function()
-aw=Instance.new"Frame"
-aw.Name="ModulesContainer"
-aw.Size=UDim2.new(1,0,0,0)
+ax=Instance.new"Frame"
+ax.Name="ModulesContainer"
+ax.Size=UDim2.new(1,0,0,0)
 
-if an.UpExpand then
-aw.AnchorPoint=Vector2.new(0,1)
-aw.Position=UDim2.new(0,0,1,-45)
+if ao.UpExpand then
+ax.AnchorPoint=Vector2.new(0,1)
+ax.Position=UDim2.new(0,0,1,-45)
 else
-aw.Position=UDim2.fromOffset(0,45)
+ax.Position=UDim2.fromOffset(0,45)
 end
 
-aw.BackgroundTransparency=1
-aw.BorderSizePixel=0
-aw.Visible=false
-aw.ClipsDescendants=true
-aw.Parent=ao
+ax.BackgroundTransparency=1
+ax.BorderSizePixel=0
+ax.Visible=false
+ax.ClipsDescendants=true
+ax.Parent=ap
 
-ax=Instance.new"UIListLayout"
-ax.SortOrder=Enum.SortOrder.LayoutOrder
-ax.HorizontalAlignment=Enum.HorizontalAlignment.Center
-ax.Padding=UDim.new(0,2)
+ay=Instance.new"UIListLayout"
+ay.SortOrder=Enum.SortOrder.LayoutOrder
+ay.HorizontalAlignment=Enum.HorizontalAlignment.Center
+ay.Padding=UDim.new(0,2)
 
-ax.VerticalAlignment=an.UpExpand and Enum.VerticalAlignment.Bottom or Enum.VerticalAlignment.Top
+ay.VerticalAlignment=ao.UpExpand and Enum.VerticalAlignment.Bottom or Enum.VerticalAlignment.Top
 
-ax.Parent=aw
+ay.Parent=ax
 end)
 if not success then
 warn("[ModuleCategory] Modules container creation failed:",err)
@@ -5976,39 +6143,39 @@ end
 
 local function updateCount()
 success,err=pcall(function()
-at.Text=tostring(#an.Modules)
+au.Text=tostring(#ao.Modules)
 end)
 if not success then
 warn("[ModuleCategory] updateCount failed:",err)
 end
 end
 
-function an.Toggle(ay,az)
+function ao.Toggle(az,aA)
 success,err=pcall(function()
-if az~=nil then
-if az==ay.Expanded then
+if aA~=nil then
+if aA==az.Expanded then
 return
 end
-ay.Expanded=az
+az.Expanded=aA
 else
-ay.Expanded=not ay.Expanded
+az.Expanded=not az.Expanded
 end
 
-an.ExpandEvent:Fire()
+ao.ExpandEvent:Fire()
 
-local aA=ay.Expanded and ax.AbsoluteContentSize.Y/A.Scale or 0
+local aB=az.Expanded and ay.AbsoluteContentSize.Y/A.Scale or 0
 
 task.spawn(function()
-flickerTextEffect(as,true,am.Name)
+flickerTextEffect(at,true,an.Name)
 end)
 
-local aB=ay.UpExpand and 180 or 0
-local aC=ay.UpExpand and 0 or 180
+local aC=az.UpExpand and 180 or 0
+local I=az.UpExpand and 0 or 180
 
-n:Tween(av,TweenInfo.new(0.25,Enum.EasingStyle.Quad),{
-Rotation=ay.Expanded and aB or aC,
-ImageColor3=ay.Expanded
-and(am.AccentColor or am.StrokeColor or Color3.fromRGB(
+n:Tween(aw,TweenInfo.new(0.25,Enum.EasingStyle.Quad),{
+Rotation=az.Expanded and aC or I,
+ImageColor3=az.Expanded
+and(an.AccentColor or an.StrokeColor or Color3.fromRGB(
 100,
 150,
 255
@@ -6016,9 +6183,9 @@ and(am.AccentColor or am.StrokeColor or Color3.fromRGB(
 or o.Text,
 })
 
-n:Tween(ar,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
-ImageColor3=ay.Expanded
-and(am.AccentColor or am.StrokeColor or Color3.fromRGB(
+n:Tween(as,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+ImageColor3=az.Expanded
+and(an.AccentColor or an.StrokeColor or Color3.fromRGB(
 100,
 150,
 255
@@ -6026,35 +6193,35 @@ and(am.AccentColor or am.StrokeColor or Color3.fromRGB(
 or o.Text,
 })
 
-n:Tween(ar,TweenInfo.new(0.5,Enum.EasingStyle.Quad),{
-Rotation=ay.Expanded and 360 or 0,
+n:Tween(as,TweenInfo.new(0.5,Enum.EasingStyle.Quad),{
+Rotation=az.Expanded and 360 or 0,
 })
 
-n:Tween(ao,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
-BackgroundColor3=ay.Expanded and m.Dark(o.Main,0.12)
-or(am.BackgroundColor or m.Dark(o.Main,0.08)),
+n:Tween(ap,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+BackgroundColor3=az.Expanded and m.Dark(o.Main,0.12)
+or(an.BackgroundColor or m.Dark(o.Main,0.08)),
 })
 
-aw.Visible=true
-n:Tween(aw,TweenInfo.new(0.3,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{
-Size=UDim2.new(1,0,0,aA),
+ax.Visible=true
+n:Tween(ax,TweenInfo.new(0.3,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{
+Size=UDim2.new(1,0,0,aB),
 })
 
-if ay.UpExpand then
-n:Tween(ao,TweenInfo.new(0.3,Enum.EasingStyle.Quad),{
-Size=UDim2.fromOffset(220,45+aA),
-Position=UDim2.fromOffset(0,-(ay.Expanded and aA or 0)),
+if az.UpExpand then
+n:Tween(ap,TweenInfo.new(0.3,Enum.EasingStyle.Quad),{
+Size=UDim2.fromOffset(220,45+aB),
+Position=UDim2.fromOffset(0,-(az.Expanded and aB or 0)),
 })
 else
-n:Tween(ao,TweenInfo.new(0.3,Enum.EasingStyle.Quad),{
-Size=UDim2.fromOffset(220,45+aA),
+n:Tween(ap,TweenInfo.new(0.3,Enum.EasingStyle.Quad),{
+Size=UDim2.fromOffset(220,45+aB),
 })
 end
 
-if not ay.Expanded then
+if not az.Expanded then
 task.delay(0.3,function()
-if not ay.Expanded then
-aw.Visible=false
+if not az.Expanded then
+ax.Visible=false
 end
 end)
 end
@@ -6064,16 +6231,16 @@ warn("[ModuleCategory] Toggle failed:",err)
 end
 end
 
-function an.Expand(ay)
-ay:Toggle()
+function ao.Expand(az)
+az:Toggle()
 end
 
-function an.Load(ay,az)
+function ao.Load(az,aA)
 success,err=pcall(function()
-for aA,aB in az do
-local aC=d.Modules[aB]
-if aC then
-ay:AddModule(aC)
+for aB,aC in aA do
+local I=d.Modules[aC]
+if I then
+az:AddModule(I)
 end
 end
 end)
@@ -6082,120 +6249,120 @@ warn("[ModuleCategory] Load failed:",err)
 end
 end
 
-function an.AddModule(ay,az)
+function ao.AddModule(az,aA)
 success,err=pcall(function()
-if not az or not az.Object then
+if not aA or not aA.Object then
 return
 end
 
-table.insert(ay.Modules,az)
+table.insert(az.Modules,aA)
 updateCount()
 
-az.Object.Parent=aw
-if az.Children then
-az.Children.Parent=aw
+aA.Object.Parent=ax
+if aA.Children then
+aA.Children.Parent=ax
 end
-az.ModuleCategory=an
+aA.ModuleCategory=ao
 end)
 if not success then
 warn("[ModuleCategory] AddModule failed:",err)
 end
 
-return az
+return aA
 end
 
-function an.AddToggle(ay,az)
-local aA
-aA=ac:CreateModule{
-Name=az.Name,
-Function=function(aB)
+function ao.AddToggle(az,aA)
+local aB
+aB=ac:CreateModule{
+Name=aA.Name,
+Function=function(aC)
 task.spawn(function()
-if az.Enabled~=aB then
-az:Toggle()
-end
-end)
-end,
-Default=az.Enabled,
-Tooltip=az.Name,
-NoSave=true,
-}
-az.Toggled:Connect(function()
-if aA.Enabled~=az.Enabled then
-print("toggleapi called",az.Name,az.Enabled,aA.Enabled)
+if aA.Enabled~=aC then
 aA:Toggle()
 end
 end)
-ay:AddModule(aA)
+end,
+Default=aA.Enabled,
+Tooltip=aA.Name,
+NoSave=true,
+}
+aA.Toggled:Connect(function()
+if aB.Enabled~=aA.Enabled then
+print("toggleapi called",aA.Name,aA.Enabled,aB.Enabled)
+aB:Toggle()
+end
+end)
+az:AddModule(aB)
 end
 
-function an.SetVisible(ay,az)
+function ao.SetVisible(az,aA)
 success,err=pcall(function()
-if az==nil then
-az=not ao.Visible
+if aA==nil then
+aA=not ap.Visible
 end
-ao.Visible=az
+ap.Visible=aA
 end)
 if not success then
 warn("[ModuleCategory] SetVisible failed:",err)
 end
 end
 
-an.Button={Toggle=function()end}
+ao.Button={Toggle=function()end}
 
-function an.CreateModule(ay,az)
-local aA
+function ao.CreateModule(az,aA)
+local aB
 success,err=pcall(function()
-aA=ac:CreateModule(az)
-ay:AddModule(aA)
+aB=ac:CreateModule(aA)
+az:AddModule(aB)
 end)
 if not success then
 warn("[ModuleCategory] CreateModule failed:",err)
 end
-return aA
+return aB
 end
 
 
 success,err=pcall(function()
-ap.Activated:Connect(function()
-an:Toggle()
+aq.Activated:Connect(function()
+ao:Toggle()
 end)
 
-au.Activated:Connect(function()
-an:Toggle()
+av.Activated:Connect(function()
+ao:Toggle()
 end)
 
-ap.MouseEnter:Connect(function()
-if not an.Expanded then
-n:Tween(ao,TweenInfo.new(0.15),{
-BackgroundColor3=m.Light(am.BackgroundColor or o.Main,0.05),
+aq.MouseEnter:Connect(function()
+if not ao.Expanded then
+n:Tween(ap,TweenInfo.new(0.15),{
+BackgroundColor3=m.Light(an.BackgroundColor or o.Main,0.05),
 })
-n:Tween(av,TweenInfo.new(0.15),{
-ImageColor3=am.AccentColor
-or am.StrokeColor
+n:Tween(aw,TweenInfo.new(0.15),{
+ImageColor3=an.AccentColor
+or an.StrokeColor
 or Color3.fromRGB(100,150,255),
 })
 end
 end)
 
-ap.MouseLeave:Connect(function()
-if not an.Expanded then
-n:Tween(ao,TweenInfo.new(0.15),{
-BackgroundColor3=am.BackgroundColor or m.Dark(o.Main,0.08),
+aq.MouseLeave:Connect(function()
+if not ao.Expanded then
+n:Tween(ap,TweenInfo.new(0.15),{
+BackgroundColor3=an.BackgroundColor or m.Dark(o.Main,0.08),
 })
-n:Tween(av,TweenInfo.new(0.15),{
+n:Tween(aw,TweenInfo.new(0.15),{
 ImageColor3=o.Text,
 })
 end
 end)
 
-ax:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
-if an.Expanded then
-local ay=ax.AbsoluteContentSize.Y/A.Scale
-aw.Size=UDim2.new(1,0,0,ay)
-ao.Size=UDim2.fromOffset(220,45+ay)
+ay:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
+if ao.Expanded then
+local az=ay.AbsoluteContentSize.Y/A.Scale
+ax.Size=UDim2.new(1,0,0,az)
+ap.Size=UDim2.fromOffset(220,45+az)
 
-if an.UpExpand then
-ao.Position=UDim2.fromOffset(0,-ay)
+if ao.UpExpand then
+ap.Position=UDim2.fromOffset(0,-az)
 end
 end
 end)
@@ -6204,24 +6371,24 @@ if not success then
 warn("[ModuleCategory] Event connections failed:",err)
 end
 
-an.Object=ao
-an.Container=aw
+ao.Object=ap
+ao.Container=ax
 
-return an
+return ao
 end)
 
-if not an then
-warn("[ModuleCategory] CreateModuleCategory failed:",ao)
+if not ao then
+warn("[ModuleCategory] CreateModuleCategory failed:",ap)
 return nil
 end
-return an and ao
+return ao and ap
 end
 
 ad:GetPropertyChangedSignal"Visible":Connect(function()
-local al=ac
-if al.LockedVisibility==nil then return end
-if ad.Visible~=al.LockedVisibility then
-ad.Visible=al.LockedVisibility
+local am=ac
+if am.LockedVisibility==nil then return end
+if ad.Visible~=am.LockedVisibility then
+ad.Visible=am.LockedVisibility
 end
 end)
 
@@ -6232,14 +6399,14 @@ Size=ab.Size,
 Window=ad,
 Default=ab.Visible
 }
-function ac.ToggleCategoryButton(al,am)
-ac.Button:Toggle(am)
+function ac.ToggleCategoryButton(am,an)
+ac.Button:Toggle(an)
 end
 if ac.Button~=nil and ac.Button.Object~=nil and ac.Button.Object.Parent~=nil then
 ac.Button.Object:GetPropertyChangedSignal"Visible":Connect(function()
-local al=ac
-if al.LockedVisibility==nil then return end
-if al.LockedVisibility then return end
+local am=ac
+if am.LockedVisibility==nil then return end
+if am.LockedVisibility then return end
 ac.Button.Object.Visible=false
 end)
 end
@@ -6606,7 +6773,7 @@ ao.Parent=an
 
 local ap=Instance.new"Frame"
 ap.Name="CustomChildren"
-ap.Size=UDim2.new(1,0,0,200)
+ap.Size=UDim2.new(1,0,0,ag.CustomOverlay and 40 or 200)
 ap.Position=UDim2.fromScale(0,1)
 ap.BackgroundTransparency=1
 ap.Parent=ah
@@ -6652,12 +6819,12 @@ local av=math.min(41+au,601)
 if as.Expanded then
 if as.UpExpand then
 n:Tween(ah,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
-Size=UDim2.fromOffset(ah.Size.X.Offset,av),
+Size=UDim2.fromOffset(220,av),
 Position=UDim2.fromOffset(ah.Position.X.Offset,ah.Position.Y.Offset-(av-41)),
 })
 else
 n:Tween(ah,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
-Size=UDim2.fromOffset(ah.Size.X.Offset,av),
+Size=UDim2.fromOffset(220,av),
 })
 end
 else
@@ -6734,6 +6901,11 @@ end)
 an.MouseButton2Click:Connect(function()
 ai:Expand(true)
 end)
+connectDoubleClick(an,function()
+if not ai.Expanded then
+ai:Expand(true)
+end
+end)
 am.Activated:Connect(function()
 ai:Pin()
 end)
@@ -6766,6 +6938,7 @@ end))
 ai:Update()
 ai.Object=ah
 ai.Children=ap
+af.Overlays[ag.Name]=ai
 af.Categories[ag.Name]=ai
 
 return ai
@@ -9718,6 +9891,11 @@ if al.Text=="Type to search..."then
 al.Text=""
 end
 end)
+d.VisibilityChanged:Connect(function()
+if not ap and v.Visible then
+flickerTextEffect(al,true,"Type to search...")
+end
+end)
 al.FocusLost:Connect(function()
 ap=false
 if al.Text==""then
@@ -11315,6 +11493,7 @@ ListEnabled=an.ListEnabled,
 end
 
 for am,an in ah.Modules do
+if an.NoSave then continue end
 al.Modules[an.SavingID or am]={
 Enabled=an.Enabled,
 Favorited=an.StarActive,
@@ -11326,6 +11505,7 @@ Options=d:SaveOptions(an,true),
 end
 
 for am,an in ah.Legit.Modules do
+if an.NoSave then continue end
 al.Legit[am]={
 Enabled=an.Enabled,
 Position=an.Children and{X=an.Children.Position.X.Offset,Y=an.Children.Position.Y.Offset}or nil,
@@ -11972,7 +12152,6 @@ GuiColorSync=true,
 UpExpand=true,
 }
 ar.ExpandEvent:Connect(function()
-print"expand event"
 local as=d.Categories.Main.MainGui
 for at,au in as:GetChildren()do
 if au:IsA"TextButton"then
@@ -11993,6 +12172,41 @@ n:Tween(au,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
 Size=UDim2.fromOffset(218,ar.Expanded and 0 or 27),
 TextTransparency=ar.Expanded and 1 or 0,
 })
+end
+end
+for at,au in d.Categories do
+if not(au.OriginalCategory or(au.Type~=nil and au.Type=="CategoryList"))then continue end
+if not au.Object then continue end
+if au.Object.Parent==nil then continue end
+if not au.Button then continue end
+if not au.Button.Enabled then continue end
+local av=au.Object:FindFirstChild"Title"
+if av then
+n:Tween(av,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+TextTransparency=ar.Expanded and 1 or 0
+})
+end
+local aw=au.Object:FindFirstChild"Icon"
+if aw then
+n:Tween(aw,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+ImageTransparency=ar.Expanded and 1 or 0,
+})
+end
+if ar.Expanded and not au.OriginalCategorySize then
+au.OriginalCategorySize=au.Object.Size.Y.Offset
+end
+if au.OriginalCategorySize then
+if not ar.Expanded then
+au.Object.Visible=true
+end
+local ax=n:Tween(au.Object,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+Size=UDim2.fromOffset(220,(ar.Expanded and 0 or au.OriginalCategorySize))
+})
+if ar.Expanded then
+ax.Completed:Connect(function()
+au.Object.Visible=false
+end)
+end
 end
 end
 end)
