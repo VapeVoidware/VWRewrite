@@ -5193,6 +5193,7 @@ aA.Transparency=0
 aA.Thickness=2
 aA.Color=Color3.fromRGB(255,255,0)
 aA.Parent=ar
+aA.Enabled=false
 local aB=aA
 connectvisibilitychange(function(aC)
 aB.Enabled=ao.StarActive
@@ -11245,11 +11246,12 @@ local ar=ah.Modules[ap]
 if not ar then
 continue
 end
-if ar.Options and aq.Options then
-ah:LoadOptions(ar,aq.Options)
-end
 if ar.StarActive~=nil and aq.Favorited~=nil and ar.StarActive~=aq.Favorited and ar.ToggleStar~=nil and type(ar.ToggleStar)=="function"then
 ar:ToggleStar(true)
+end
+if ar.NoSave then continue end
+if ar.Options and aq.Options then
+ah:LoadOptions(ar,aq.Options)
 end
 if aq.Enabled~=ar.Enabled then
 if ai then
@@ -11493,7 +11495,6 @@ ListEnabled=an.ListEnabled,
 end
 
 for am,an in ah.Modules do
-if an.NoSave then continue end
 al.Modules[an.SavingID or am]={
 Enabled=an.Enabled,
 Favorited=an.StarActive,
