@@ -305,6 +305,7 @@ end
 d.wrap=wrap
 
 local function connectDoubleClick(p,q,s)
+if not shared.VoidDev then return end
 local t=0
 s=s or 0.25
 if not(q~=nil and type(q)=="function")then
@@ -312,8 +313,6 @@ q=function()end
 else
 d.wrap(q)
 end
-
-warn("connectDoubleClick set up for",p)
 
 p.Activated:Connect(function()
 local u=tick()
@@ -7254,6 +7253,7 @@ end)
 
 local function revertToNormalMode(V)
 au=false
+al:Fire"None"
 if not V then
 as()
 end
