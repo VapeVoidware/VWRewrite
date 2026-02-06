@@ -116,6 +116,10 @@ local function finishLoading()
 		if (not teleportedServers) and not shared.VapeIndependent and not shared.DISABLED_QUEUE_ON_TELEPORT and not shared.FORCE_DISABLED_QUEUE_ON_TELEPORT then
 			teleportedServers = true
 			local teleportScript = [[
+				if shared.VoidwareAutoExecutingState then
+					return
+				end
+				shared.VoidwareAutoExecutingState = true
 				shared.vapereload = true
 				task.wait(2.5)
 				if shared.VapeDeveloper and isfile('vape/loader.lua') then
