@@ -234,7 +234,7 @@ end
 
 --if not shared.VapeDeveloper then
 local TESTING_COMMIT = "master"
-local PRODUCTION_COMMIT = "912406a04cd985cf3df8acbfe7fa075f525fea86"
+local PRODUCTION_COMMIT = "0bc4e8173d94fad3bca47f233165811355dc16af"
 local commit = shared.CustomCommit or (shared.TestingMode or shared.StagingMode) and TESTING_COMMIT or PRODUCTION_COMMIT
 shared.META_COMMIT = "a109a0a4441e42d497fa7e3cdc04d770dd853a04"
 if (isfile("vape/profiles/commit.txt") and readfile("vape/profiles/commit.txt") or "") ~= commit then
