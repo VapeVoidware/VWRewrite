@@ -196,28 +196,30 @@ local smf = function(id, core)
 	id = tostring(id)
 	local suc, err = pcall(makefolder, id)
 	if (not suc or not isfolder(id)) and core then
-		local RESULT_HANDLER = Instance.new("BindableFunction")
-		RESULT_HANDLER.OnInvoke = function(text: string)
-			if text ~= "Join Discord Server" then
-				return
+		pcall(function()
+			local RESULT_HANDLER = Instance.new("BindableFunction")
+			RESULT_HANDLER.OnInvoke = function(text: string)
+				if text ~= "Join Discord Server" then
+					return
+				end
+				pcall(function()
+					setclipboard("discord.gg/voidware")
+					game:GetService("StarterGui"):SetCore("SendNotification", {
+						Title = "Voidware Bedwars",
+						Text = "discord.gg/voidware copied to your clipboard!",
+						Duration = 5,
+					})
+				end)
 			end
-			pcall(function()
-				setclipboard("discord.gg/voidware")
-				game:GetService("StarterGui"):SetCore("SendNotification", {
-					Title = "Voidware Bedwars",
-					Text = "discord.gg/voidware copied to your clipboard!",
-					Duration = 5,
-				})
-			end)
-		end
-		game:GetService("StarterGui"):SetCore("SendNotification", {
-			Title = "Voidware Bedwars",
-			Text = "Your executor's file system doesn't work! Try reinstalling it or join the discord server for support :c",
-			Button1 = "Join Discord Server",
-			Button2 = "Ok",
-			Duration = 15,
-			Callback = RESULT_HANDLER,
-		})
+			game:GetService("StarterGui"):SetCore("SendNotification", {
+				Title = "Voidware Bedwars",
+				Text = "Your executor's file system doesn't work! Try reinstalling it or join the discord server for support :c",
+				Button1 = "Join Discord Server",
+				Button2 = "Ok",
+				Duration = 15,
+				Callback = RESULT_HANDLER,
+			})
+		end)
 		error("Executor File System Error")
 	end
 end
