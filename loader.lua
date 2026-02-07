@@ -195,7 +195,7 @@ end
 local smf = function(id, core)
 	id = tostring(id)
 	local suc, err = pcall(makefolder, id)
-	if (not suc or not isfile(id)) and core then
+	if (not suc or not isfolder(id)) and core then
 		local RESULT_HANDLER = Instance.new("BindableFunction")
 		RESULT_HANDLER.OnInvoke = function(text: string)
 			if text ~= "Join Discord Server" then
