@@ -5064,21 +5064,22 @@ function ac.CreateModule(am,an)
 an.Function=a:wrap(an.Function,{
 type="module",
 name=an.Name,
-category=ab.Name,
+category=ab.Name
 })
 d:Remove(an.Name)
 local ao={
 Enabled=false,
 Options={},
 Bind={},
-NoSave=an.NoSave,
-Index=getTableSize(d.Modules),
-ExtraText=an.ExtraText,
-Name=an.Name,
 Category=ab.Name,
-SavingID=an.SavingID,
+Index=getTableSize(d.Modules),
 Toggled=c(`{tostring(an.Name)}_{tostring(ac.Name)}_{tostring(an.SavingID)}_{tostring(an.ExtraText)}`),
 }
+for ap,aq in{"Name","SavingID","LegitSynced","ExtraText","NoSave"}do
+if an[aq]~=nil then
+ao[aq]=an[aq]
+end
+end
 an.Tooltip=an.Tooltip or an.Name
 
 local ap=an.DisplayName or an.Name
@@ -5272,9 +5273,16 @@ end
 
 for aC,I in{az,au}do
 I:GetPropertyChangedSignal"Visible":Connect(function()
-if I.Visible and an.Premium then
-I.Visible=false
+if not an.Premium then
+return
 end
+if not I.Visible then
+return
+end
+
+task.defer(function()
+I.Visible=false
+end)
 end)
 end
 
@@ -5846,7 +5854,6 @@ ag.Activated:Connect(function()
 
 
 
-print(ah())
 if not ah()then
 return
 end
@@ -6300,7 +6307,6 @@ NoSave=true,
 }
 aA.Toggled:Connect(function()
 if aB.Enabled~=aA.Enabled then
-print("toggleapi called",aA.Name,aA.Enabled,aB.Enabled)
 aB:Toggle()
 end
 end)
@@ -6397,11 +6403,16 @@ return ao and ap
 end
 
 ad:GetPropertyChangedSignal"Visible":Connect(function()
-local am=ac
-if am.LockedVisibility==nil then return end
-if ad.Visible~=am.LockedVisibility then
-ad.Visible=am.LockedVisibility
+if ac.LockedVisibility==nil then
+return
 end
+if ad.Visible==ac.LockedVisibility then
+return
+end
+
+task.defer(function()
+ad.Visible=ac.LockedVisibility
+end)
 end)
 
 ac.Button=aa.Categories.Main:CreateButton{
@@ -9827,6 +9838,17 @@ end)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 local ap=false
 local aq
 al:GetPropertyChangedSignal"Text":Connect(function()
@@ -10365,6 +10387,7 @@ end
 
 local at=table.clone(aq)
 at.Function=as
+at.LegitSynced=true
 local au=ai:CreateModule(at)
 
 local av=Instance.new"TextButton"
@@ -11126,6 +11149,12 @@ function d.Load(ah,ai,aj)
 if not ah._profile_loaded then
 ah.PreloadEvent:Fire()
 end
+ah._loading=ah._loading or 0
+ah._loading+=1
+
+if ah._loading>3 then
+error"Load recursion detected"
+end
 ah._profile_loaded=true
 if not ai then
 ah.GUIColor:SetValue(nil,nil,nil,4)
@@ -11256,18 +11285,21 @@ if aq.Position then
 d:LoadPosition(ar.Object,aq.Position)
 end
 end
-
 for ap,aq in ao.Modules do
 local ar=ah.Modules[ap]
 if not ar then
 continue
 end
-if ar.StarActive~=nil and aq.Favorited~=nil and ar.StarActive~=aq.Favorited and ar.ToggleStar~=nil and type(ar.ToggleStar)=="function"then
-ar:ToggleStar(true)
-end
+if ar.LegitSynced then continue end
 if ar.NoSave then continue end
+
+
+
 if ar.Options and aq.Options then
 ah:LoadOptions(ar,aq.Options)
+end
+if ar.StarActive~=nil and aq.Favorited~=nil and ar.StarActive~=aq.Favorited and ar.ToggleStar~=nil and type(ar.ToggleStar)=="function"then
+ar:ToggleStar(true)
 end
 if aq.Enabled~=ar.Enabled then
 if ai then
@@ -11906,7 +11938,7 @@ at
 d:CreateNotification("Language Updated",au,3,"info")
 end
 end)
-end)
+end,5)
 am:CreateButton{
 Name="Reset current profile",
 Function=function()
