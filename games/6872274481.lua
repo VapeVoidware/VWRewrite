@@ -71,7 +71,13 @@ for e,f in game:GetChildren()do
 if tostring(f)=="CoreGui"then
 continue
 end
-getgenv()[f.Name]=a.Services[f.Name]
+if tostring(f)~=tostring(f.ClassName)then
+continue
+end
+local g=a.Services[f.Name]
+if g~=nil then
+getgenv()[f.Name]=g
+end
 end
 end)
 
