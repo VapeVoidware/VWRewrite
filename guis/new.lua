@@ -7054,7 +7054,7 @@ local aB=false
 local aC="STAGING"
 
 local function checkWhitelistForRating()
-if aC~="PRODUCTION"then
+if aC~="PRODUCTION"and not shared.VoidDev then
 az=true
 aB=false
 end
@@ -7096,6 +7096,9 @@ az=true
 
 return aB
 end
+
+am:Connect(checkWhitelistForRating)
+af.Event:Connect(checkWhitelistForRating)
 
 
 local aD=Instance.new"Frame"
@@ -7482,7 +7485,7 @@ aF.Text="RATE CONFIG"
 aF.TextColor3=Color3.new(1,1,1)
 aF.TextSize=12
 aF.AutoButtonColor=false
-aF.Visible=true
+aF.Visible=false
 aF.ZIndex=2
 addCorner(aF)
 
@@ -7660,7 +7663,7 @@ aU.PlaceholderText="Share your thoughts about this config... (max 500 characters
 aU.Text=""
 aU.Font=Enum.Font.Gotham
 aU.TextColor3=Color3.new(1,1,1)
-aU.TextSize=14
+aU.TextSize=17
 aU.TextWrapped=true
 aU.TextXAlignment=Enum.TextXAlignment.Left
 aU.TextYAlignment=Enum.TextYAlignment.Top
@@ -7676,8 +7679,8 @@ aV.Position=UDim2.new(1,-60,1,-22)
 aV.Size=UDim2.fromOffset(50,20)
 aV.Font=Enum.Font.Gotham
 aV.Text="0/500"
-aV.TextColor3=Color3.fromRGB(120,120,120)
-aV.TextSize=11
+aV.TextColor3=Color3.fromRGB(200,200,200)
+aV.TextSize=15
 aV.TextXAlignment=Enum.TextXAlignment.Right
 aV.ZIndex=4
 
@@ -9579,6 +9582,7 @@ bo.instance.Visible=false
 
 if
 bn:lower():gsub(" ",""):find(bf.Text:lower():gsub(" ",""),1,true)
+or tostring(bo.username):lower():gsub(" ",""):find(bf.Text:lower():gsub(" ",""),1,true)
 or bf.Text==""
 then
 bo.instance.Visible=true
@@ -11873,9 +11877,9 @@ end
 ah._loading=ah._loading or 0
 ah._loading+=1
 
-if ah._loading>3 then
-error"Load recursion detected"
-end
+
+
+
 ah._profile_loaded=true
 if not ai then
 ah.GUIColor:SetValue(nil,nil,nil,4)
