@@ -3808,7 +3808,7 @@ ah=nil
 end
 end)))
 
-if F.hand and an[F.hand.tool.Name]then
+if F.hand and F.hand.tool and an[F.hand.tool.Name]then
 task.spawn(an[F.hand.tool.Name],getItem(F.hand.tool.Name),ah,(ag.Enabled and r or x.character.RootPart).CFrame.LookVector)
 return
 end
@@ -5637,7 +5637,7 @@ end,
 warlock=function()
 local ai
 repeat
-if F.hand.tool and F.hand.tool.Name=='warlock_staff'then
+if F.hand and F.hand.tool and F.hand.tool.Name=='warlock_staff'then
 local aj=x.EntityPosition{
 Range=30,
 Part='RootPart',
@@ -5742,7 +5742,7 @@ L.ProjectileController:createLocalProjectile(al,'telepearl','telepearl',ai,nil,a
 ah:InvokeServer(ak.tool,'telepearl','telepearl',ai,ai,ao,i:GenerateGUID(true),{drawDurationSeconds=1,shotId=i:GenerateGUID(false)},workspace:GetServerTimeNow()-0.045)
 end
 
-if F.hand then
+if F.hand and F.hand.tool then
 switchItem(F.hand.tool)
 end
 end
@@ -6234,7 +6234,7 @@ return false
 end
 
 local function getScaffoldBlock()
-if F.hand.toolType=='block'then
+if F.hand and F.hand.toolType=='block'and F.hand.tool then
 return F.hand.tool.Name,F.hand.amount
 elseif(not ak.Enabled)then
 local aq,ar=getWool()

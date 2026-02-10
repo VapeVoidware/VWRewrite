@@ -31,7 +31,15 @@ FavoriteNotifications={},
 BindNotifications={},
 Version="4.18",
 Windows={},
-Indicators={}
+Indicators={},
+AliasesConfig={KitESP=
+{
+"ElderESP",
+"OrbESP",
+"BeeESP",
+"MetalESP"
+}
+}
 }
 d.DefaultColor=Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
 for e,f in{"PreloadEvent","GUIColorChanged","SelfDestructEvent","VisibilityChanged","OnLoadEvent","ProfileChangedEvent","MainGuiSettingsOpenedEvent"}do
@@ -106,14 +114,16 @@ local j=f.GuiService local k=
 f.RunService
 local l=f.HttpService
 
+local m=f.Players
+
 d.isMobile=h.TouchEnabled and not h.KeyboardEnabled
 
-local m={}
-local n={
+local n={}
+local o={
 tweens={},
 tweenstwo={},
 }
-local o={
+local p={
 Main=Color3.fromRGB(0,0,0),
 Text=Color3.fromRGB(255,255,255),
 Font=Font.fromEnum(Enum.Font.Arial),
@@ -121,255 +131,295 @@ FontSemiBold=Font.fromEnum(Enum.Font.Arial,Enum.FontWeight.SemiBold),
 Tween=TweenInfo.new(0.16,Enum.EasingStyle.Linear),
 }
 
-local function getTableSize(p)
-local q=0
-for r in p do
-q+=1
+local function getTableSize(q)
+local r=0
+for s in q do
+r+=1
 end
-return q
+return r
 end
 
-local function loopClean(p,q)
-q=q or{}
-if q[p]then
+local function loopClean(q,r)
+r=r or{}
+if r[q]then
 return
 end
-q[p]=true
+r[q]=true
 
-local r={
+local s={
 ModuleCategory=true,
 CategoryApi=true,
 }
 
-for s,t in pairs(p)do
-if not r[s]and type(t)=="table"then
-loopClean(t,q)
+for t,u in pairs(q)do
+if not s[t]and type(u)=="table"then
+loopClean(u,r)
 end
-p[s]=nil
+q[t]=nil
 end
 end
 
-local function addMaid(p)
-p.Connections={}
-function p.Clean(q,r)
-if typeof(r)=="Instance"then
-table.insert(q.Connections,{
+local function addMaid(q)
+q.Connections={}
+function q.Clean(r,s)
+if typeof(s)=="Instance"then
+table.insert(r.Connections,{
 Disconnect=function()
-r:ClearAllChildren()
-r:Destroy()
+s:ClearAllChildren()
+s:Destroy()
 end,
 })
-elseif type(r)=="function"then
-table.insert(q.Connections,{
-Disconnect=r,
+elseif type(s)=="function"then
+table.insert(r.Connections,{
+Disconnect=s,
 })
-elseif typeof(r)=="thread"then
-table.insert(q.Connections,{
+elseif typeof(s)=="thread"then
+table.insert(r.Connections,{
 Disconnect=function()
-pcall(task.cancel,r)
+pcall(task.cancel,s)
 end,
 })
 else
-table.insert(q.Connections,r)
+table.insert(r.Connections,s)
 end
 end
 end
 addMaid(d)
 
-local function loadJson(p,q)
+local function loadJson(q,r)
+local s,t=pcall(function()
+local s=r and q or readfile(q)
+return l:JSONDecode(s)
+end)
+return s and type(t)=="table"and t or nil
+end
+
+local function decode(q)
+return loadJson(q,true)
+end
+
+local function encode(q)
 local r,s=pcall(function()
-local r=q and p or readfile(p)
-return l:JSONDecode(r)
+return l:JSONEncode(q)
 end)
-return r and type(s)=="table"and s or nil
+if not r then
+warn(`[encode]: {tostring(s)}`)
+end
+return r and s
 end
 
-local function decode(p)
-return loadJson(p,true)
+local function removeSpaces(q)
+return q:gsub(" ","")
 end
 
-local function encode(p)
-local q,r=pcall(function()
-return l:JSONEncode(p)
-end)
-if not q then
-warn(`[encode]: {tostring(r)}`)
-end
-return q and r
+local function highlightIgnoringSpaces(q,r)
+local s=q:lower():gsub("%s+","")
+local t=r:lower():gsub("%s+","")
+
+local u=s:find(t)
+if not u then
+return q
 end
 
-local function flickerTextEffect(p,q,r)
-if q==true and p.TextTransparency==0 then
-n:Tween(p,TweenInfo.new(0.15),{
+
+local v,w
+local x=0
+
+for y=1,#q do
+local z=q:sub(y,y)
+if z~=" "then
+x+=1
+end
+
+if x==u and not v then
+v=y
+end
+
+if x==u+#t-1 then
+w=y
+break
+end
+end
+
+local y=q:sub(1,v-1)
+local z=q:sub(v,w)
+local A=q:sub(w+1)
+
+return y..`<b><font color="#FFFFFF">{z}</font></b>`..A
+end
+
+local function flickerTextEffect(q,r,s)
+if r==true and q.TextTransparency==0 then
+o:Tween(q,TweenInfo.new(0.15),{
 TextTransparency=1,
 }).Completed:Wait()
 end
-if r~=nil then
-p.Text=r
+if s~=nil then
+q.Text=s
 end
-n:Tween(p,TweenInfo.new(0.15),{
-TextTransparency=q and 0 or 1,
+o:Tween(q,TweenInfo.new(0.15),{
+TextTransparency=r and 0 or 1,
 }).Completed:Wait()
 end
 
-local function flickerImageEffect(p,q,r)
-if not p or not(p:IsA"ImageButton"or p:IsA"ImageLabel")then
+local function flickerImageEffect(q,r,s)
+if not q or not(q:IsA"ImageButton"or q:IsA"ImageLabel")then
 return
 end
 
-q=q or 0.5
-r=r or 0.15
+r=r or 0.5
+s=s or 0.15
 
-local s=tick()
-local t=p.Size
-local u=p.ImageColor3
-local v=p.ImageTransparency
+local t=tick()
+local u=q.Size
+local v=q.ImageColor3
+local w=q.ImageTransparency
 
-local w=Instance.new"UIScale"
-w.Scale=1
-w.Parent=p
+local x=Instance.new"UIScale"
+x.Scale=1
+x.Parent=q
 
 task.spawn(function()
-n:Tween(w,TweenInfo.new(r),{
+o:Tween(x,TweenInfo.new(s),{
 Scale=1.2
 })
-while tick()-s<q and p.Parent do
-n:Tween(p,TweenInfo.new(r),{
+while tick()-t<r and q.Parent do
+o:Tween(q,TweenInfo.new(s),{
 ImageTransparency=0,
 ImageColor3=Color3.fromRGB(255,255,255)
 })
 
-task.wait(r)
+task.wait(s)
 
-n:Tween(p,TweenInfo.new(r),{
-ImageTransparency=v,
-ImageColor3=u
+o:Tween(q,TweenInfo.new(s),{
+ImageTransparency=w,
+ImageColor3=v
 })
 
-task.wait(r)
+task.wait(s)
 end
 
 pcall(function()
-w:Destroy()
+x:Destroy()
 end)
-n:Tween(w,TweenInfo.new(r),{
+o:Tween(x,TweenInfo.new(s),{
 Scale=1,
 })
-p.Size=t
-p.ImageTransparency=v
+q.Size=u
+q.ImageTransparency=w
 end)
 end
 
-local function Color3ToHex(p)
-local q=math.floor(p.R*255)
-local r=math.floor(p.G*255)
-local s=math.floor(p.B*255)
-return string.format("#%02x%02x%02x",q,r,s)
+local function Color3ToHex(q)
+local r=math.floor(q.R*255)
+local s=math.floor(q.G*255)
+local t=math.floor(q.B*255)
+return string.format("#%02x%02x%02x",r,s,t)
 end
 
-local function hsv(p,q,r)
-local s,t=pcall(function()
-return Color3.fromHSV(p,q,r)
+local function hsv(q,r,s)
+local t,u=pcall(function()
+return Color3.fromHSV(q,r,s)
 end)
-return s,t
+return t,u
 end
 
-local function str(p)
-return tostring(p)
+local function str(q)
+return tostring(q)
 end
 
-local function tblcheck(p)
-return(p~=nil and type(p)=="table")
+local function tblcheck(q)
+return(q~=nil and type(q)=="table")
 end
 
-local function num(p)
-if p==nil then
-return p
-end
-return tonumber(p)
-end
-
-local function count(p)
-local q=0
-for r,s in p do
-q=q+1
-end
+local function num(q)
+if q==nil then
 return q
 end
+return tonumber(q)
+end
 
-local function wrap(p)
-return a:wrap(p,{
+local function count(q)
+local r=0
+for s,t in q do
+r=r+1
+end
+return r
+end
+
+local function wrap(q)
+return a:wrap(q,{
 name="wrap:api"
 })
 end
 d.wrap=wrap
 
-local function connectDoubleClick(p,q,s)
+local function connectDoubleClick(q,r,t)
 if not shared.VoidDev then return end
-local t=0
-s=s or 0.25
-if not(q~=nil and type(q)=="function")then
-q=function()end
+local u=0
+t=t or 0.25
+if not(r~=nil and type(r)=="function")then
+r=function()end
 else
-d.wrap(q)
+d.wrap(r)
 end
 
-p.Activated:Connect(function()
-local u=tick()
+q.Activated:Connect(function()
+local v=tick()
 
-print(u-t,s)
-if u-t<=s then
-q()
+print(v-u,t)
+if v-u<=t then
+r()
 end
 
-t=u
+u=v
 end)
 end
 d.connectDoubleClick=connectDoubleClick
 
-local function connectguicolorchange(p,q)
-p=wrap(p)
-local s
-if type(p)=="function"then
-p(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
-s=d.GUIColorChanged.Event:Connect(p)
+local function connectguicolorchange(q,r)
+q=wrap(q)
+local t
+if type(q)=="function"then
+q(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
+t=d.GUIColorChanged.Event:Connect(q)
 else
-p.BackgroundColor3=Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
-s=d.GUIColorChanged.Event:Connect(function(t,u,v)
-p.BackgroundColor3=Color3.fromHSV(t,u,v)
+q.BackgroundColor3=Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
+t=d.GUIColorChanged.Event:Connect(function(u,v,w)
+q.BackgroundColor3=Color3.fromHSV(u,v,w)
 end)
 end
-if q and type(p)=="function"then
-d:Clean(s)
+if r and type(q)=="function"then
+d:Clean(t)
 return{
 run=function()
-p(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
+q(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
 end,
-conn=s
+conn=t
 }
 end
-return s
+return t
 end
 d.connectguicolorchange=connectguicolorchange
 
 d.GuiColorSyncAPI={}
-function d.setupguicolorsync(p,q,s,t)
-if not(t~=nil and type(t)=="function")then
-t=function()end
+function d.setupguicolorsync(q,r,t,u)
+if not(u~=nil and type(u)=="function")then
+u=function()end
 else
-t=wrap(t)
+u=wrap(u)
 end
-if not tblcheck(q)then
-a:throw(`[setupguicolorsync]: api invalid! {tostring(q)}`)
+if not tblcheck(r)then
+a:throw(`[setupguicolorsync]: api invalid! {tostring(r)}`)
 return
 end
-if not(tblcheck(s)and tblcheck(s.Color1))then
-a:throw(`[setupguicolorsync]: options invalid! {tostring(s)}`)
+if not(tblcheck(t)and tblcheck(t.Color1))then
+a:throw(`[setupguicolorsync]: options invalid! {tostring(t)}`)
 return
 end
 
-local u,v,w=s.Color1,s.Color2,s.Color3
-local x=false
+local v,w,x=t.Color1,t.Color2,t.Color3
+local y=false
 
 
 
@@ -394,95 +444,94 @@ local x=false
 
 
 
-local y=function()end
+local z=function()end
 
-local z
-local A=false
-if not q.Name then
-A=true
-q.Name=l:GenerateGUID(false)
+local A
+local B=false
+if not r.Name then
+B=true
+r.Name=l:GenerateGUID(false)
 end
-z=p.GuiColorSyncAPI[q.Name]or q:CreateToggle{
+A=q.GuiColorSyncAPI[r.Name]or r:CreateToggle{
 Name="GUI Color Sync",
-Function=function(B)
-t(B)
-if B then
-y()
+Function=function(C)
+u(C)
+if C then
+z()
 end
 end,
-Tooltip=s.Tooltip or"Syncs with the gui theme color",
-Default=s.Default
+Tooltip=t.Tooltip or"Syncs with the gui theme color",
+Default=t.Default
 }
-p.GuiColorSyncAPI[q.Name]=z
+q.GuiColorSyncAPI[r.Name]=A
 
-for B,C in{u,v,w}do
-C:ConnectCallback(function()
-if z.Enabled and not x then
-local D
-if A then
-D="GUI Sync"
+for C,D in{v,w,x}do
+D:ConnectCallback(function()
+if A.Enabled and not y then
+local E
+if B then
+E="GUI Sync"
 else
-D=`GUI Sync - {q.Name}`
+E=`GUI Sync - {r.Name}`
 end
-InfoNotification(D,"Disabled due to color slider change! Re-enable if you want :D",5)
-z:Toggle()
+InfoNotification(E,"Disabled due to color slider change! Re-enable if you want :D",5)
+A:Toggle()
 end
 end)
 end
 
-y=connectguicolorchange(function(B,C,D)
-if not z.Enabled then return end
-local E={Hue=B,Sat=C,Value=D}
+z=connectguicolorchange(function(C,D,E)
+if not A.Enabled then return end
+local F={Hue=C,Sat=D,Value=E}
 
-x=true
+y=true
 
-if w then
-local F=E
+if x then
+local G=F
 
-if s.Color1HueShift then
-local G=(B+s.Color1HueShift)%1
-F={Hue=G,Sat=C,Value=D}
+if t.Color1HueShift then
+local H=(C+t.Color1HueShift)%1
+G={Hue=H,Sat=D,Value=E}
 end
-local G=(B+(s.Color2HueShift or 0.1))%1
-local H=(B+(s.Color3HueShift or 0.2))%1
-local I={Hue=G,Sat=C,Value=D}
-local J={Hue=H,Sat=C,Value=D}
+local H=(C+(t.Color2HueShift or 0.1))%1
+local I=(C+(t.Color3HueShift or 0.2))%1
+local J={Hue=H,Sat=D,Value=E}
+local K={Hue=I,Sat=D,Value=E}
 
-u:SetValue(F.Hue,F.Sat,F.Value)
-v:SetValue(I.Hue,I.Sat,I.Value)
+v:SetValue(G.Hue,G.Sat,G.Value)
 w:SetValue(J.Hue,J.Sat,J.Value)
-elseif v then
-local F=E
-local G=(B+(s.Color2HueShift or 0.1))%1
-local H={Hue=G,Sat=C,Value=D}
+x:SetValue(K.Hue,K.Sat,K.Value)
+elseif w then
+local G=F
+local H=(C+(t.Color2HueShift or 0.1))%1
+local I={Hue=H,Sat=D,Value=E}
 
-u:SetValue(F.Hue,F.Sat,F.Value)
-v:SetValue(H.Hue,H.Sat,H.Value)
+v:SetValue(G.Hue,G.Sat,G.Value)
+w:SetValue(I.Hue,I.Sat,I.Value)
 else
-if s.Color1HueShift then
-local F=(B+s.Color1HueShift)%1
-E={Hue=F,Sat=C,Value=D}
+if t.Color1HueShift then
+local G=(C+t.Color1HueShift)%1
+F={Hue=G,Sat=D,Value=E}
 end
-u:SetValue(E.Hue,E.Sat,E.Value)
+v:SetValue(F.Hue,F.Sat,F.Value)
 end
 
-x=false
+y=false
 end,true).run
 
-return z
+return A
 end
 
-local function connectvisibilitychange(p)
-return d.VisibilityChanged.Event:Connect(p)
+local function connectvisibilitychange(q)
+return d.VisibilityChanged.Event:Connect(q)
 end
 d.connectvisibilitychange=connectvisibilitychange
 
-local p=Instance.new"GetTextBoundsParams"
-p.Width=math.huge
-local q
-local s
-local t=getcustomasset
-local u
+local q=Instance.new"GetTextBoundsParams"
+q.Width=math.huge
+local r
+local t
+local u=getcustomasset
 local v
 local w
 local x
@@ -490,8 +539,9 @@ local y
 local z
 local A
 local B
+local C
 
-local C={
+local D={
 ["vape/assets/new/add.png"]="rbxassetid://14368300605",
 ["vape/assets/new/alert.png"]="rbxassetid://14368301329",
 ["vape/assets/new/allowedicon.png"]="rbxassetid://14368302000",
@@ -558,132 +608,132 @@ local C={
 ["vape/assets/new/star.png"]="rbxassetid://137405505909578"
 }
 
-local D=isfile
-or function(D)
-local E,F=pcall(function()
-return readfile(D)
+local E=isfile
+or function(E)
+local F,G=pcall(function()
+return readfile(E)
 end)
-return E and F~=nil and F~=""
+return F and G~=nil and G~=""
 end
 
-local E=function(E,F,G)
-p.Text=E
-p.Size=F
-if typeof(G)=="Font"then
-p.Font=G
+local F=function(F,G,H)
+q.Text=F
+q.Size=G
+if typeof(H)=="Font"then
+q.Font=H
 end
-local H,I=pcall(function()
-return i:GetTextBoundsAsync(p)
+local I,J=pcall(function()
+return i:GetTextBoundsAsync(q)
 end)
-if not H then
+if not I then
 a:report{
 type="getfontsize-function",
-err=I,
-args={E,F,G},
+err=J,
+args={F,G,H},
 notifyBlacklisted=true,
 }
 end
-return H and I
+return I and J
 end
 
-local function addBlur(F,G)
-local H=Instance.new"ImageLabel"
-H.Name="Blur"
-H.Size=UDim2.new(1,89,1,52)
-H.Position=UDim2.fromOffset(-48,-31)
-H.BackgroundTransparency=1
-H.Image=u("vape/assets/new/"..(G and"blurnotif"or"blur")..".png")
-H.ScaleType=Enum.ScaleType.Slice
-H.SliceCenter=Rect.new(52,31,261,502)
-H.Parent=F
+local function addBlur(G,H)
+local I=Instance.new"ImageLabel"
+I.Name="Blur"
+I.Size=UDim2.new(1,89,1,52)
+I.Position=UDim2.fromOffset(-48,-31)
+I.BackgroundTransparency=1
+I.Image=v("vape/assets/new/"..(H and"blurnotif"or"blur")..".png")
+I.ScaleType=Enum.ScaleType.Slice
+I.SliceCenter=Rect.new(52,31,261,502)
+I.Parent=G
 
-return H
+return I
 end
 
-local function addCorner(F,G)
-local H=Instance.new"UICorner"
-H.CornerRadius=G or UDim.new(0,5)
-H.Parent=F
+local function addCorner(G,H)
+local I=Instance.new"UICorner"
+I.CornerRadius=H or UDim.new(0,5)
+I.Parent=G
 
-return H
+return I
 end
 
-local function addCloseButton(F,G)
-local H=Instance.new"ImageButton"
-H.Name="Close"
-H.Size=UDim2.fromOffset(24,24)
-H.Position=UDim2.new(1,-35,0,G or 9)
-H.BackgroundColor3=Color3.new(1,1,1)
-H.BackgroundTransparency=1
-H.AutoButtonColor=false
-H.Image=u"vape/assets/new/close.png"
-H.ImageColor3=m.Light(o.Text,0.2)
-H.ImageTransparency=0.5
-H.Parent=F
-addCorner(H,UDim.new(1,0))
+local function addCloseButton(G,H)
+local I=Instance.new"ImageButton"
+I.Name="Close"
+I.Size=UDim2.fromOffset(24,24)
+I.Position=UDim2.new(1,-35,0,H or 9)
+I.BackgroundColor3=Color3.new(1,1,1)
+I.BackgroundTransparency=1
+I.AutoButtonColor=false
+I.Image=v"vape/assets/new/close.png"
+I.ImageColor3=n.Light(p.Text,0.2)
+I.ImageTransparency=0.5
+I.Parent=G
+addCorner(I,UDim.new(1,0))
 
-H.MouseEnter:Connect(function()
-H.ImageTransparency=0.3
-n:Tween(H,o.Tween,{
+I.MouseEnter:Connect(function()
+I.ImageTransparency=0.3
+o:Tween(I,p.Tween,{
 BackgroundTransparency=0.6,
 })
 end)
-H.MouseLeave:Connect(function()
-H.ImageTransparency=0.5
-n:Tween(H,o.Tween,{
+I.MouseLeave:Connect(function()
+I.ImageTransparency=0.5
+o:Tween(I,p.Tween,{
 BackgroundTransparency=1,
 })
 end)
 
-return H
+return I
 end
 
 
 
 
 
-local function addTooltip(F,G)
+local function addTooltip(G,H)
 if d.isMobile then return end
-if not G then
+if not H then
 return
 end
 
-local function tooltipMoved(H,I)
-local J=H+16+z.Size.X.Offset>(A.Scale*1920)
-z.Position=UDim2.fromOffset(
-(J and H-(z.Size.X.Offset*A.Scale)-16 or H+16)/A.Scale,
-((I+11)-(z.Size.Y.Offset/2))/A.Scale
+local function tooltipMoved(I,J)
+local K=I+16+A.Size.X.Offset>(B.Scale*1920)
+A.Position=UDim2.fromOffset(
+(K and I-(A.Size.X.Offset*B.Scale)-16 or I+16)/B.Scale,
+((J+11)-(A.Size.Y.Offset/2))/B.Scale
 )
-z.Visible=y.Visible
+A.Visible=z.Visible
 end
 
-local H={}
-H[1]=F.MouseEnter:Connect(function(I,J)
-local K=E(G,z.TextSize,o.Font)
-z.Size=UDim2.fromOffset(K.X+10,K.Y+10)
-z.Text=G
-tooltipMoved(I,J)
+local I={}
+I[1]=G.MouseEnter:Connect(function(J,K)
+local L=F(H,A.TextSize,p.Font)
+A.Size=UDim2.fromOffset(L.X+10,L.Y+10)
+A.Text=H
+tooltipMoved(J,K)
 end)
-H[2]=F.MouseMoved:Connect(tooltipMoved)
-H[3]=F.MouseLeave:Connect(function()
-z.Visible=false
+I[2]=G.MouseMoved:Connect(tooltipMoved)
+I[3]=G.MouseLeave:Connect(function()
+A.Visible=false
 end)
-F.Destroying:Once(function()
-for I,J in H do
+G.Destroying:Once(function()
+for J,K in I do
 pcall(function()
-J:Disconnect()
+K:Disconnect()
 end)
-H[I]=nil
+I[J]=nil
 end
 end)
 end
 d.addTooltip=addTooltip
 
-local function checkKeybinds(F,G,H)
-if type(G)=="table"then
-if table.find(G,H)then
-for I,J in G do
-if not table.find(F,J)then
+local function checkKeybinds(G,H,I)
+if type(H)=="table"then
+if table.find(H,I)then
+for J,K in H do
+if not table.find(G,K)then
 return false
 end
 end
@@ -712,201 +762,201 @@ end
 
 
 
-local function createMobileButton(F,G)
-local H=false
-local I=Instance.new"TextButton"
-I.Size=UDim2.fromOffset(40,40)
-I.Position=UDim2.fromOffset(G.X,G.Y)
-I.AnchorPoint=Vector2.new(0.5,0.5)
-I.BackgroundColor3=F.Enabled and Color3.new(0,0.7,0)or Color3.new()
-I.BackgroundTransparency=0.5
-I.Text=F.Name
-I.TextColor3=Color3.new(1,1,1)
-I.TextScaled=true
-I.Font=Enum.Font.Gotham
-I.Parent=d.gui
-local J=Instance.new"UITextSizeConstraint"
-J.MaxTextSize=16
-J.Parent=I
-addCorner(I,UDim.new(1,0))
+local function createMobileButton(G,H)
+local I=false
+local J=Instance.new"TextButton"
+J.Size=UDim2.fromOffset(40,40)
+J.Position=UDim2.fromOffset(H.X,H.Y)
+J.AnchorPoint=Vector2.new(0.5,0.5)
+J.BackgroundColor3=G.Enabled and Color3.new(0,0.7,0)or Color3.new()
+J.BackgroundTransparency=0.5
+J.Text=G.Name
+J.TextColor3=Color3.new(1,1,1)
+J.TextScaled=true
+J.Font=Enum.Font.Gotham
+J.Parent=d.gui
+local K=Instance.new"UITextSizeConstraint"
+K.MaxTextSize=16
+K.Parent=J
+addCorner(J,UDim.new(1,0))
 
-I.MouseButton1Down:Connect(function()
-H=true
-local K,L=tick(),h:GetMouseLocation()
+J.MouseButton1Down:Connect(function()
+I=true
+local L,M=tick(),h:GetMouseLocation()
 repeat
-H=(h:GetMouseLocation()-L).Magnitude<6
+I=(h:GetMouseLocation()-M).Magnitude<6
 task.wait()
-until(tick()-K)>1 or not H
-if H then
-F.Bind={}
-I:Destroy()
+until(tick()-L)>1 or not I
+if I then
+G.Bind={}
+J:Destroy()
 end
 end)
-I.MouseButton1Up:Connect(function()
-H=false
-end)
-I.Activated:Connect(function()
-F:Toggle()
-I.BackgroundColor3=F.Enabled and Color3.new(0,0.7,0)or Color3.new()
-end)
-
-F.Bind={Button=I}
-end
-
-d.http_function=function(F)
-if F==nil then
-return
-end
-F=tostring(F)
-local G,H=pcall(function()
-return{game:HttpGet(F)}
-end)
-if not(G~=nil and G==true and H~=nil and type(H)=="table")then
-return
-end
-if H[1]~=nil and H[1]==game then
-return H[4]
-else
-return H[1]
-end
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-local F=function(F,G,H)
-local I,J
-task.spawn(function()
-I,J=pcall(function()
-return F()
-end)
-end)
-G=G or 5
-local K=tick()
-repeat task.wait()until I~=nil or tick()-K>=G
-if I==nil then
+J.MouseButton1Up:Connect(function()
 I=false
-J="TIMEOUT_EXCEEDED"
-end
-if not I and shared.VoidDev then
-warn(debug.traceback(J))
-end
-if H~=nil then
-return H(I,J)
-end
-return I,J
+end)
+J.Activated:Connect(function()
+G:Toggle()
+J.BackgroundColor3=G.Enabled and Color3.new(0,0.7,0)or Color3.new()
+end)
+
+G.Bind={Button=J}
 end
 
-local G=shared.CACHED_ICON_LIBRARY
-if not G then
-F(function()
+d.http_function=function(G)
+if G==nil then
+return
+end
+G=tostring(G)
 local H,I=pcall(function()
-local H=loadstring(d.http_function"https://raw.githubusercontent.com/Footagesus/Icons/main/Main-v2.lua")()
-H.SetIconsType"lucide"
-return H
+return{game:HttpGet(G)}
 end)
+if not(H~=nil and H==true and I~=nil and type(I)=="table")then
+return
+end
+if I[1]~=nil and I[1]==game then
+return I[4]
+else
+return I[1]
+end
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+local G=function(G,H,I)
+local J,K
+task.spawn(function()
+J,K=pcall(function()
+return G()
+end)
+end)
+H=H or 5
+local L=tick()
+repeat task.wait()until J~=nil or tick()-L>=H
+if J==nil then
+J=false
+K="TIMEOUT_EXCEEDED"
+end
+if not J and shared.VoidDev then
+warn(debug.traceback(K))
+end
+if I~=nil then
+return I(J,K)
+end
+return J,K
+end
+
+local H=shared.CACHED_ICON_LIBRARY
 if not H then
+G(function()
+local I,J=pcall(function()
+local I=loadstring(d.http_function"https://raw.githubusercontent.com/Footagesus/Icons/main/Main-v2.lua")()
+I.SetIconsType"lucide"
+return I
+end)
+if not I then
 pcall(function()
 d:CreateNotification("Vape | Icons","Failure loading custom icons :c",5,'alert')
 end)
-warn(`[Icons Failure]: {tostring(G)}`)
+warn(`[Icons Failure]: {tostring(H)}`)
 end
-G=H and I or nil
-shared.CACHED_ICON_LIBRARY=G
+H=I and J or nil
+shared.CACHED_ICON_LIBRARY=H
 end,3)
 end
-local function getCustomIcon(H)
-if not G then return false end
-local I,J=pcall(function()
-return G.GetIcon(H)
+local function getCustomIcon(I)
+if not H then return false end
+local J,K=pcall(function()
+return H.GetIcon(I)
 end)
-if not I then
-warn(`[getCustomIcon Failure]: {tostring(H)} -> {tostring(J)}`)
+if not J then
+warn(`[getCustomIcon Failure]: {tostring(I)} -> {tostring(K)}`)
 end
-return I and J~=nil and J or false
+return J and K~=nil and K or false
 end
 
-u=function(H,I)
-if I then
-local J=getCustomIcon(H)
-if J~=false then
-return J
+v=function(I,J)
+if J then
+local K=getCustomIcon(I)
+if K~=false then
+return K
 else
 return''
 end
 end
-return C[H]or getCustomIcon(H)or select(2,pcall(t,H))or''
+return D[I]or getCustomIcon(I)or select(2,pcall(u,I))or''
 end
 
-local function makeDraggable(H,I)
-H.InputBegan:Connect(function(J)
-if I and not I.Visible then
+local function makeDraggable(I,J)
+I.InputBegan:Connect(function(K)
+if J and not J.Visible then
 return
 end
 if
 (
-J.UserInputType==Enum.UserInputType.MouseButton1
-or J.UserInputType==Enum.UserInputType.Touch
-)and(J.Position.Y-H.AbsolutePosition.Y<40 or I)
+K.UserInputType==Enum.UserInputType.MouseButton1
+or K.UserInputType==Enum.UserInputType.Touch
+)and(K.Position.Y-I.AbsolutePosition.Y<40 or J)
 then
-local K=Vector2.new(
-H.AbsolutePosition.X-J.Position.X,
-H.AbsolutePosition.Y-J.Position.Y+j:GetGuiInset().Y
-)/A.Scale
+local L=Vector2.new(
+I.AbsolutePosition.X-K.Position.X,
+I.AbsolutePosition.Y-K.Position.Y+j:GetGuiInset().Y
+)/B.Scale
 
-local L=h.InputChanged:Connect(function(L)
+local M=h.InputChanged:Connect(function(M)
 if
-L.UserInputType
+M.UserInputType
 ==(
-J.UserInputType==Enum.UserInputType.MouseButton1
+K.UserInputType==Enum.UserInputType.MouseButton1
 and Enum.UserInputType.MouseMovement
 or Enum.UserInputType.Touch
 )
 then
-local M=L.Position
+local N=M.Position
 if h:IsKeyDown(Enum.KeyCode.LeftShift)then
-K=(K//3)*3
-M=(M//3)*3
+L=(L//3)*3
+N=(N//3)*3
 end
-H.AnchorPoint=Vector2.new(0,0)
-H.Position=UDim2.fromOffset(
-(M.X/A.Scale)+K.X,
-(M.Y/A.Scale)+K.Y
+I.AnchorPoint=Vector2.new(0,0)
+I.Position=UDim2.fromOffset(
+(N.X/B.Scale)+L.X,
+(N.Y/B.Scale)+L.Y
 )
 end
 end)
 
-local M
-M=J.Changed:Connect(function()
-if J.UserInputState==Enum.UserInputState.End then
-if L then
-L:Disconnect()
-end
+local N
+N=h.InputEnded:Connect(function(O)
+if O==K and K.UserInputState==Enum.UserInputState.End then
 if M then
 M:Disconnect()
+end
+if N then
+N:Disconnect()
 end
 end
 end)
@@ -915,37 +965,37 @@ end)
 end
 d.makeDraggable=makeDraggable
 
-local function makeDraggable2(H,I)
-H.InputBegan:Connect(function(J)
-if not I.Visible then
+local function makeDraggable2(I,J)
+I.InputBegan:Connect(function(K)
+if not J.Visible then
 return
 end
 
 if
-J.UserInputType==Enum.UserInputType.MouseButton1
-or J.UserInputType==Enum.UserInputType.Touch
+K.UserInputType==Enum.UserInputType.MouseButton1
+or K.UserInputType==Enum.UserInputType.Touch
 then
 
-local K=J.Position
-local L=I.Position
+local L=K.Position
+local M=J.Position
 
-local M
-M=h.InputChanged:Connect(function(N)
+local N
+N=h.InputChanged:Connect(function(O)
 if
-N.UserInputType==Enum.UserInputType.MouseMovement
-or N.UserInputType==Enum.UserInputType.Touch
+O.UserInputType==Enum.UserInputType.MouseMovement
+or O.UserInputType==Enum.UserInputType.Touch
 then
 
-local O=N.Position-K
+local P=O.Position-L
 
-I.Position=UDim2.fromOffset(L.X.Offset+O.X,L.Y.Offset+O.Y)
+J.Position=UDim2.fromOffset(M.X.Offset+P.X,M.Y.Offset+P.Y)
 end
 end)
 
-J.Changed:Connect(function()
-if J.UserInputState==Enum.UserInputState.End then
-if M then
-M:Disconnect()
+K.Changed:Connect(function()
+if K.UserInputState==Enum.UserInputState.End then
+if N then
+N:Disconnect()
 end
 end
 end)
@@ -954,19 +1004,19 @@ end)
 end
 d.makeDraggable2=makeDraggable2
 
-local function setupGuiMoveCheck(H,I)
-local J=false
-local K
-H.InputBegan:Connect(function()
-J=true
-K=I.Position.X.Offset
+local function setupGuiMoveCheck(I,J)
+local K=false
+local L
+I.InputBegan:Connect(function()
+K=true
+L=J.Position.X.Offset
 end)
-H.InputEnded:Connect(function()
-J=false
+I.InputEnded:Connect(function()
+K=false
 
 end)
 return function()
-return K==nil or I.Position.X.Offset-K<2.1
+return L==nil or J.Position.X.Offset-L<2.1
 end
 end
 
@@ -1019,61 +1069,61 @@ end
 
 
 local function randomString()
-local H={}
-for I=1,math.random(10,100)do
-H[I]=string.char(math.random(32,126))
+local I={}
+for J=1,math.random(10,100)do
+I[J]=string.char(math.random(32,126))
 end
-return table.concat(H)
+return table.concat(I)
 end
 
-local function removeTags(H)
-H=H:gsub("<br%s*/>","\n")
-return H:gsub("<[^<>]->","")
+local function removeTags(I)
+I=I:gsub("<br%s*/>","\n")
+return I:gsub("<[^<>]->","")
 end
 
 do
-local H=D"vape/profiles/color.txt"and loadJson"vape/profiles/color.txt"
-if H then
-o.Main=H.Main and Color3.fromRGB(unpack(H.Main))or o.Main
-o.Text=H.Text and Color3.fromRGB(unpack(H.Text))or o.Text
-o.Font=H.Font
+local I=E"vape/profiles/color.txt"and loadJson"vape/profiles/color.txt"
+if I then
+p.Main=I.Main and Color3.fromRGB(unpack(I.Main))or p.Main
+p.Text=I.Text and Color3.fromRGB(unpack(I.Text))or p.Text
+p.Font=I.Font
 and Font.new(
-H.Font:find"rbxasset"and H.Font
-or string.format("rbxasset://fonts/families/%s.json",H.Font)
+I.Font:find"rbxasset"and I.Font
+or string.format("rbxasset://fonts/families/%s.json",I.Font)
 )
-or o.Font
-o.FontSemiBold=Font.new(o.Font.Family,Enum.FontWeight.SemiBold)
+or p.Font
+p.FontSemiBold=Font.new(p.Font.Family,Enum.FontWeight.SemiBold)
 end
-p.Font=o.Font
+q.Font=p.Font
 end
 
 do
-function m.Dark(H,I)
-local J,K,L=H:ToHSV()
-return Color3.fromHSV(J,K,math.clamp(select(3,o.Main:ToHSV())>0.5 and L+I or L-I,0,1))
+function n.Dark(I,J)
+local K,L,M=I:ToHSV()
+return Color3.fromHSV(K,L,math.clamp(select(3,p.Main:ToHSV())>0.5 and M+J or M-J,0,1))
 end
 
-function m.Light(H,I)
-local J,K,L=H:ToHSV()
-return Color3.fromHSV(J,K,math.clamp(select(3,o.Main:ToHSV())>0.5 and L-I or L+I,0,1))
+function n.Light(I,J)
+local K,L,M=I:ToHSV()
+return Color3.fromHSV(K,L,math.clamp(select(3,p.Main:ToHSV())>0.5 and M-J or M+J,0,1))
 end
 
-function d.Color(H,I)
-local J=0.75+(0.15*math.min(I/0.03,1))
-if I>0.57 then
-J=0.9-(0.4*math.min((I-0.57)/0.09,1))
+function d.Color(I,J)
+local K=0.75+(0.15*math.min(J/0.03,1))
+if J>0.57 then
+K=0.9-(0.4*math.min((J-0.57)/0.09,1))
 end
-if I>0.66 then
-J=0.5+(0.4*math.min((I-0.66)/0.16,1))
+if J>0.66 then
+K=0.5+(0.4*math.min((J-0.66)/0.16,1))
 end
-if I>0.87 then
-J=0.9-(0.15*math.min((I-0.87)/0.13,1))
+if J>0.87 then
+K=0.9-(0.15*math.min((J-0.87)/0.13,1))
 end
-return I,J,1
+return J,K,1
 end
 
-function d.TextColor(H,I,J,K)
-if K>=0.7 and(J<0.6 or I>0.04 and I<0.56)then
+function d.TextColor(I,J,K,L)
+if L>=0.7 and(K<0.6 or J>0.04 and J<0.56)then
 return Color3.new(0.19,0.19,0.19)
 end
 return Color3.new(1,1,1)
@@ -1081,663 +1131,663 @@ end
 end
 
 do
-function n.Tween(H,I,J,K,L,M,N)
-if type(L)=="boolean"then
-M=L
-L=nil
+function o.Tween(I,J,K,L,M,N,O)
+if type(M)=="boolean"then
+N=M
+M=nil
 end
-if type(J)=="table"then
-K=J
-J=TweenInfo.new(0.15)
-end
-
-L=L or H.tweens
-
-if L[I]then
-L[I]:Cancel()
-L[I]=nil
+if type(K)=="table"then
+L=K
+K=TweenInfo.new(0.15)
 end
 
-if I.Parent then
-local O=g:Create(I,J,K)
-L[I]=O
+M=M or I.tweens
 
-O.Completed:Once(function()
-L[I]=nil
+if M[J]then
+M[J]:Cancel()
+M[J]=nil
+end
+
+if J.Parent then
+local P=g:Create(J,K,L)
+M[J]=P
+
+P.Completed:Once(function()
+M[J]=nil
+
+if not O then
+pcall(function()
+for Q,R in pairs(L)do
+J[Q]=R
+end
+end)
+end
+end)
 
 if not N then
-pcall(function()
-for P,Q in pairs(K)do
-I[P]=Q
-end
-end)
-end
-end)
-
-if not M then
-O:Play()
+P:Play()
 end
 
-return O
+return P
 else
-for O,P in pairs(K)do
-I[O]=P
+for P,Q in pairs(L)do
+J[P]=Q
 end
 end
 end
-n.tween=n.Tween
+o.tween=o.Tween
 
-function n.Cancel(H,I)
-if H.tweens[I]then
-H.tweens[I]:Cancel()
-H.tweens[I]=nil
+function o.Cancel(I,J)
+if I.tweens[J]then
+I.tweens[J]:Cancel()
+I.tweens[J]=nil
 end
 end
-n.cancel=n.Cancel
+o.cancel=o.Cancel
 end
 
 d.Libraries={
-color=m,
-getcustomasset=u,
-getfontsize=E,
-tween=n,
-uipallet=o,
+color=n,
+getcustomasset=v,
+getfontsize=F,
+tween=o,
+uipallet=p,
 }
 
-local H
-H={
-Button=function(I,J,K)
-local L={
-Name=I.Name,
-Visible=I.Visible==nil or I.Visible
+local I
+I={
+Button=function(J,K,L)
+local M={
+Name=J.Name,
+Visible=J.Visible==nil or J.Visible
 }
-local M=Instance.new"TextButton"
-M.Name=I.Name.."Button"
-M.Size=UDim2.new(1,0,0,31)
-M.BackgroundColor3=m.Dark(J.BackgroundColor3,I.Darker and 0.02 or 0)
-M.BackgroundTransparency=I.BackgroundTransparency or 0
-M.BorderSizePixel=0
-M.AutoButtonColor=false
-M.Visible=L.Visible
-M.Text=""
-M.Parent=J
-M:GetPropertyChangedSignal"Visible":Connect(function()
-L.Visible=M.Visible
+local N=Instance.new"TextButton"
+N.Name=J.Name.."Button"
+N.Size=UDim2.new(1,0,0,31)
+N.BackgroundColor3=n.Dark(K.BackgroundColor3,J.Darker and 0.02 or 0)
+N.BackgroundTransparency=J.BackgroundTransparency or 0
+N.BorderSizePixel=0
+N.AutoButtonColor=false
+N.Visible=M.Visible
+N.Text=""
+N.Parent=K
+N:GetPropertyChangedSignal"Visible":Connect(function()
+M.Visible=N.Visible
 end)
-addTooltip(M,I.Tooltip)
-local N=Instance.new"Frame"
-N.Size=UDim2.fromOffset(200,27)
-N.Position=UDim2.fromOffset(10,2)
-N.BackgroundColor3=m.Light(o.Main,0.05)
-N.Parent=M
-addCorner(N)
-local O=Instance.new"TextLabel"
-O.Size=UDim2.new(1,-4,1,-4)
-O.Position=UDim2.fromOffset(2,2)
-O.BackgroundColor3=o.Main
-O.Text=I.Name
-O.TextColor3=m.Dark(o.Text,0.16)
-O.TextSize=14
-O.FontFace=o.Font
+addTooltip(N,J.Tooltip)
+local O=Instance.new"Frame"
+O.Size=UDim2.fromOffset(200,27)
+O.Position=UDim2.fromOffset(10,2)
+O.BackgroundColor3=n.Light(p.Main,0.05)
 O.Parent=N
-addCorner(O,UDim.new(0,4))
-I.Function=I.Function and wrap(I.Function)or function()end
+addCorner(O)
+local P=Instance.new"TextLabel"
+P.Size=UDim2.new(1,-4,1,-4)
+P.Position=UDim2.fromOffset(2,2)
+P.BackgroundColor3=p.Main
+P.Text=J.Name
+P.TextColor3=n.Dark(p.Text,0.16)
+P.TextSize=14
+P.FontFace=p.Font
+P.Parent=O
+addCorner(P,UDim.new(0,4))
+J.Function=J.Function and wrap(J.Function)or function()end
 
-function L.SetVisible(P,Q)
-if Q==nil then
-Q=not L.Visible
+function M.SetVisible(Q,R)
+if R==nil then
+R=not M.Visible
 end
-M.Visible=Q
+N.Visible=R
 end
 
-M.MouseEnter:Connect(function()
-n:Tween(N,o.Tween,{
-BackgroundColor3=m.Light(o.Main,0.3),
+N.MouseEnter:Connect(function()
+o:Tween(O,p.Tween,{
+BackgroundColor3=n.Light(p.Main,0.3),
 })
 end)
-M.MouseLeave:Connect(function()
-n:Tween(N,o.Tween,{
-BackgroundColor3=m.Light(o.Main,0.05),
+N.MouseLeave:Connect(function()
+o:Tween(O,p.Tween,{
+BackgroundColor3=n.Light(p.Main,0.05),
 })
 end)
-M.Activated:Connect(I.Function)
-L.Object=M
-L.Label=O
-return L
+N.Activated:Connect(J.Function)
+M.Object=N
+M.Label=P
+return M
 end,
-ColorSlider=function(I,J,K)
-if I.Color then
-I.DefaultHue,I.DefaultSat,I.DefaultValue=I.Color:ToHSV()
+ColorSlider=function(J,K,L)
+if J.Color then
+J.DefaultHue,J.DefaultSat,J.DefaultValue=J.Color:ToHSV()
 end
-local L={
+local M={
 Type="ColorSlider",
-Hue=I.DefaultHue or 0.44,
-Sat=I.DefaultSat or 1,
-Value=I.DefaultValue or 1,
-Opacity=I.DefaultOpacity or 1,
+Hue=J.DefaultHue or 0.44,
+Sat=J.DefaultSat or 1,
+Value=J.DefaultValue or 1,
+Opacity=J.DefaultOpacity or 1,
 Rainbow=false,
 Index=0,
 }
 
-local function createSlider(M,N)
-local O=Instance.new"TextButton"
-O.Name=I.Name.."Slider"..M
-O.Size=UDim2.new(1,0,0,50)
-O.BackgroundColor3=m.Dark(J.BackgroundColor3,I.Darker and 0.02 or 0)
-O.BorderSizePixel=0
-O.AutoButtonColor=false
-O.Visible=false
-O.Text=""
-O.Parent=J
-local P=Instance.new"TextLabel"
-P.Name="Title"
-P.Size=UDim2.fromOffset(60,30)
-P.Position=UDim2.fromOffset(10,2)
-P.BackgroundTransparency=1
-P.Text=M
-P.TextXAlignment=Enum.TextXAlignment.Left
-P.TextColor3=m.Dark(o.Text,0.16)
-P.TextSize=11
-P.FontFace=o.Font
-P.Parent=O
-local Q=Instance.new"Frame"
-Q.Name="Slider"
-Q.Size=UDim2.new(1,-20,0,2)
-Q.Position=UDim2.fromOffset(10,37)
-Q.BackgroundColor3=Color3.new(1,1,1)
-Q.BorderSizePixel=0
-Q.Parent=O
-local R=Instance.new"UIGradient"
-R.Color=N
-R.Parent=Q
-local S=Q:Clone()
-S.Name="Fill"
-S.Size=UDim2.fromScale(
+local function createSlider(N,O)
+local P=Instance.new"TextButton"
+P.Name=J.Name.."Slider"..N
+P.Size=UDim2.new(1,0,0,50)
+P.BackgroundColor3=n.Dark(K.BackgroundColor3,J.Darker and 0.02 or 0)
+P.BorderSizePixel=0
+P.AutoButtonColor=false
+P.Visible=false
+P.Text=""
+P.Parent=K
+local Q=Instance.new"TextLabel"
+Q.Name="Title"
+Q.Size=UDim2.fromOffset(60,30)
+Q.Position=UDim2.fromOffset(10,2)
+Q.BackgroundTransparency=1
+Q.Text=N
+Q.TextXAlignment=Enum.TextXAlignment.Left
+Q.TextColor3=n.Dark(p.Text,0.16)
+Q.TextSize=11
+Q.FontFace=p.Font
+Q.Parent=P
+local R=Instance.new"Frame"
+R.Name="Slider"
+R.Size=UDim2.new(1,-20,0,2)
+R.Position=UDim2.fromOffset(10,37)
+R.BackgroundColor3=Color3.new(1,1,1)
+R.BorderSizePixel=0
+R.Parent=P
+local S=Instance.new"UIGradient"
+S.Color=O
+S.Parent=R
+local T=R:Clone()
+T.Name="Fill"
+T.Size=UDim2.fromScale(
 math.clamp(
-M=="Saturation"and L.Sat
-or M=="Vibrance"and L.Value
-or L.Opacity,
+N=="Saturation"and M.Sat
+or N=="Vibrance"and M.Value
+or M.Opacity,
 0.04,
 0.96
 ),
 1
 )
-S.Position=UDim2.new()
-S.BackgroundTransparency=1
-S.Parent=Q
-local T=Instance.new"Frame"
-T.Name="Knob"
-T.Size=UDim2.fromOffset(24,4)
-T.Position=UDim2.fromScale(1,0.5)
-T.AnchorPoint=Vector2.new(0.5,0.5)
-T.BackgroundColor3=O.BackgroundColor3
-T.BorderSizePixel=0
-T.Parent=S
+T.Position=UDim2.new()
+T.BackgroundTransparency=1
+T.Parent=R
 local U=Instance.new"Frame"
 U.Name="Knob"
-U.Size=UDim2.fromOffset(14,14)
-U.Position=UDim2.fromScale(0.5,0.5)
+U.Size=UDim2.fromOffset(24,4)
+U.Position=UDim2.fromScale(1,0.5)
 U.AnchorPoint=Vector2.new(0.5,0.5)
-U.BackgroundColor3=o.Text
+U.BackgroundColor3=P.BackgroundColor3
+U.BorderSizePixel=0
 U.Parent=T
-addCorner(U,UDim.new(1,0))
+local V=Instance.new"Frame"
+V.Name="Knob"
+V.Size=UDim2.fromOffset(14,14)
+V.Position=UDim2.fromScale(0.5,0.5)
+V.AnchorPoint=Vector2.new(0.5,0.5)
+V.BackgroundColor3=p.Text
+V.Parent=U
+addCorner(V,UDim.new(1,0))
 
-O.InputBegan:Connect(function(V)
+P.InputBegan:Connect(function(W)
 if
 (
-V.UserInputType==Enum.UserInputType.MouseButton1
-or V.UserInputType==Enum.UserInputType.Touch
-)and(V.Position.Y-O.AbsolutePosition.Y)>(20*A.Scale)
+W.UserInputType==Enum.UserInputType.MouseButton1
+or W.UserInputType==Enum.UserInputType.Touch
+)and(W.Position.Y-P.AbsolutePosition.Y)>(20*B.Scale)
 then
-local W=h.InputChanged:Connect(function(W)
+local X=h.InputChanged:Connect(function(X)
 if
-W.UserInputType
+X.UserInputType
 ==(
-V.UserInputType==Enum.UserInputType.MouseButton1
+W.UserInputType==Enum.UserInputType.MouseButton1
 and Enum.UserInputType.MouseMovement
 or Enum.UserInputType.Touch
 )
 then
-L:SetValue(
+M:SetValue(
 nil,
-M=="Saturation"
+N=="Saturation"
 and math.clamp(
-(W.Position.X-Q.AbsolutePosition.X)/Q.AbsoluteSize.X,
+(X.Position.X-R.AbsolutePosition.X)/R.AbsoluteSize.X,
 0,
 1
 )
 or nil,
-M=="Vibrance"
+N=="Vibrance"
 and math.clamp(
-(W.Position.X-Q.AbsolutePosition.X)/Q.AbsoluteSize.X,
+(X.Position.X-R.AbsolutePosition.X)/R.AbsoluteSize.X,
 0,
 1
 )
 or nil,
-M=="Opacity"
+N=="Opacity"
 and math.clamp(
-(W.Position.X-Q.AbsolutePosition.X)/Q.AbsoluteSize.X,
+(X.Position.X-R.AbsolutePosition.X)/R.AbsoluteSize.X,
 0,
 1
 )
 or nil
 )
-if L._InternalCallback then
-L._InternalCallback()
+if M._InternalCallback then
+M._InternalCallback()
 end
 end
 end)
 
-local X
-X=V.Changed:Connect(function()
-if V.UserInputState==Enum.UserInputState.End then
-if W then
-W:Disconnect()
-end
+local Y
+Y=h.InputEnded:Connect(function(Z)
+if Z==W and W.UserInputState==Enum.UserInputState.End then
 if X then
 X:Disconnect()
 end
+if Y then
+Y:Disconnect()
+end
 end
 end)
 end
 end)
-O.MouseEnter:Connect(function()
-n:Tween(U,o.Tween,{
+P.MouseEnter:Connect(function()
+o:Tween(V,p.Tween,{
 Size=UDim2.fromOffset(16,16),
 })
 end)
-O.MouseLeave:Connect(function()
-n:Tween(U,o.Tween,{
+P.MouseLeave:Connect(function()
+o:Tween(V,p.Tween,{
 Size=UDim2.fromOffset(14,14),
 })
 end)
 
-return O
+return P
 end
 
-local M=Instance.new"TextButton"
-M.Name=I.Name.."Slider"
-M.Size=UDim2.new(1,0,0,50)
-M.BackgroundColor3=m.Dark(J.BackgroundColor3,I.Darker and 0.02 or 0)
-M.BorderSizePixel=0
-M.AutoButtonColor=false
-M.Visible=I.Visible==nil or I.Visible
-M.Text=""
-M.Parent=J
-addTooltip(M,I.Tooltip)
-local N=Instance.new"TextLabel"
-N.Name="Title"
-N.Size=UDim2.fromOffset(60,30)
-N.Position=UDim2.fromOffset(10,2)
-N.BackgroundTransparency=1
-N.Text=I.Name
-N.TextXAlignment=Enum.TextXAlignment.Left
-N.TextColor3=m.Dark(o.Text,0.16)
-N.TextSize=11
-N.FontFace=o.Font
-N.Parent=M
-local O=Instance.new"TextBox"
-O.Name="Box"
-O.Size=UDim2.fromOffset(60,15)
-O.Position=UDim2.new(1,-69,0,9)
+local N=Instance.new"TextButton"
+N.Name=J.Name.."Slider"
+N.Size=UDim2.new(1,0,0,50)
+N.BackgroundColor3=n.Dark(K.BackgroundColor3,J.Darker and 0.02 or 0)
+N.BorderSizePixel=0
+N.AutoButtonColor=false
+N.Visible=J.Visible==nil or J.Visible
+N.Text=""
+N.Parent=K
+addTooltip(N,J.Tooltip)
+local O=Instance.new"TextLabel"
+O.Name="Title"
+O.Size=UDim2.fromOffset(60,30)
+O.Position=UDim2.fromOffset(10,2)
 O.BackgroundTransparency=1
-O.Visible=false
-O.Text=""
-O.TextXAlignment=Enum.TextXAlignment.Right
-O.TextColor3=m.Dark(o.Text,0.16)
+O.Text=J.Name
+O.TextXAlignment=Enum.TextXAlignment.Left
+O.TextColor3=n.Dark(p.Text,0.16)
 O.TextSize=11
-O.FontFace=o.Font
-O.ClearTextOnFocus=true
-O.Parent=M
-local P=Instance.new"Frame"
-P.Name="Slider"
-P.Size=UDim2.new(1,-20,0,2)
-P.Position=UDim2.fromOffset(10,39)
-P.BackgroundColor3=Color3.new(1,1,1)
-P.BorderSizePixel=0
-P.Parent=M
-local Q={}
-for R=0,1,0.1 do
-table.insert(Q,ColorSequenceKeypoint.new(R,Color3.fromHSV(R,1,1)))
+O.FontFace=p.Font
+O.Parent=N
+local P=Instance.new"TextBox"
+P.Name="Box"
+P.Size=UDim2.fromOffset(60,15)
+P.Position=UDim2.new(1,-69,0,9)
+P.BackgroundTransparency=1
+P.Visible=false
+P.Text=""
+P.TextXAlignment=Enum.TextXAlignment.Right
+P.TextColor3=n.Dark(p.Text,0.16)
+P.TextSize=11
+P.FontFace=p.Font
+P.ClearTextOnFocus=true
+P.Parent=N
+local Q=Instance.new"Frame"
+Q.Name="Slider"
+Q.Size=UDim2.new(1,-20,0,2)
+Q.Position=UDim2.fromOffset(10,39)
+Q.BackgroundColor3=Color3.new(1,1,1)
+Q.BorderSizePixel=0
+Q.Parent=N
+local R={}
+for S=0,1,0.1 do
+table.insert(R,ColorSequenceKeypoint.new(S,Color3.fromHSV(S,1,1)))
 end
-local R=Instance.new"UIGradient"
-R.Color=ColorSequence.new(Q)
-R.Parent=P
-local S=P:Clone()
-S.Name="Fill"
-S.Size=UDim2.fromScale(math.clamp(L.Hue,0.04,0.96),1)
-S.Position=UDim2.new()
-S.BackgroundTransparency=1
-S.Parent=P
-local T=Instance.new"ImageButton"
-T.Name="Preview"
-T.Size=UDim2.fromOffset(12,12)
-T.Position=UDim2.new(1,-22,0,10)
+local S=Instance.new"UIGradient"
+S.Color=ColorSequence.new(R)
+S.Parent=Q
+local T=Q:Clone()
+T.Name="Fill"
+T.Size=UDim2.fromScale(math.clamp(M.Hue,0.04,0.96),1)
+T.Position=UDim2.new()
 T.BackgroundTransparency=1
-T.Image=u"vape/assets/new/colorpreview.png"
-T.ImageColor3=Color3.fromHSV(L.Hue,L.Sat,L.Value)
-T.ImageTransparency=1-L.Opacity
-T.Parent=M
-local U=Instance.new"TextButton"
-U.Name="Expand"
-U.Size=UDim2.fromOffset(17,13)
-U.Position=UDim2.new(
+T.Parent=Q
+local U=Instance.new"ImageButton"
+U.Name="Preview"
+U.Size=UDim2.fromOffset(12,12)
+U.Position=UDim2.new(1,-22,0,10)
+U.BackgroundTransparency=1
+U.Image=v"vape/assets/new/colorpreview.png"
+U.ImageColor3=Color3.fromHSV(M.Hue,M.Sat,M.Value)
+U.ImageTransparency=1-M.Opacity
+U.Parent=N
+local V=Instance.new"TextButton"
+V.Name="Expand"
+V.Size=UDim2.fromOffset(17,13)
+V.Position=UDim2.new(
 0,
-i:GetTextSize(N.Text,N.TextSize,N.Font,Vector2.new(1000,1000)).X+11,
+i:GetTextSize(O.Text,O.TextSize,O.Font,Vector2.new(1000,1000)).X+11,
 0,
 7
 )
-U.BackgroundTransparency=1
-U.Text=""
-U.Parent=M
-local V=Instance.new"ImageLabel"
-V.Name="Expand"
-V.Size=UDim2.fromOffset(9,5)
-V.Position=UDim2.fromOffset(4,4)
 V.BackgroundTransparency=1
-V.Image=u"vape/assets/new/expandicon.png"
-V.ImageColor3=m.Dark(o.Text,0.43)
-V.Parent=U
-local W=Instance.new"TextButton"
-W.Name="Rainbow"
-W.Size=UDim2.fromOffset(12,12)
-W.Position=UDim2.new(1,-42,0,10)
+V.Text=""
+V.Parent=N
+local W=Instance.new"ImageLabel"
+W.Name="Expand"
+W.Size=UDim2.fromOffset(9,5)
+W.Position=UDim2.fromOffset(4,4)
 W.BackgroundTransparency=1
-W.Text=""
-W.Parent=M
-local X=Instance.new"ImageLabel"
+W.Image=v"vape/assets/new/expandicon.png"
+W.ImageColor3=n.Dark(p.Text,0.43)
+W.Parent=V
+local X=Instance.new"TextButton"
+X.Name="Rainbow"
 X.Size=UDim2.fromOffset(12,12)
+X.Position=UDim2.new(1,-42,0,10)
 X.BackgroundTransparency=1
-X.Image=u"vape/assets/new/rainbow_1.png"
-X.ImageColor3=m.Light(o.Main,0.37)
-X.Parent=W
-local Y=X:Clone()
-Y.Image=u"vape/assets/new/rainbow_2.png"
-Y.Parent=W
-local Z=X:Clone()
-Z.Image=u"vape/assets/new/rainbow_3.png"
-Z.Parent=W
-local _=X:Clone()
-_.Image=u"vape/assets/new/rainbow_4.png"
-_.Parent=W
-local aa=Instance.new"Frame"
-aa.Name="Knob"
-aa.Size=UDim2.fromOffset(24,4)
-aa.Position=UDim2.fromScale(1,0.5)
-aa.AnchorPoint=Vector2.new(0.5,0.5)
-aa.BackgroundColor3=M.BackgroundColor3
-aa.BorderSizePixel=0
-aa.Parent=S
+X.Text=""
+X.Parent=N
+local Y=Instance.new"ImageLabel"
+Y.Size=UDim2.fromOffset(12,12)
+Y.BackgroundTransparency=1
+Y.Image=v"vape/assets/new/rainbow_1.png"
+Y.ImageColor3=n.Light(p.Main,0.37)
+Y.Parent=X
+local Z=Y:Clone()
+Z.Image=v"vape/assets/new/rainbow_2.png"
+Z.Parent=X
+local _=Y:Clone()
+_.Image=v"vape/assets/new/rainbow_3.png"
+_.Parent=X
+local aa=Y:Clone()
+aa.Image=v"vape/assets/new/rainbow_4.png"
+aa.Parent=X
 local ab=Instance.new"Frame"
 ab.Name="Knob"
-ab.Size=UDim2.fromOffset(14,14)
-ab.Position=UDim2.fromScale(0.5,0.5)
+ab.Size=UDim2.fromOffset(24,4)
+ab.Position=UDim2.fromScale(1,0.5)
 ab.AnchorPoint=Vector2.new(0.5,0.5)
-ab.BackgroundColor3=o.Text
-ab.Parent=aa
-addCorner(ab,UDim.new(1,0))
-I.Function=I.Function or function()end
+ab.BackgroundColor3=N.BackgroundColor3
+ab.BorderSizePixel=0
+ab.Parent=T
+local ac=Instance.new"Frame"
+ac.Name="Knob"
+ac.Size=UDim2.fromOffset(14,14)
+ac.Position=UDim2.fromScale(0.5,0.5)
+ac.AnchorPoint=Vector2.new(0.5,0.5)
+ac.BackgroundColor3=p.Text
+ac.Parent=ab
+addCorner(ac,UDim.new(1,0))
+J.Function=J.Function or function()end
 
-if K.OptionsVisibilityChanged~=nil then
-K.OptionsVisibilityChanged:Connect(function(ac)
-if ac==nil then
-ac=J.Visible
+if L.OptionsVisibilityChanged~=nil then
+L.OptionsVisibilityChanged:Connect(function(ad)
+if ad==nil then
+ad=K.Visible
 end
-n:Tween(ab,TweenInfo.new(0.1,Enum.EasingStyle.Quad),{
-Size=ac and UDim2.fromOffset(14,14)or UDim2.fromOffset(0,0)
+o:Tween(ac,TweenInfo.new(0.1,Enum.EasingStyle.Quad),{
+Size=ad and UDim2.fromOffset(14,14)or UDim2.fromOffset(0,0)
 })
 end)
 end
 
-local ac=createSlider(
+local ad=createSlider(
 "Saturation",
 ColorSequence.new{
-ColorSequenceKeypoint.new(0,Color3.fromHSV(0,0,L.Value)),
-ColorSequenceKeypoint.new(1,Color3.fromHSV(L.Hue,1,L.Value)),
-}
-)
-local ad=createSlider(
-"Vibrance",
-ColorSequence.new{
-ColorSequenceKeypoint.new(0,Color3.fromHSV(0,0,0)),
-ColorSequenceKeypoint.new(1,Color3.fromHSV(L.Hue,L.Sat,1)),
+ColorSequenceKeypoint.new(0,Color3.fromHSV(0,0,M.Value)),
+ColorSequenceKeypoint.new(1,Color3.fromHSV(M.Hue,1,M.Value)),
 }
 )
 local ae=createSlider(
+"Vibrance",
+ColorSequence.new{
+ColorSequenceKeypoint.new(0,Color3.fromHSV(0,0,0)),
+ColorSequenceKeypoint.new(1,Color3.fromHSV(M.Hue,M.Sat,1)),
+}
+)
+local af=createSlider(
 "Opacity",
 ColorSequence.new{
-ColorSequenceKeypoint.new(0,m.Dark(o.Main,0.02)),
-ColorSequenceKeypoint.new(1,Color3.fromHSV(L.Hue,L.Sat,L.Value)),
+ColorSequenceKeypoint.new(0,n.Dark(p.Main,0.02)),
+ColorSequenceKeypoint.new(1,Color3.fromHSV(M.Hue,M.Sat,M.Value)),
 }
 )
 
-function L.Save(af,ag)
-ag[I.Name]={
-Hue=af.Hue,
-Sat=af.Sat,
-Value=af.Value,
-Opacity=af.Opacity,
-Rainbow=af.Rainbow,
+function M.Save(ag,ah)
+ah[J.Name]={
+Hue=ag.Hue,
+Sat=ag.Sat,
+Value=ag.Value,
+Opacity=ag.Opacity,
+Rainbow=ag.Rainbow,
 }
 end
 
-function L.Load(af,ag)
-if ag.Rainbow~=af.Rainbow then
-af:Toggle()
+function M.Load(ag,ah)
+if ah.Rainbow~=ag.Rainbow then
+ag:Toggle()
 end
-if af.Hue~=ag.Hue or af.Sat~=ag.Sat or af.Value~=ag.Value or af.Opacity~=ag.Opacity then
-af:SetValue(ag.Hue,ag.Sat,ag.Value,ag.Opacity,false)
+if ag.Hue~=ah.Hue or ag.Sat~=ah.Sat or ag.Value~=ah.Value or ag.Opacity~=ah.Opacity then
+ag:SetValue(ah.Hue,ah.Sat,ah.Value,ah.Opacity,false)
 end
 end
 
-function L.ConnectCallback(af,ag)
-if not(ag~=nil and type(ag)=="function")then return end
-if L._InternalCallback and shared.VoidDev then
+function M.ConnectCallback(ag,ah)
+if not(ah~=nil and type(ah)=="function")then return end
+if M._InternalCallback and shared.VoidDev then
 warn(debug.traceback(`Overriding InternalCallback!!!`))
 end
-L._InternalCallback=wrap(ag)
+M._InternalCallback=wrap(ah)
 end
 
-function L.SetValue(af,ag,ah,ai,aj)
-af.Hue=ag or af.Hue
-af.Sat=ah or af.Sat
-af.Value=ai or af.Value
-af.Opacity=aj or af.Opacity
-T.ImageColor3=Color3.fromHSV(af.Hue,af.Sat,af.Value)
-T.ImageTransparency=1-af.Opacity
-ac.Slider.UIGradient.Color=ColorSequence.new{
-ColorSequenceKeypoint.new(0,Color3.fromHSV(0,0,af.Value)),
-ColorSequenceKeypoint.new(1,Color3.fromHSV(af.Hue,1,af.Value)),
-}
+function M.SetValue(ag,ah,ai,aj,ak)
+ag.Hue=ah or ag.Hue
+ag.Sat=ai or ag.Sat
+ag.Value=aj or ag.Value
+ag.Opacity=ak or ag.Opacity
+U.ImageColor3=Color3.fromHSV(ag.Hue,ag.Sat,ag.Value)
+U.ImageTransparency=1-ag.Opacity
 ad.Slider.UIGradient.Color=ColorSequence.new{
-ColorSequenceKeypoint.new(0,Color3.fromHSV(0,0,0)),
-ColorSequenceKeypoint.new(1,Color3.fromHSV(af.Hue,af.Sat,1)),
+ColorSequenceKeypoint.new(0,Color3.fromHSV(0,0,ag.Value)),
+ColorSequenceKeypoint.new(1,Color3.fromHSV(ag.Hue,1,ag.Value)),
 }
 ae.Slider.UIGradient.Color=ColorSequence.new{
-ColorSequenceKeypoint.new(0,m.Dark(o.Main,0.02)),
-ColorSequenceKeypoint.new(1,Color3.fromHSV(af.Hue,af.Sat,af.Value)),
+ColorSequenceKeypoint.new(0,Color3.fromHSV(0,0,0)),
+ColorSequenceKeypoint.new(1,Color3.fromHSV(ag.Hue,ag.Sat,1)),
+}
+af.Slider.UIGradient.Color=ColorSequence.new{
+ColorSequenceKeypoint.new(0,n.Dark(p.Main,0.02)),
+ColorSequenceKeypoint.new(1,Color3.fromHSV(ag.Hue,ag.Sat,ag.Value)),
 }
 
-if af.Rainbow then
-S.Size=UDim2.fromScale(math.clamp(af.Hue,0.04,0.96),1)
+if ag.Rainbow then
+T.Size=UDim2.fromScale(math.clamp(ag.Hue,0.04,0.96),1)
 else
-n:Tween(S,o.Tween,{
-Size=UDim2.fromScale(math.clamp(af.Hue,0.04,0.96),1),
+o:Tween(T,p.Tween,{
+Size=UDim2.fromScale(math.clamp(ag.Hue,0.04,0.96),1),
 })
 end
 
-if ah then
-n:Tween(ac.Slider.Fill,o.Tween,{
-Size=UDim2.fromScale(math.clamp(af.Sat,0.04,0.96),1),
-})
-end
 if ai then
-n:Tween(ad.Slider.Fill,o.Tween,{
-Size=UDim2.fromScale(math.clamp(af.Value,0.04,0.96),1),
+o:Tween(ad.Slider.Fill,p.Tween,{
+Size=UDim2.fromScale(math.clamp(ag.Sat,0.04,0.96),1),
 })
 end
 if aj then
-n:Tween(ae.Slider.Fill,o.Tween,{
-Size=UDim2.fromScale(math.clamp(af.Opacity,0.04,0.96),1),
+o:Tween(ae.Slider.Fill,p.Tween,{
+Size=UDim2.fromScale(math.clamp(ag.Value,0.04,0.96),1),
+})
+end
+if ak then
+o:Tween(af.Slider.Fill,p.Tween,{
+Size=UDim2.fromScale(math.clamp(ag.Opacity,0.04,0.96),1),
 })
 end
 
-I.Function(af.Hue,af.Sat,af.Value,af.Opacity)
+J.Function(ag.Hue,ag.Sat,ag.Value,ag.Opacity)
 end
 
-function L.ToColor(af)
-return Color3.fromHSV(af.Hue,af.Sat,af.Value)
+function M.ToColor(ag)
+return Color3.fromHSV(ag.Hue,ag.Sat,ag.Value)
 end
 
-function L.Toggle(af)
-af.Rainbow=not af.Rainbow
-if af.Rainbow then
-table.insert(d.RainbowTable,af)
-X.ImageColor3=Color3.fromRGB(5,127,100)
+function M.Toggle(ag)
+ag.Rainbow=not ag.Rainbow
+if ag.Rainbow then
+table.insert(d.RainbowTable,ag)
+Y.ImageColor3=Color3.fromRGB(5,127,100)
 task.delay(0.1,function()
-if not af.Rainbow then
+if not ag.Rainbow then
 return
 end
-Y.ImageColor3=Color3.fromRGB(228,125,43)
+Z.ImageColor3=Color3.fromRGB(228,125,43)
 task.delay(0.1,function()
-if not af.Rainbow then
+if not ag.Rainbow then
 return
 end
-Z.ImageColor3=Color3.fromRGB(225,46,52)
+_.ImageColor3=Color3.fromRGB(225,46,52)
 end)
 end)
 else
-local ag=table.find(d.RainbowTable,af)
-if ag then
-table.remove(d.RainbowTable,ag)
+local ah=table.find(d.RainbowTable,ag)
+if ah then
+table.remove(d.RainbowTable,ah)
 end
-Z.ImageColor3=m.Light(o.Main,0.37)
+_.ImageColor3=n.Light(p.Main,0.37)
 task.delay(0.1,function()
-if af.Rainbow then
+if ag.Rainbow then
 return
 end
-Y.ImageColor3=m.Light(o.Main,0.37)
+Z.ImageColor3=n.Light(p.Main,0.37)
 task.delay(0.1,function()
-if af.Rainbow then
+if ag.Rainbow then
 return
 end
-X.ImageColor3=m.Light(o.Main,0.37)
+Y.ImageColor3=n.Light(p.Main,0.37)
 end)
 end)
 end
 end
 
-local af=tick()
-T.Activated:Connect(function()
-T.Visible=false
-O.Visible=true
-O:CaptureFocus()
-local ag=Color3.fromHSV(L.Hue,L.Sat,L.Value)
-O.Text=math.round(ag.R*255)
+local ag=tick()
+U.Activated:Connect(function()
+U.Visible=false
+P.Visible=true
+P:CaptureFocus()
+local ah=Color3.fromHSV(M.Hue,M.Sat,M.Value)
+P.Text=math.round(ah.R*255)
 ..", "
-..math.round(ag.G*255)
+..math.round(ah.G*255)
 ..", "
-..math.round(ag.B*255)
+..math.round(ah.B*255)
 end)
-M.InputBegan:Connect(function(ag)
+N.InputBegan:Connect(function(ah)
 if
 (
-ag.UserInputType==Enum.UserInputType.MouseButton1
-or ag.UserInputType==Enum.UserInputType.Touch
-)and(ag.Position.Y-M.AbsolutePosition.Y)>(20*A.Scale)
+ah.UserInputType==Enum.UserInputType.MouseButton1
+or ah.UserInputType==Enum.UserInputType.Touch
+)and(ah.Position.Y-N.AbsolutePosition.Y)>(20*B.Scale)
 then
-if af>tick()then
-L:Toggle()
+if ag>tick()then
+M:Toggle()
 end
-af=tick()+0.3
-local ah=h.InputChanged:Connect(function(ah)
+ag=tick()+0.3
+local ai=h.InputChanged:Connect(function(ai)
 if
-ah.UserInputType
+ai.UserInputType
 ==(
-ag.UserInputType==Enum.UserInputType.MouseButton1
+ah.UserInputType==Enum.UserInputType.MouseButton1
 and Enum.UserInputType.MouseMovement
 or Enum.UserInputType.Touch
 )
 then
-L:SetValue(
-math.clamp((ah.Position.X-P.AbsolutePosition.X)/P.AbsoluteSize.X,0,1),
+M:SetValue(
+math.clamp((ai.Position.X-Q.AbsolutePosition.X)/Q.AbsoluteSize.X,0,1),
 nil,nil,nil,true
 )
-if L._InternalCallback then
-L._InternalCallback()
+if M._InternalCallback then
+M._InternalCallback()
 end
 end
 end)
 
-local ai
-ai=ag.Changed:Connect(function()
-if ag.UserInputState==Enum.UserInputState.End then
-if ah then
-ah:Disconnect()
-end
+local aj
+aj=h.InputEnded:Connect(function(ak)
+if ak==ah and ah.UserInputState==Enum.UserInputState.End then
 if ai then
 ai:Disconnect()
 end
+if aj then
+aj:Disconnect()
+end
 end
 end)
 end
 end)
-M.MouseEnter:Connect(function()
-n:Tween(ab,o.Tween,{
+N.MouseEnter:Connect(function()
+o:Tween(ac,p.Tween,{
 Size=UDim2.fromOffset(16,16),
 })
 end)
-M.MouseLeave:Connect(function()
-n:Tween(ab,o.Tween,{
+N.MouseLeave:Connect(function()
+o:Tween(ac,p.Tween,{
 Size=UDim2.fromOffset(14,14),
 })
 end)
-M:GetPropertyChangedSignal"Visible":Connect(function()
-ac.Visible=V.Rotation==180 and M.Visible
-ad.Visible=ac.Visible
-ae.Visible=ac.Visible
+N:GetPropertyChangedSignal"Visible":Connect(function()
+ad.Visible=W.Rotation==180 and N.Visible
+ae.Visible=ad.Visible
+af.Visible=ad.Visible
 end)
-U.MouseEnter:Connect(function()
-V.ImageColor3=m.Dark(o.Text,0.16)
+V.MouseEnter:Connect(function()
+W.ImageColor3=n.Dark(p.Text,0.16)
 end)
-U.MouseLeave:Connect(function()
-V.ImageColor3=m.Dark(o.Text,0.43)
+V.MouseLeave:Connect(function()
+W.ImageColor3=n.Dark(p.Text,0.43)
 end)
-U.Activated:Connect(function()
-ac.Visible=not ac.Visible
-ad.Visible=ac.Visible
-ae.Visible=ac.Visible
-V.Rotation=ac.Visible and 180 or 0
+V.Activated:Connect(function()
+ad.Visible=not ad.Visible
+ae.Visible=ad.Visible
+af.Visible=ad.Visible
+W.Rotation=ad.Visible and 180 or 0
 end)
-W.Activated:Connect(function()
-L:Toggle()
+X.Activated:Connect(function()
+M:Toggle()
 end)
-O.FocusLost:Connect(function(ag)
-T.Visible=true
-O.Visible=false
-if ag then
-local ah=O.Text:split","
-local ai,aj=pcall(function()
-return tonumber(ah[1])
-and Color3.fromRGB(tonumber(ah[1]),tonumber(ah[2]),tonumber(ah[3]))
-or Color3.fromHex(O.Text)
+P.FocusLost:Connect(function(ah)
+U.Visible=true
+P.Visible=false
+if ah then
+local ai=P.Text:split","
+local aj,ak=pcall(function()
+return tonumber(ai[1])
+and Color3.fromRGB(tonumber(ai[1]),tonumber(ai[2]),tonumber(ai[3]))
+or Color3.fromHex(P.Text)
 end)
-if ai then
-if L.Rainbow then
-L:Toggle()
+if aj then
+if M.Rainbow then
+M:Toggle()
 end
-L:SetValue(aj:ToHSV())
-if L._InternalCallback then
-L._InternalCallback()
+M:SetValue(ak:ToHSV())
+if M._InternalCallback then
+M._InternalCallback()
 end
 end
 end
 end)
 
-L.Object=M
-K.Options[I.Name]=L
+M.Object=N
+L.Options[J.Name]=M
 
-return L
+return M
 end,
 Dropdown=function(aa,ab,ac)
 local ad
@@ -1761,7 +1811,7 @@ Index=0,
 local af=Instance.new"TextButton"
 af.Name=aa.Name.."Dropdown"
 af.Size=aa.Size or UDim2.new(1,0,0,40)
-af.BackgroundColor3=m.Dark(ab.BackgroundColor3,aa.Darker and 0.02 or 0)
+af.BackgroundColor3=n.Dark(ab.BackgroundColor3,aa.Darker and 0.02 or 0)
 af.BorderSizePixel=0
 af.AutoButtonColor=false
 af.Visible=aa.Visible==nil or aa.Visible
@@ -1772,21 +1822,21 @@ local ag=Instance.new"Frame"
 ag.Name="BKG"
 ag.Size=UDim2.new(1,-20,1,-9)
 ag.Position=UDim2.fromOffset(10,4)
-ag.BackgroundColor3=m.Light(o.Main,0.034)
+ag.BackgroundColor3=n.Light(p.Main,0.034)
 ag.Parent=af
 addCorner(ag,UDim.new(0,6))
 local ah=Instance.new"UIStroke"
 ah.Name="GlowStroke"
 ah.Thickness=2
 ah.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
-ah.Color=m.Light(o.Main,0.35)
+ah.Color=n.Light(p.Main,0.35)
 ah.Transparency=1
 ah.Parent=ag
 local ai=Instance.new"TextButton"
 ai.Name="Dropdown"
 ai.Size=UDim2.new(1,-2,1,-2)
 ai.Position=UDim2.fromOffset(1,1)
-ai.BackgroundColor3=o.Main
+ai.BackgroundColor3=p.Main
 ai.AutoButtonColor=false
 ai.Text=""
 ai.Parent=ag
@@ -1796,21 +1846,21 @@ aj.Size=UDim2.new(1,0,0,29)
 aj.BackgroundTransparency=1
 aj.Text="         "..aa.Name.." - "..ae.Value
 aj.TextXAlignment=Enum.TextXAlignment.Left
-aj.TextColor3=m.Dark(o.Text,0.16)
+aj.TextColor3=n.Dark(p.Text,0.16)
 aj.TextSize=13
 aj.TextTruncate=Enum.TextTruncate.AtEnd
-aj.FontFace=o.Font
+aj.FontFace=p.Font
 aj.Parent=ai
 addCorner(ai,UDim.new(0,6))
-local I=Instance.new"ImageLabel"
-I.Name="Arrow"
-I.Size=UDim2.fromOffset(4,8)
-I.Position=UDim2.new(1,-17,0,11)
-I.BackgroundTransparency=1
-I.Image=u"vape/assets/new/expandright.png"
-I.ImageColor3=Color3.fromRGB(140,140,140)
-I.Rotation=90
-I.Parent=ai
+local ak=Instance.new"ImageLabel"
+ak.Name="Arrow"
+ak.Size=UDim2.fromOffset(4,8)
+ak.Position=UDim2.new(1,-17,0,11)
+ak.BackgroundTransparency=1
+ak.Image=v"vape/assets/new/expandright.png"
+ak.ImageColor3=Color3.fromRGB(140,140,140)
+ak.Rotation=90
+ak.Parent=ai
 aa.Function=aa.Function or function()end
 local J
 local K
@@ -1856,7 +1906,7 @@ function ae.SetValue(L,M,N)
 L.Value=table.find(aa.List,M)and M or aa.List[1]or"None"
 aj.Text="         "..aa.Name.." - "..L.Value
 if J then
-I.Rotation=90
+ak.Rotation=90
 J:Destroy()
 J=nil
 af.Size=aa.Size or UDim2.new(1,0,0,40)
@@ -1869,7 +1919,7 @@ end
 
 ai.Activated:Connect(function()
 if not J then
-I.Rotation=270
+ak.Rotation=270
 
 local L=7
 
@@ -1909,12 +1959,12 @@ if O then
 N=Instance.new"TextBox"
 N.Name="SearchBar"
 N.Size=UDim2.new(1,0,0,26)
-N.BackgroundColor3=m.Light(o.Main,0.02)
+N.BackgroundColor3=n.Light(p.Main,0.02)
 N.PlaceholderText=" Search..."
 N.Text=""
-N.TextColor3=o.Text
+N.TextColor3=p.Text
 N.TextSize=13
-N.FontFace=o.Font
+N.FontFace=p.Font
 N.ClearTextOnFocus=false
 N.Parent=J
 addTooltip(N,"Type to search options")
@@ -1930,7 +1980,7 @@ P.BackgroundTransparency=1
 P.Text="  No Results Found"
 P.TextColor3=Color3.fromRGB(150,150,150)
 P.TextSize=13
-P.FontFace=o.Font
+P.FontFace=p.Font
 P.Visible=false
 P.TextXAlignment=Enum.TextXAlignment.Left
 P.Parent=M
@@ -1943,25 +1993,25 @@ local U=Instance.new"TextButton"
 U.Name=T.."Option"
 U.Size=UDim2.new(1,0,0,26)
 U.Position=UDim2.fromOffset(0,R*26)
-U.BackgroundColor3=o.Main
+U.BackgroundColor3=p.Main
 U.BorderSizePixel=0
 U.AutoButtonColor=false
 U.Text="   "..T
-U.TextColor3=o.Text
+U.TextColor3=p.Text
 U.TextXAlignment=Enum.TextXAlignment.Left
 U.TextSize=13
-U.FontFace=o.Font
+U.FontFace=p.Font
 U.Parent=M
 addTooltip(U,T)
 
 U.MouseEnter:Connect(function()
-n:Tween(U,o.Tween,{
-BackgroundColor3=m.Light(o.Main,0.04),
+o:Tween(U,p.Tween,{
+BackgroundColor3=n.Light(p.Main,0.04),
 })
 end)
 U.MouseLeave:Connect(function()
-n:Tween(U,o.Tween,{
-BackgroundColor3=o.Main,
+o:Tween(U,p.Tween,{
+BackgroundColor3=p.Main,
 })
 end)
 
@@ -2045,18 +2095,18 @@ end
 end)
 
 af.MouseEnter:Connect(function()
-n:Tween(ag,o.Tween,{
-BackgroundColor3=m.Light(o.Main,0.0875),
+o:Tween(ag,p.Tween,{
+BackgroundColor3=n.Light(p.Main,0.0875),
 })
-n:Tween(ah,o.Tween,{
+o:Tween(ah,p.Tween,{
 Transparency=0.15,
 })
 end)
 af.MouseLeave:Connect(function()
-n:Tween(ag,o.Tween,{
-BackgroundColor3=m.Light(o.Main,0.034),
+o:Tween(ag,p.Tween,{
+BackgroundColor3=n.Light(p.Main,0.034),
 })
-n:Tween(ah,o.Tween,{
+o:Tween(ah,p.Tween,{
 Transparency=1,
 })
 end)
@@ -2082,7 +2132,7 @@ local af
 local ag
 aa.Function=aa.Function or function()end
 
-af=H.Dropdown({
+af=I.Dropdown({
 Name=aa.Name,
 List=ad,
 Function=function(ah)
@@ -2102,7 +2152,7 @@ Visible=aa.Visible,
 Default=aa.Default,
 },ab,ac)
 ae.Object=af.Object
-ag=H.TextBox({
+ag=I.TextBox({
 Name=aa.Name.." Asset",
 Placeholder="font (rbxasset)",
 Function=function()
@@ -2134,7 +2184,7 @@ Index=getTableSize(ac.Options),
 local ae=Instance.new"TextButton"
 ae.Name=aa.Name.."Slider"
 ae.Size=UDim2.new(1,0,0,50)
-ae.BackgroundColor3=m.Dark(ab.BackgroundColor3,aa.Darker and 0.02 or 0)
+ae.BackgroundColor3=n.Dark(ab.BackgroundColor3,aa.Darker and 0.02 or 0)
 ae.BorderSizePixel=0
 ae.AutoButtonColor=false
 ae.Visible=aa.Visible==nil or aa.Visible
@@ -2148,9 +2198,9 @@ af.Position=UDim2.fromOffset(10,2)
 af.BackgroundTransparency=1
 af.Text=aa.Name
 af.TextXAlignment=Enum.TextXAlignment.Left
-af.TextColor3=m.Dark(o.Text,0.16)
+af.TextColor3=n.Dark(p.Text,0.16)
 af.TextSize=11
-af.FontFace=o.Font
+af.FontFace=p.Font
 af.Parent=ae
 local ag=Instance.new"TextButton"
 ag.Name="Value"
@@ -2164,9 +2214,9 @@ and" "..(type(aa.Suffix)=="function"and aa.Suffix(ad.Value)or aa.Suffix)
 or""
 )
 ag.TextXAlignment=Enum.TextXAlignment.Right
-ag.TextColor3=m.Dark(o.Text,0.16)
+ag.TextColor3=n.Dark(p.Text,0.16)
 ag.TextSize=11
-ag.FontFace=o.Font
+ag.FontFace=p.Font
 ag.Parent=ae
 local ah=Instance.new"TextBox"
 ah.Name="Box"
@@ -2176,16 +2226,16 @@ ah.BackgroundTransparency=1
 ah.Visible=false
 ah.Text=ad.Value
 ah.TextXAlignment=Enum.TextXAlignment.Right
-ah.TextColor3=m.Dark(o.Text,0.16)
+ah.TextColor3=n.Dark(p.Text,0.16)
 ah.TextSize=11
-ah.FontFace=o.Font
+ah.FontFace=p.Font
 ah.ClearTextOnFocus=false
 ah.Parent=ae
 local ai=Instance.new"Frame"
 ai.Name="Slider"
 ai.Size=UDim2.new(1,-20,0,2)
 ai.Position=UDim2.fromOffset(10,37)
-ai.BackgroundColor3=m.Light(o.Main,0.034)
+ai.BackgroundColor3=n.Light(p.Main,0.034)
 ai.BorderSizePixel=0
 ai.Parent=ae
 local aj=ai:Clone()
@@ -2195,21 +2245,21 @@ UDim2.fromScale(math.clamp((ad.Value-aa.Min)/aa.Max,0.04,0.96),1)
 aj.Position=UDim2.new()
 aj.BackgroundColor3=Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
 aj.Parent=ai
-local I=Instance.new"Frame"
-I.Name="Knob"
-I.Size=UDim2.fromOffset(24,4)
-I.Position=UDim2.fromScale(1,0.5)
-I.AnchorPoint=Vector2.new(0.5,0.5)
-I.BackgroundColor3=ae.BackgroundColor3
-I.BorderSizePixel=0
-I.Parent=aj
+local ak=Instance.new"Frame"
+ak.Name="Knob"
+ak.Size=UDim2.fromOffset(24,4)
+ak.Position=UDim2.fromScale(1,0.5)
+ak.AnchorPoint=Vector2.new(0.5,0.5)
+ak.BackgroundColor3=ae.BackgroundColor3
+ak.BorderSizePixel=0
+ak.Parent=aj
 local J=Instance.new"Frame"
 J.Name="Knob"
 J.Size=UDim2.fromOffset(14,14)
 J.Position=UDim2.fromScale(0.5,0.5)
 J.AnchorPoint=Vector2.new(0.5,0.5)
 J.BackgroundColor3=Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
-J.Parent=I
+J.Parent=ak
 addCorner(J,UDim.new(1,0))
 aa.Function=aa.Function or function()end
 aa.Decimal=aa.Decimal or 1
@@ -2219,7 +2269,7 @@ ac.OptionsVisibilityChanged:Connect(function(K)
 if K==nil then
 K=ab.Visible
 end
-n:Tween(J,TweenInfo.new(0.1,Enum.EasingStyle.Quad),{
+o:Tween(J,TweenInfo.new(0.1,Enum.EasingStyle.Quad),{
 Size=K and UDim2.fromOffset(14,14)or UDim2.fromOffset(0,0)
 })
 end)
@@ -2251,7 +2301,7 @@ return
 end
 local O=K.Value~=L
 K.Value=L
-n:Tween(aj,o.Tween,{
+o:Tween(aj,p.Tween,{
 Size=UDim2.fromScale(math.clamp(M or math.clamp(L/aa.Max,0,1),0.04,0.96),1),
 })
 ag.Text=K.Value
@@ -2270,7 +2320,7 @@ if
 (
 K.UserInputType==Enum.UserInputType.MouseButton1
 or K.UserInputType==Enum.UserInputType.Touch
-)and(K.Position.Y-ae.AbsolutePosition.Y)>(20*A.Scale)
+)and(K.Position.Y-ae.AbsolutePosition.Y)>(20*B.Scale)
 then
 local L=
 math.clamp((K.Position.X-ai.AbsolutePosition.X)/ai.AbsoluteSize.X,0,1)
@@ -2308,8 +2358,8 @@ end
 end)
 
 local P
-P=K.Changed:Connect(function()
-if K.UserInputState==Enum.UserInputState.End then
+P=h.InputEnded:Connect(function(Q)
+if Q==K and K.UserInputState==Enum.UserInputState.End then
 if O then
 O:Disconnect()
 end
@@ -2322,12 +2372,12 @@ end)
 end
 end)
 ae.MouseEnter:Connect(function()
-n:Tween(J,o.Tween,{
+o:Tween(J,p.Tween,{
 Size=UDim2.fromOffset(16,16),
 })
 end)
 ae.MouseLeave:Connect(function()
-n:Tween(J,o.Tween,{
+o:Tween(J,p.Tween,{
 Size=UDim2.fromOffset(14,14),
 })
 end)
@@ -2359,7 +2409,7 @@ Index=getTableSize(ac.Options),
 local ae=Instance.new"TextButton"
 ae.Name="Targets"
 ae.Size=UDim2.new(1,0,0,50)
-ae.BackgroundColor3=m.Dark(ab.BackgroundColor3,aa.Darker and 0.02 or 0)
+ae.BackgroundColor3=n.Dark(ab.BackgroundColor3,aa.Darker and 0.02 or 0)
 ae.BorderSizePixel=0
 ae.AutoButtonColor=false
 ae.Visible=aa.Visible==nil or aa.Visible
@@ -2370,14 +2420,14 @@ local af=Instance.new"Frame"
 af.Name="BKG"
 af.Size=UDim2.new(1,-20,1,-9)
 af.Position=UDim2.fromOffset(10,4)
-af.BackgroundColor3=m.Light(o.Main,0.034)
+af.BackgroundColor3=n.Light(p.Main,0.034)
 af.Parent=ae
 addCorner(af,UDim.new(0,4))
 local ag=Instance.new"TextButton"
 ag.Name="TextList"
 ag.Size=UDim2.new(1,-2,1,-2)
 ag.Position=UDim2.fromOffset(1,1)
-ag.BackgroundColor3=o.Main
+ag.BackgroundColor3=p.Main
 ag.AutoButtonColor=false
 ag.Text=""
 ag.Parent=af
@@ -2388,16 +2438,16 @@ ah.Position=UDim2.fromOffset(5,6)
 ah.BackgroundTransparency=1
 ah.Text="Target:"
 ah.TextXAlignment=Enum.TextXAlignment.Left
-ah.TextColor3=m.Dark(o.Text,0.16)
+ah.TextColor3=n.Dark(p.Text,0.16)
 ah.TextSize=15
 ah.TextTruncate=Enum.TextTruncate.AtEnd
-ah.FontFace=o.Font
+ah.FontFace=p.Font
 ah.Parent=ag
 local ai=ah:Clone()
 ai.Name="Items"
 ai.Position=UDim2.fromOffset(5,21)
 ai.Text="Ignore none"
-ai.TextColor3=m.Dark(o.Text,0.16)
+ai.TextColor3=n.Dark(p.Text,0.16)
 ai.TextSize=11
 ai.Parent=ag
 addCorner(ag,UDim.new(0,4))
@@ -2406,19 +2456,19 @@ aj.Size=UDim2.fromOffset(65,12)
 aj.Position=UDim2.fromOffset(52,8)
 aj.BackgroundTransparency=1
 aj.Parent=ag
-local I=Instance.new"UIListLayout"
-I.FillDirection=Enum.FillDirection.Horizontal
-I.Padding=UDim.new(0,6)
-I.Parent=aj
+local ak=Instance.new"UIListLayout"
+ak.FillDirection=Enum.FillDirection.Horizontal
+ak.Padding=UDim.new(0,6)
+ak.Parent=aj
 local J=Instance.new"TextButton"
 J.Name="TargetsTextWindow"
 J.Size=UDim2.fromOffset(220,145)
-J.BackgroundColor3=o.Main
+J.BackgroundColor3=p.Main
 J.BorderSizePixel=0
 J.AutoButtonColor=false
 J.Visible=false
 J.Text=""
-J.Parent=v
+J.Parent=w
 ad.Window=J
 addBlur(J)
 addCorner(J)
@@ -2427,7 +2477,7 @@ K.Name="Icon"
 K.Size=UDim2.fromOffset(18,12)
 K.Position=UDim2.fromOffset(10,15)
 K.BackgroundTransparency=1
-K.Image=u"vape/assets/new/targetstab.png"
+K.Image=v"vape/assets/new/targetstab.png"
 K.Parent=J
 local L=Instance.new"TextLabel"
 L.Name="Title"
@@ -2436,9 +2486,9 @@ L.Position=UDim2.fromOffset(math.abs(L.Size.X.Offset),11)
 L.BackgroundTransparency=1
 L.Text="Target settings"
 L.TextXAlignment=Enum.TextXAlignment.Left
-L.TextColor3=o.Text
+L.TextColor3=p.Text
 L.TextSize=13
-L.FontFace=o.Font
+L.FontFace=p.Font
 L.Parent=J
 local M=addCloseButton(J)
 aa.Function=aa.Function or function()end
@@ -2471,44 +2521,44 @@ function ad.Color(N,O,P,Q,R)
 af.BackgroundColor3=R and Color3.fromHSV(d:Color((O-(N.Index*0.075))%1))
 or Color3.fromHSV(O,P,Q)
 if N.Players.Enabled then
-n:Cancel(N.Players.Object.Frame)
+o:Cancel(N.Players.Object.Frame)
 N.Players.Object.Frame.BackgroundColor3=Color3.fromHSV(O,P,Q)
 end
 if N.NPCs.Enabled then
-n:Cancel(N.NPCs.Object.Frame)
+o:Cancel(N.NPCs.Object.Frame)
 N.NPCs.Object.Frame.BackgroundColor3=Color3.fromHSV(O,P,Q)
 end
 if N.Invisible.Enabled then
-n:Cancel(N.Invisible.Object.Knob)
+o:Cancel(N.Invisible.Object.Knob)
 N.Invisible.Object.Knob.BackgroundColor3=Color3.fromHSV(O,P,Q)
 end
 if N.Walls.Enabled then
-n:Cancel(N.Walls.Object.Knob)
+o:Cancel(N.Walls.Object.Knob)
 N.Walls.Object.Knob.BackgroundColor3=Color3.fromHSV(O,P,Q)
 end
 end
 
-ad.Players=H.TargetsButton({
+ad.Players=I.TargetsButton({
 Position=UDim2.fromOffset(11,45),
-Icon=u"vape/assets/new/targetplayers1.png",
+Icon=v"vape/assets/new/targetplayers1.png",
 IconSize=UDim2.fromOffset(15,16),
 IconParent=aj,
-ToolIcon=u"vape/assets/new/targetplayers2.png",
+ToolIcon=v"vape/assets/new/targetplayers2.png",
 ToolSize=UDim2.fromOffset(11,12),
 Tooltip="Players",
 Function=aa.Function,
 },J,aj)
-ad.NPCs=H.TargetsButton({
+ad.NPCs=I.TargetsButton({
 Position=UDim2.fromOffset(112,45),
-Icon=u"vape/assets/new/targetnpc1.png",
+Icon=v"vape/assets/new/targetnpc1.png",
 IconSize=UDim2.fromOffset(12,16),
 IconParent=aj,
-ToolIcon=u"vape/assets/new/targetnpc2.png",
+ToolIcon=v"vape/assets/new/targetnpc2.png",
 ToolSize=UDim2.fromOffset(9,12),
 Tooltip="NPCs",
 Function=aa.Function,
 },J,aj)
-ad.Invisible=H.Toggle({
+ad.Invisible=I.Toggle({
 Name="Ignore invisible",
 Function=function()
 local N="none"
@@ -2523,7 +2573,7 @@ aa.Function()
 end,
 },J,{Options={}})
 ad.Invisible.Object.Position=UDim2.fromOffset(0,81)
-ad.Walls=H.Toggle({
+ad.Walls=I.Toggle({
 Name="Ignore behind walls",
 Function=function()
 local N="none"
@@ -2556,22 +2606,22 @@ J.Visible=false
 end)
 ag.Activated:Connect(function()
 J.Visible=not J.Visible
-n:Cancel(af)
+o:Cancel(af)
 af.BackgroundColor3=J.Visible
 and Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
-or m.Light(o.Main,0.37)
+or n.Light(p.Main,0.37)
 end)
 ae.MouseEnter:Connect(function()
 if not ad.Window.Visible then
-n:Tween(af,o.Tween,{
-BackgroundColor3=m.Light(o.Main,0.37),
+o:Tween(af,p.Tween,{
+BackgroundColor3=n.Light(p.Main,0.37),
 })
 end
 end)
 ae.MouseLeave:Connect(function()
 if not ad.Window.Visible then
-n:Tween(af,o.Tween,{
-BackgroundColor3=m.Light(o.Main,0.034),
+o:Tween(af,p.Tween,{
+BackgroundColor3=n.Light(p.Main,0.034),
 })
 end
 end)
@@ -2579,7 +2629,7 @@ ae:GetPropertyChangedSignal"AbsolutePosition":Connect(function()
 if d.ThreadFix then
 setthreadidentity(8)
 end
-local N=(ae.AbsolutePosition+Vector2.new(0,60))/A.Scale
+local N=(ae.AbsolutePosition+Vector2.new(0,60))/B.Scale
 J.Position=UDim2.fromOffset(N.X+220,N.Y)
 end)
 
@@ -2594,7 +2644,7 @@ local ad={Enabled=false}
 local ae=Instance.new"TextButton"
 ae.Size=UDim2.fromOffset(98,31)
 ae.Position=aa.Position
-ae.BackgroundColor3=m.Light(o.Main,0.05)
+ae.BackgroundColor3=n.Light(p.Main,0.05)
 ae.AutoButtonColor=false
 ae.Visible=aa.Visible==nil or aa.Visible
 ae.Text=""
@@ -2604,7 +2654,7 @@ addTooltip(ae,aa.Tooltip)
 local af=Instance.new"Frame"
 af.Size=UDim2.new(1,-2,1,-2)
 af.Position=UDim2.fromOffset(1,1)
-af.BackgroundColor3=o.Main
+af.BackgroundColor3=p.Main
 af.Parent=ae
 addCorner(af)
 local ag=Instance.new"ImageLabel"
@@ -2613,20 +2663,20 @@ ag.Position=UDim2.fromScale(0.5,0.5)
 ag.AnchorPoint=Vector2.new(0.5,0.5)
 ag.BackgroundTransparency=1
 ag.Image=aa.Icon
-ag.ImageColor3=m.Light(o.Main,0.37)
+ag.ImageColor3=n.Light(p.Main,0.37)
 ag.Parent=af
 aa.Function=aa.Function or function()end
 local ah
 
 function ad.Toggle(ai)
 ai.Enabled=not ai.Enabled
-n:Tween(af,o.Tween,{
+o:Tween(af,p.Tween,{
 BackgroundColor3=ai.Enabled
 and Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
-or o.Main,
+or p.Main,
 })
-n:Tween(ag,o.Tween,{
-ImageColor3=ai.Enabled and Color3.new(1,1,1)or m.Light(o.Main,0.37),
+o:Tween(ag,p.Tween,{
+ImageColor3=ai.Enabled and Color3.new(1,1,1)or n.Light(p.Main,0.37),
 })
 if ah then
 ah:Destroy()
@@ -2636,7 +2686,7 @@ ah=Instance.new"ImageLabel"
 ah.Size=aa.ToolSize
 ah.BackgroundTransparency=1
 ah.Image=aa.ToolIcon
-ah.ImageColor3=o.Text
+ah.ImageColor3=p.Text
 ah.Parent=aa.IconParent
 end
 aa.Function(ai.Enabled)
@@ -2644,25 +2694,25 @@ end
 
 ae.MouseEnter:Connect(function()
 if not ad.Enabled then
-n:Tween(af,o.Tween,{
+o:Tween(af,p.Tween,{
 BackgroundColor3=Color3.fromHSV(
 d.GUIColor.Hue,
 d.GUIColor.Sat,
 d.GUIColor.Value-0.25
 ),
 })
-n:Tween(ag,o.Tween,{
+o:Tween(ag,p.Tween,{
 ImageColor3=Color3.new(1,1,1),
 })
 end
 end)
 ae.MouseLeave:Connect(function()
 if not ad.Enabled then
-n:Tween(af,o.Tween,{
-BackgroundColor3=o.Main,
+o:Tween(af,p.Tween,{
+BackgroundColor3=p.Main,
 })
-n:Tween(ag,o.Tween,{
-ImageColor3=m.Light(o.Main,0.37),
+o:Tween(ag,p.Tween,{
+ImageColor3=n.Light(p.Main,0.37),
 })
 end
 end)
@@ -2684,7 +2734,7 @@ Index=0,
 local ae=Instance.new"TextButton"
 ae.Name=aa.Name.."TextBox"
 ae.Size=UDim2.new(1,0,0,58)
-ae.BackgroundColor3=m.Dark(ab.BackgroundColor3,aa.Darker and 0.02 or 0)
+ae.BackgroundColor3=n.Dark(ab.BackgroundColor3,aa.Darker and 0.02 or 0)
 ae.BorderSizePixel=0
 ae.AutoButtonColor=false
 ae.Visible=aa.Visible==nil or aa.Visible
@@ -2697,15 +2747,15 @@ af.Position=UDim2.fromOffset(10,3)
 af.BackgroundTransparency=1
 af.Text=aa.Name
 af.TextXAlignment=Enum.TextXAlignment.Left
-af.TextColor3=o.Text
+af.TextColor3=p.Text
 af.TextSize=12
-af.FontFace=o.Font
+af.FontFace=p.Font
 af.Parent=ae
 local ag=Instance.new"Frame"
 ag.Name="BKG"
 ag.Size=UDim2.new(1,-20,0,29)
 ag.Position=UDim2.fromOffset(10,23)
-ag.BackgroundColor3=m.Light(o.Main,0.02)
+ag.BackgroundColor3=n.Light(p.Main,0.02)
 ag.Parent=ae
 addCorner(ag,UDim.new(0,4))
 local ah=Instance.new"TextBox"
@@ -2715,10 +2765,10 @@ ah.BackgroundTransparency=1
 ah.Text=aa.Default or""
 ah.PlaceholderText=aa.Placeholder or"Click to set"
 ah.TextXAlignment=Enum.TextXAlignment.Left
-ah.TextColor3=m.Dark(o.Text,0.16)
-ah.PlaceholderColor3=m.Dark(o.Text,0.31)
+ah.TextColor3=n.Dark(p.Text,0.16)
+ah.PlaceholderColor3=n.Dark(p.Text,0.31)
 ah.TextSize=12
-ah.FontFace=o.Font
+ah.FontFace=p.Font
 ah.ClearTextOnFocus=false
 ah.Parent=ag
 aa.Function=aa.Function or function()end
@@ -2733,10 +2783,10 @@ ai:SetValue(aj.Value)
 end
 end
 
-function ad.SetValue(ai,aj,I)
+function ad.SetValue(ai,aj,ak)
 ai.Value=aj
 ah.Text=aj
-aa.Function(I)
+aa.Function(ak)
 end
 
 ae.Activated:Connect(function()
@@ -2768,7 +2818,7 @@ aa.Color=aa.Color or Color3.fromRGB(5,134,105)
 local ae=Instance.new"TextButton"
 ae.Name=aa.Name.."TextList"
 ae.Size=UDim2.new(1,0,0,50)
-ae.BackgroundColor3=m.Dark(ab.BackgroundColor3,aa.Darker and 0.02 or 0)
+ae.BackgroundColor3=n.Dark(ab.BackgroundColor3,aa.Darker and 0.02 or 0)
 ae.BorderSizePixel=0
 ae.AutoButtonColor=false
 ae.Visible=aa.Visible==nil or aa.Visible
@@ -2779,14 +2829,14 @@ local af=Instance.new"Frame"
 af.Name="BKG"
 af.Size=UDim2.new(1,-20,1,-9)
 af.Position=UDim2.fromOffset(10,4)
-af.BackgroundColor3=m.Light(o.Main,0.034)
+af.BackgroundColor3=n.Light(p.Main,0.034)
 af.Parent=ae
 addCorner(af,UDim.new(0,4))
 local ag=Instance.new"TextButton"
 ag.Name="TextList"
 ag.Size=UDim2.new(1,-2,1,-2)
 ag.Position=UDim2.fromOffset(1,1)
-ag.BackgroundColor3=o.Main
+ag.BackgroundColor3=p.Main
 ag.AutoButtonColor=false
 ag.Text=""
 ag.Parent=af
@@ -2795,7 +2845,7 @@ ah.Name="Icon"
 ah.Size=UDim2.fromOffset(14,12)
 ah.Position=UDim2.fromOffset(10,14)
 ah.BackgroundTransparency=1
-ah.Image=aa.Icon or u"vape/assets/new/allowedicon.png"
+ah.Image=aa.Icon or v"vape/assets/new/allowedicon.png"
 ah.Parent=ag
 local ai=Instance.new"TextLabel"
 ai.Name="Title"
@@ -2804,10 +2854,10 @@ ai.Position=UDim2.fromOffset(35,6)
 ai.BackgroundTransparency=1
 ai.Text=aa.Name
 ai.TextXAlignment=Enum.TextXAlignment.Left
-ai.TextColor3=m.Dark(o.Text,0.16)
+ai.TextColor3=n.Dark(p.Text,0.16)
 ai.TextSize=15
 ai.TextTruncate=Enum.TextTruncate.AtEnd
-ai.FontFace=o.Font
+ai.FontFace=p.Font
 ai.Parent=ag
 local aj=ai:Clone()
 aj.Name="Amount"
@@ -2816,13 +2866,13 @@ aj.Position=UDim2.fromOffset(0,6)
 aj.Text="0"
 aj.TextXAlignment=Enum.TextXAlignment.Right
 aj.Parent=ag
-local I=ai:Clone()
-I.Name="Items"
-I.Position=UDim2.fromOffset(35,21)
-I.Text="None"
-I.TextColor3=m.Dark(o.Text,0.43)
-I.TextSize=11
-I.Parent=ag
+local ak=ai:Clone()
+ak.Name="Items"
+ak.Position=UDim2.fromOffset(35,21)
+ak.Text="None"
+ak.TextColor3=n.Dark(p.Text,0.43)
+ak.TextSize=11
+ak.Parent=ag
 addCorner(ag,UDim.new(0,4))
 
 local J=400
@@ -2833,13 +2883,13 @@ local M=math.floor((J-K)/L)
 local N=Instance.new"TextButton"
 N.Name=aa.Name.."TextWindow"
 N.Size=UDim2.fromOffset(220,K)
-N.BackgroundColor3=o.Main
+N.BackgroundColor3=p.Main
 N.BorderSizePixel=0
 N.AutoButtonColor=false
 N.Visible=false
 N.Text=""
 N.ClipsDescendants=true
-N.Parent=ac.Legit and d.Legit.Window or v
+N.Parent=ac.Legit and d.Legit.Window or w
 ad.Window=N
 addBlur(N)
 addCorner(N)
@@ -2849,7 +2899,7 @@ O.Name="Icon"
 O.Size=aa.TabSize or UDim2.fromOffset(19,16)
 O.Position=UDim2.fromOffset(10,13)
 O.BackgroundTransparency=1
-O.Image=aa.Tab or u"vape/assets/new/allowedtab.png"
+O.Image=aa.Tab or v"vape/assets/new/allowedtab.png"
 O.Parent=N
 local P=Instance.new"TextLabel"
 P.Name="Title"
@@ -2858,9 +2908,9 @@ P.Position=UDim2.fromOffset(math.abs(P.Size.X.Offset),11)
 P.BackgroundTransparency=1
 P.Text=aa.Name
 P.TextXAlignment=Enum.TextXAlignment.Left
-P.TextColor3=o.Text
+P.TextColor3=p.Text
 P.TextSize=13
-P.FontFace=o.Font
+P.FontFace=p.Font
 P.Parent=N
 local Q=addCloseButton(N)
 
@@ -2868,13 +2918,13 @@ local R=Instance.new"Frame"
 R.Name="Add"
 R.Size=UDim2.fromOffset(200,31)
 R.Position=UDim2.fromOffset(10,45)
-R.BackgroundColor3=m.Light(o.Main,0.02)
+R.BackgroundColor3=n.Light(p.Main,0.02)
 R.Parent=N
 addCorner(R)
 local S=R:Clone()
 S.Size=UDim2.new(1,-2,1,-2)
 S.Position=UDim2.fromOffset(1,1)
-S.BackgroundColor3=m.Dark(o.Main,0.02)
+S.BackgroundColor3=n.Dark(p.Main,0.02)
 S.Parent=R
 local T=Instance.new"TextBox"
 T.Size=UDim2.new(1,-35,1,0)
@@ -2885,7 +2935,7 @@ T.PlaceholderText=aa.Placeholder or"Add entry..."
 T.TextXAlignment=Enum.TextXAlignment.Left
 T.TextColor3=Color3.new(1,1,1)
 T.TextSize=15
-T.FontFace=o.Font
+T.FontFace=p.Font
 T.ClearTextOnFocus=false
 T.Parent=R
 local U=Instance.new"ImageButton"
@@ -2893,7 +2943,7 @@ U.Name="AddButton"
 U.Size=UDim2.fromOffset(16,16)
 U.Position=UDim2.new(1,-26,0,8)
 U.BackgroundTransparency=1
-U.Image=u"vape/assets/new/add.png"
+U.Image=v"vape/assets/new/add.png"
 U.ImageColor3=aa.Color
 U.ImageTransparency=0.3
 U.Parent=R
@@ -2903,13 +2953,13 @@ local V=Instance.new"Frame"
 V.Name="SearchBKG"
 V.Size=UDim2.fromOffset(200,31)
 V.Position=UDim2.fromOffset(10,82)
-V.BackgroundColor3=m.Light(o.Main,0.02)
+V.BackgroundColor3=n.Light(p.Main,0.02)
 V.Parent=N
 addCorner(V)
 local W=V:Clone()
 W.Size=UDim2.new(1,-2,1,-2)
 W.Position=UDim2.fromOffset(1,1)
-W.BackgroundColor3=m.Dark(o.Main,0.02)
+W.BackgroundColor3=n.Dark(p.Main,0.02)
 W.Parent=V
 local X=Instance.new"TextBox"
 X.Name="SearchBox"
@@ -2921,7 +2971,7 @@ X.PlaceholderText="Search..."
 X.TextXAlignment=Enum.TextXAlignment.Left
 X.TextColor3=Color3.new(1,1,1)
 X.TextSize=13
-X.FontFace=o.Font
+X.FontFace=p.Font
 X.ClearTextOnFocus=false
 X.Parent=V
 addTooltip(V,"Type to search entries")
@@ -2947,244 +2997,244 @@ Z.BackgroundTransparency=1
 Z.Text="No Results Found"
 Z.TextColor3=Color3.fromRGB(150,150,150)
 Z.TextSize=13
-Z.FontFace=o.Font
+Z.FontFace=p.Font
 Z.Visible=false
 Z.Parent=Y
 
 aa.Function=aa.Function or function()end
 
-function ad.Save(_,ak)
-ak[aa.Name]={
+function ad.Save(_,al)
+al[aa.Name]={
 List=_.List,
 ListEnabled=_.ListEnabled,
 }
 end
 
-function ad.Load(ak,_)
-ak.List=_.List or{}
-ak.ListEnabled=_.ListEnabled or{}
-ak:ChangeValue()
+function ad.Load(al,_)
+al.List=_.List or{}
+al.ListEnabled=_.ListEnabled or{}
+al:ChangeValue()
 end
 
-function ad.Color(ak,_,al,am,an)
+function ad.Color(al,_,am,an,ao)
 if N.Visible then
-af.BackgroundColor3=an and Color3.fromHSV(d:Color((_-(ak.Index*0.075))%1))
-or Color3.fromHSV(_,al,am)
+af.BackgroundColor3=ao and Color3.fromHSV(d:Color((_-(al.Index*0.075))%1))
+or Color3.fromHSV(_,am,an)
 end
 end
 
-local ak=""
+local al=""
 
-function ad.UpdateWindowSize(al,am)
-local an=math.min(am,M)*L
-local _=119+an
+function ad.UpdateWindowSize(am,an)
+local ao=math.min(an,M)*L
+local _=119+ao
 
-Y.Size=UDim2.fromOffset(200,an)
+Y.Size=UDim2.fromOffset(200,ao)
 
-n:Tween(N,o.Tween,{
+o:Tween(N,p.Tween,{
 Size=UDim2.fromOffset(220,_),
 })
 end
 
-function ad.FilterItems(al,am)
-ak=am:lower()
-local an=0
+function ad.FilterItems(am,an)
+al=an:lower()
+local ao=0
 
-for _,ao in al.Objects do
-local ap=ao.Name:lower()
-local aq=ak==""or ap:find(ak,1,true)
+for _,ap in am.Objects do
+local aq=ap.Name:lower()
+local ar=al==""or aq:find(al,1,true)
 
-if aq then
-an=an+1
-ao.Position=UDim2.fromOffset(0,(an-1)*L)
+if ar then
+ao=ao+1
+ap.Position=UDim2.fromOffset(0,(ao-1)*L)
 
 
-ao.Visible=true
-n:Tween(ao,TweenInfo.new(0.15),{
+ap.Visible=true
+o:Tween(ap,TweenInfo.new(0.15),{
 BackgroundTransparency=0,
 })
-for ar,as in ao:GetDescendants()do
-if as:IsA"TextLabel"then
-n:Tween(as,TweenInfo.new(0.15),{
+for as,at in ap:GetDescendants()do
+if at:IsA"TextLabel"then
+o:Tween(at,TweenInfo.new(0.15),{
 TextTransparency=0,
 })
-elseif as:IsA"ImageButton"or as:IsA"ImageLabel"then
-n:Tween(as,TweenInfo.new(0.15),{
-ImageTransparency=as.Name=="AddButton"and 0.3 or 0.5,
+elseif at:IsA"ImageButton"or at:IsA"ImageLabel"then
+o:Tween(at,TweenInfo.new(0.15),{
+ImageTransparency=at.Name=="AddButton"and 0.3 or 0.5,
 })
-elseif as:IsA"Frame"and as.Name~="BKG"then
-n:Tween(as,TweenInfo.new(0.15),{
+elseif at:IsA"Frame"and at.Name~="BKG"then
+o:Tween(at,TweenInfo.new(0.15),{
 BackgroundTransparency=0,
 })
 end
 end
 else
 
-n:Tween(ao,TweenInfo.new(0.15),{
+o:Tween(ap,TweenInfo.new(0.15),{
 BackgroundTransparency=1,
 })
-for ar,as in ao:GetDescendants()do
-if as:IsA"TextLabel"then
-n:Tween(as,TweenInfo.new(0.15),{
+for as,at in ap:GetDescendants()do
+if at:IsA"TextLabel"then
+o:Tween(at,TweenInfo.new(0.15),{
 TextTransparency=1,
 })
-elseif as:IsA"ImageButton"or as:IsA"ImageLabel"then
-n:Tween(as,TweenInfo.new(0.15),{
+elseif at:IsA"ImageButton"or at:IsA"ImageLabel"then
+o:Tween(at,TweenInfo.new(0.15),{
 ImageTransparency=1,
 })
-elseif as:IsA"Frame"then
-n:Tween(as,TweenInfo.new(0.15),{
+elseif at:IsA"Frame"then
+o:Tween(at,TweenInfo.new(0.15),{
 BackgroundTransparency=1,
 })
 end
 end
 task.delay(0.15,function()
-ao.Visible=false
+ap.Visible=false
 end)
 end
 end
 
-Z.Visible=an==0 and#al.List>0
-al:UpdateWindowSize(an==0 and 1 or an)
+Z.Visible=ao==0 and#am.List>0
+am:UpdateWindowSize(ao==0 and 1 or ao)
 end
 
-function ad.ChangeValue(al,am)
-if am then
-local an=table.find(al.List,am)
+function ad.ChangeValue(am,an)
 if an then
-table.remove(al.List,an)
-an=table.find(al.ListEnabled,am)
-if an then
-table.remove(al.ListEnabled,an)
+local ao=table.find(am.List,an)
+if ao then
+table.remove(am.List,ao)
+ao=table.find(am.ListEnabled,an)
+if ao then
+table.remove(am.ListEnabled,ao)
 end
 else
-table.insert(al.List,am)
-table.insert(al.ListEnabled,am)
+table.insert(am.List,an)
+table.insert(am.ListEnabled,an)
 end
 end
 
-aa.Function(al.List)
-for an,ao in al.Objects do
-ao:Destroy()
+aa.Function(am.List)
+for ao,ap in am.Objects do
+ap:Destroy()
 end
-table.clear(al.Objects)
-aj.Text=#al.List
+table.clear(am.Objects)
+aj.Text=#am.List
 
-local an="None"
-for ao,ap in al.ListEnabled do
-if ao==1 then
-an=""
+local ao="None"
+for ap,aq in am.ListEnabled do
+if ap==1 then
+ao=""
 end
-an=an..(ao==1 and ap or", "..ap)
+ao=ao..(ap==1 and aq or", "..aq)
 end
-I.Text=an
+ak.Text=ao
 
-for ao,ap in al.List do
-local aq=table.find(al.ListEnabled,ap)
-local ar=Instance.new"TextButton"
-ar.Name=ap
-ar.Size=UDim2.fromOffset(200,32)
-ar.Position=UDim2.fromOffset(0,(ao-1)*L)
-ar.BackgroundColor3=m.Light(o.Main,0.02)
-ar.AutoButtonColor=false
-ar.Text=""
-ar.Parent=Y
-addCorner(ar)
-local as=Instance.new"Frame"
-as.Name="BKG"
-as.Size=UDim2.new(1,-2,1,-2)
-as.Position=UDim2.fromOffset(1,1)
-as.BackgroundColor3=o.Main
-as.Visible=false
-as.Parent=ar
+for ap,aq in am.List do
+local ar=table.find(am.ListEnabled,aq)
+local as=Instance.new"TextButton"
+as.Name=aq
+as.Size=UDim2.fromOffset(200,32)
+as.Position=UDim2.fromOffset(0,(ap-1)*L)
+as.BackgroundColor3=n.Light(p.Main,0.02)
+as.AutoButtonColor=false
+as.Text=""
+as.Parent=Y
 addCorner(as)
+local at=Instance.new"Frame"
+at.Name="BKG"
+at.Size=UDim2.new(1,-2,1,-2)
+at.Position=UDim2.fromOffset(1,1)
+at.BackgroundColor3=p.Main
+at.Visible=false
+at.Parent=as
+addCorner(at)
 local _=Instance.new"Frame"
 _.Name="Dot"
 _.Size=UDim2.fromOffset(10,11)
 _.Position=UDim2.fromOffset(10,12)
-_.BackgroundColor3=aq and aa.Color or m.Light(o.Main,0.37)
-_.Parent=ar
+_.BackgroundColor3=ar and aa.Color or n.Light(p.Main,0.37)
+_.Parent=as
 addCorner(_,UDim.new(1,0))
-local at=_:Clone()
-at.Size=UDim2.fromOffset(8,9)
-at.Position=UDim2.fromOffset(1,1)
-at.BackgroundColor3=aq and aa.Color or m.Light(o.Main,0.02)
-at.Parent=_
-local au=Instance.new"TextLabel"
-au.Name="Title"
-au.Size=UDim2.new(1,-30,1,0)
-au.Position=UDim2.fromOffset(30,0)
-au.BackgroundTransparency=1
-au.Text=ap
-au.TextXAlignment=Enum.TextXAlignment.Left
-au.TextColor3=m.Dark(o.Text,0.16)
-au.TextSize=15
-au.FontFace=o.Font
-au.Parent=ar
-local av=Instance.new"ImageButton"
-av.Name="Close"
-av.Size=UDim2.fromOffset(16,16)
-av.Position=UDim2.new(1,-26,0,8)
-av.BackgroundColor3=Color3.new(1,1,1)
+local au=_:Clone()
+au.Size=UDim2.fromOffset(8,9)
+au.Position=UDim2.fromOffset(1,1)
+au.BackgroundColor3=ar and aa.Color or n.Light(p.Main,0.02)
+au.Parent=_
+local av=Instance.new"TextLabel"
+av.Name="Title"
+av.Size=UDim2.new(1,-30,1,0)
+av.Position=UDim2.fromOffset(30,0)
 av.BackgroundTransparency=1
-av.AutoButtonColor=false
-av.Image=u"vape/assets/new/closemini.png"
-av.ImageColor3=m.Light(o.Text,0.2)
-av.ImageTransparency=0.5
-av.Parent=ar
-addCorner(av,UDim.new(1,0))
+av.Text=aq
+av.TextXAlignment=Enum.TextXAlignment.Left
+av.TextColor3=n.Dark(p.Text,0.16)
+av.TextSize=15
+av.FontFace=p.Font
+av.Parent=as
+local aw=Instance.new"ImageButton"
+aw.Name="Close"
+aw.Size=UDim2.fromOffset(16,16)
+aw.Position=UDim2.new(1,-26,0,8)
+aw.BackgroundColor3=Color3.new(1,1,1)
+aw.BackgroundTransparency=1
+aw.AutoButtonColor=false
+aw.Image=v"vape/assets/new/closemini.png"
+aw.ImageColor3=n.Light(p.Text,0.2)
+aw.ImageTransparency=0.5
+aw.Parent=as
+addCorner(aw,UDim.new(1,0))
 
-av.MouseEnter:Connect(function()
-av.ImageTransparency=0.3
-n:Tween(av,o.Tween,{
+aw.MouseEnter:Connect(function()
+aw.ImageTransparency=0.3
+o:Tween(aw,p.Tween,{
 BackgroundTransparency=0.6,
 })
 end)
-av.MouseLeave:Connect(function()
-av.ImageTransparency=0.5
-n:Tween(av,o.Tween,{
+aw.MouseLeave:Connect(function()
+aw.ImageTransparency=0.5
+o:Tween(aw,p.Tween,{
 BackgroundTransparency=1,
 })
 end)
-av.Activated:Connect(function()
-al:ChangeValue(ap)
-al:FilterItems(ak)
+aw.Activated:Connect(function()
+am:ChangeValue(aq)
+am:FilterItems(al)
 end)
-ar.MouseEnter:Connect(function()
-as.Visible=true
+as.MouseEnter:Connect(function()
+at.Visible=true
 end)
-ar.MouseLeave:Connect(function()
-as.Visible=false
+as.MouseLeave:Connect(function()
+at.Visible=false
 end)
-ar.Activated:Connect(function()
-local aw=table.find(al.ListEnabled,ap)
-if aw then
-table.remove(al.ListEnabled,aw)
-_.BackgroundColor3=m.Light(o.Main,0.37)
-at.BackgroundColor3=m.Light(o.Main,0.02)
+as.Activated:Connect(function()
+local ax=table.find(am.ListEnabled,aq)
+if ax then
+table.remove(am.ListEnabled,ax)
+_.BackgroundColor3=n.Light(p.Main,0.37)
+au.BackgroundColor3=n.Light(p.Main,0.02)
 else
-table.insert(al.ListEnabled,ap)
+table.insert(am.ListEnabled,aq)
 _.BackgroundColor3=aa.Color
-at.BackgroundColor3=aa.Color
+au.BackgroundColor3=aa.Color
 end
 
-local ax="None"
-for ay,az in al.ListEnabled do
-if ay==1 then
-ax=""
+local ay="None"
+for az,aA in am.ListEnabled do
+if az==1 then
+ay=""
 end
-ax=ax..(ay==1 and az or", "..az)
+ay=ay..(az==1 and aA or", "..aA)
 end
 
-I.Text=ax
+ak.Text=ay
 aa.Function()
 end)
 
-table.insert(al.Objects,ar)
+table.insert(am.Objects,as)
 end
 
 
-al:FilterItems(ak)
+am:FilterItems(al)
 end
 
 
@@ -3193,13 +3243,13 @@ ad:FilterItems(X.Text)
 end)
 
 X.MouseEnter:Connect(function()
-n:Tween(V,o.Tween,{
-BackgroundColor3=m.Light(o.Main,0.14),
+o:Tween(V,p.Tween,{
+BackgroundColor3=n.Light(p.Main,0.14),
 })
 end)
 X.MouseLeave:Connect(function()
-n:Tween(V,o.Tween,{
-BackgroundColor3=m.Light(o.Main,0.02),
+o:Tween(V,p.Tween,{
+BackgroundColor3=n.Light(p.Main,0.02),
 })
 end)
 
@@ -3224,21 +3274,21 @@ T.Text=""
 X.Text=""
 end
 end)
-T.FocusLost:Connect(function(al)
-if al and not table.find(ad.List,T.Text)and T.Text~=""then
+T.FocusLost:Connect(function(am)
+if am and not table.find(ad.List,T.Text)and T.Text~=""then
 ad:ChangeValue(T.Text)
 T.Text=""
 X.Text=""
 end
 end)
 T.MouseEnter:Connect(function()
-n:Tween(R,o.Tween,{
-BackgroundColor3=m.Light(o.Main,0.14),
+o:Tween(R,p.Tween,{
+BackgroundColor3=n.Light(p.Main,0.14),
 })
 end)
 T.MouseLeave:Connect(function()
-n:Tween(R,o.Tween,{
-BackgroundColor3=m.Light(o.Main,0.02),
+o:Tween(R,p.Tween,{
+BackgroundColor3=n.Light(p.Main,0.02),
 })
 end)
 Q.Activated:Connect(function()
@@ -3250,22 +3300,22 @@ N.Visible=not N.Visible
 if not N.Visible then
 X.Text=""
 end
-n:Cancel(af)
+o:Cancel(af)
 af.BackgroundColor3=N.Visible
 and Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
-or m.Light(o.Main,0.37)
+or n.Light(p.Main,0.37)
 end)
 ae.MouseEnter:Connect(function()
 if not ad.Window.Visible then
-n:Tween(af,o.Tween,{
-BackgroundColor3=m.Light(o.Main,0.37),
+o:Tween(af,p.Tween,{
+BackgroundColor3=n.Light(p.Main,0.37),
 })
 end
 end)
 ae.MouseLeave:Connect(function()
 if not ad.Window.Visible then
-n:Tween(af,o.Tween,{
-BackgroundColor3=m.Light(o.Main,0.034),
+o:Tween(af,p.Tween,{
+BackgroundColor3=n.Light(p.Main,0.034),
 })
 end
 end)
@@ -3273,11 +3323,11 @@ ae:GetPropertyChangedSignal"AbsolutePosition":Connect(function()
 if d.ThreadFix then
 setthreadidentity(8)
 end
-local al=(
+local am=(
 ae.AbsolutePosition
 -(ac.Legit and d.Legit.Window.AbsolutePosition or-j:GetGuiInset())
-)/A.Scale
-N.Position=UDim2.fromOffset(al.X+220,al.Y)
+)/B.Scale
+N.Position=UDim2.fromOffset(am.X+220,am.Y)
 end)
 
 if aa.Default then
@@ -3301,28 +3351,28 @@ local ae=false
 local af=Instance.new"TextButton"
 af.Name=aa.Name.."Toggle"
 af.Size=UDim2.new(1,0,0,30)
-af.BackgroundColor3=m.Dark(ab.BackgroundColor3,aa.Darker and 0.02 or 0)
+af.BackgroundColor3=n.Dark(ab.BackgroundColor3,aa.Darker and 0.02 or 0)
 af.BorderSizePixel=0
 af.AutoButtonColor=false
 af.Visible=aa.Visible==nil or aa.Visible
 af.Text="          "..aa.Name
 af.TextXAlignment=Enum.TextXAlignment.Left
-af.TextColor3=m.Dark(o.Text,0.16)
+af.TextColor3=n.Dark(p.Text,0.16)
 af.TextSize=14
-af.FontFace=o.Font
+af.FontFace=p.Font
 af.Parent=ab
 addTooltip(af,aa.Tooltip)
 local ag=Instance.new"Frame"
 ag.Name="Knob"
 ag.Size=UDim2.fromOffset(22,12)
 ag.Position=UDim2.new(1,-30,0,9)
-ag.BackgroundColor3=m.Light(o.Main,0.14)
+ag.BackgroundColor3=n.Light(p.Main,0.14)
 ag.Parent=af
 addCorner(ag,UDim.new(1,0))
 local ah=ag:Clone()
 ah.Size=UDim2.fromOffset(8,8)
 ah.Position=UDim2.fromOffset(2,2)
-ah.BackgroundColor3=o.Main
+ah.BackgroundColor3=p.Main
 ah.Parent=ag
 aa.Function=aa.Function or function()end
 
@@ -3338,7 +3388,7 @@ end
 
 function ad.Color(ai,aj,ak,al,am)
 if ai.Enabled then
-n:Cancel(ag)
+o:Cancel(ag)
 ag.BackgroundColor3=am
 and Color3.fromHSV(d:Color((aj-(ai.Index*0.075))%1))
 or Color3.fromHSV(aj,ak,al)
@@ -3349,14 +3399,14 @@ function ad.Toggle(ai)
 ai.Enabled=not ai.Enabled
 ai.Toggled:Fire()
 local aj=d.GUIColor.Rainbow and d.RainbowMode.Value~="Retro"
-n:Tween(ag,o.Tween,{
+o:Tween(ag,p.Tween,{
 BackgroundColor3=ai.Enabled
 and(aj and Color3.fromHSV(
 d:Color((d.GUIColor.Hue-(ai.Index*0.075))%1)
 )or Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value))
-or(ae and m.Light(o.Main,0.37)or m.Light(o.Main,0.14)),
+or(ae and n.Light(p.Main,0.37)or n.Light(p.Main,0.14)),
 })
-n:Tween(ah,o.Tween,{
+o:Tween(ah,p.Tween,{
 Position=UDim2.fromOffset(ai.Enabled and 12 or 2,2),
 })
 aa.Function(ai.Enabled)
@@ -3373,16 +3423,16 @@ end
 af.MouseEnter:Connect(function()
 ae=true
 if not ad.Enabled then
-n:Tween(ag,o.Tween,{
-BackgroundColor3=m.Light(o.Main,0.37),
+o:Tween(ag,p.Tween,{
+BackgroundColor3=n.Light(p.Main,0.37),
 })
 end
 end)
 af.MouseLeave:Connect(function()
 ae=false
 if not ad.Enabled then
-n:Tween(ag,o.Tween,{
-BackgroundColor3=m.Light(o.Main,0.14),
+o:Tween(ag,p.Tween,{
+BackgroundColor3=n.Light(p.Main,0.14),
 })
 end
 end)
@@ -3414,7 +3464,7 @@ Index=getTableSize(ac.Options),
 local ae=Instance.new"TextButton"
 ae.Name=aa.Name.."Slider"
 ae.Size=UDim2.new(1,0,0,50)
-ae.BackgroundColor3=m.Dark(ab.BackgroundColor3,aa.Darker and 0.02 or 0)
+ae.BackgroundColor3=n.Dark(ab.BackgroundColor3,aa.Darker and 0.02 or 0)
 ae.BorderSizePixel=0
 ae.AutoButtonColor=false
 ae.Visible=aa.Visible==nil or aa.Visible
@@ -3428,9 +3478,9 @@ af.Position=UDim2.fromOffset(10,2)
 af.BackgroundTransparency=1
 af.Text=aa.Name
 af.TextXAlignment=Enum.TextXAlignment.Left
-af.TextColor3=m.Dark(o.Text,0.16)
+af.TextColor3=n.Dark(p.Text,0.16)
 af.TextSize=11
-af.FontFace=o.Font
+af.FontFace=p.Font
 af.Parent=ae
 local ag=Instance.new"TextButton"
 ag.Name="Value"
@@ -3439,9 +3489,9 @@ ag.Position=UDim2.new(1,-69,0,9)
 ag.BackgroundTransparency=1
 ag.Text=ad.ValueMax
 ag.TextXAlignment=Enum.TextXAlignment.Right
-ag.TextColor3=m.Dark(o.Text,0.16)
+ag.TextColor3=n.Dark(p.Text,0.16)
 ag.TextSize=11
-ag.FontFace=o.Font
+ag.FontFace=p.Font
 ag.Parent=ae
 local ah=ag:Clone()
 ah.Position=UDim2.new(1,-125,0,9)
@@ -3455,9 +3505,9 @@ ai.BackgroundTransparency=1
 ai.Visible=false
 ai.Text=ad.ValueMin
 ai.TextXAlignment=Enum.TextXAlignment.Right
-ai.TextColor3=m.Dark(o.Text,0.16)
+ai.TextColor3=n.Dark(p.Text,0.16)
 ai.TextSize=11
-ai.FontFace=o.Font
+ai.FontFace=p.Font
 ai.ClearTextOnFocus=false
 ai.Parent=ae
 local aj=ai:Clone()
@@ -3467,7 +3517,7 @@ local ak=Instance.new"Frame"
 ak.Name="Slider"
 ak.Size=UDim2.new(1,-20,0,2)
 ak.Position=UDim2.fromOffset(10,37)
-ak.BackgroundColor3=m.Light(o.Main,0.034)
+ak.BackgroundColor3=n.Light(p.Main,0.034)
 ak.BorderSizePixel=0
 ak.Parent=ae
 local al=ak:Clone()
@@ -3493,7 +3543,7 @@ an.Size=UDim2.fromOffset(9,16)
 an.Position=UDim2.fromScale(0.5,0.5)
 an.AnchorPoint=Vector2.new(0.5,0.5)
 an.BackgroundTransparency=1
-an.Image=u"vape/assets/new/range.png"
+an.Image=v"vape/assets/new/range.png"
 an.ImageColor3=Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
 an.Parent=am
 local ao=am:Clone()
@@ -3506,8 +3556,8 @@ ap.Name="Arrow"
 ap.Size=UDim2.fromOffset(12,6)
 ap.Position=UDim2.new(1,-56,0,10)
 ap.BackgroundTransparency=1
-ap.Image=u"vape/assets/new/rangearrow.png"
-ap.ImageColor3=m.Light(o.Main,0.14)
+ap.Image=v"vape/assets/new/rangearrow.png"
+ap.ImageColor3=n.Light(p.Main,0.14)
 ap.Parent=ae
 aa.Function=aa.Function or function()end
 aa.Decimal=aa.Decimal or 1
@@ -3545,7 +3595,7 @@ ar[as and"ValueMax"or"ValueMin"]=at
 ag.Text=ar.ValueMax
 ah.Text=ar.ValueMin
 local au=math.clamp(math.clamp(ar.ValueMin/aa.Max,0,1),0.04,0.96)
-n:Tween(al,TweenInfo.new(0.1),{
+o:Tween(al,TweenInfo.new(0.1),{
 Position=UDim2.fromScale(au,0),
 Size=UDim2.fromScale(
 math.clamp(
@@ -3559,22 +3609,22 @@ math.clamp(math.clamp(ar.ValueMax/aa.Max,0.04,0.96),0.04,0.96)-au,
 end
 
 am.MouseEnter:Connect(function()
-n:Tween(an,o.Tween,{
+o:Tween(an,p.Tween,{
 Size=UDim2.fromOffset(11,18),
 })
 end)
 am.MouseLeave:Connect(function()
-n:Tween(an,o.Tween,{
+o:Tween(an,p.Tween,{
 Size=UDim2.fromOffset(9,16),
 })
 end)
 ao.MouseEnter:Connect(function()
-n:Tween(ao.Knob,o.Tween,{
+o:Tween(ao.Knob,p.Tween,{
 Size=UDim2.fromOffset(11,18),
 })
 end)
 ao.MouseLeave:Connect(function()
-n:Tween(ao.Knob,o.Tween,{
+o:Tween(ao.Knob,p.Tween,{
 Size=UDim2.fromOffset(9,16),
 })
 end)
@@ -3583,7 +3633,7 @@ if
 (
 ar.UserInputType==Enum.UserInputType.MouseButton1
 or ar.UserInputType==Enum.UserInputType.Touch
-)and(ar.Position.Y-ae.AbsolutePosition.Y)>(20*A.Scale)
+)and(ar.Position.Y-ae.AbsolutePosition.Y)>(20*B.Scale)
 then
 local as=(ar.Position.X-ao.AbsolutePosition.X)>-10
 local at=
@@ -3620,8 +3670,8 @@ end
 end)
 
 local av
-av=ar.Changed:Connect(function()
-if ar.UserInputState==Enum.UserInputState.End then
+av=h.InputEnded:Connect(function(aw)
+if aw==ar and ar.UserInputState==Enum.UserInputState.End then
 if au then
 au:Disconnect()
 end
@@ -3668,7 +3718,7 @@ Divider=function(aa,ab)
 local ac=Instance.new"Frame"
 ac.Name="Divider"
 ac.Size=UDim2.new(1,0,0,1)
-ac.BackgroundColor3=m.Light(o.Main,0.02)
+ac.BackgroundColor3=n.Light(p.Main,0.02)
 ac.BorderSizePixel=0
 ac.Parent=aa
 if ab then
@@ -3678,9 +3728,9 @@ ad.Size=UDim2.fromOffset(218,27)
 ad.BackgroundTransparency=1
 ad.Text="          "..ab:upper()
 ad.TextXAlignment=Enum.TextXAlignment.Left
-ad.TextColor3=m.Dark(o.Text,0.43)
+ad.TextColor3=n.Dark(p.Text,0.43)
 ad.TextSize=9
-ad.FontFace=o.Font
+ad.FontFace=p.Font
 ad.Parent=aa
 ac.Position=UDim2.fromOffset(0,26)
 ac.Parent=ad
@@ -3688,9 +3738,9 @@ end
 end,
 }
 
-for aa,ab in H do
+for aa,ab in I do
 local ac=ab
-H[aa]=function(ad,...)
+I[aa]=function(ad,...)
 local ae={...}
 if type(ad)~="table"then
 return ac(ad,unpack(ae))
@@ -3704,7 +3754,7 @@ return ac(ad,unpack(ae))
 end
 end
 
-d.Components=setmetatable(H,{
+d.Components=setmetatable(I,{
 __newindex=function(aa,ab,ac)
 for ad,ae in d.Modules do
 rawset(ae,"Create"..ab,function(af,ag)
@@ -3756,10 +3806,10 @@ Options={},
 local ac=Instance.new"TextButton"
 ac.Name="GUICategory"
 ac.Position=UDim2.fromOffset(6,60)
-ac.BackgroundColor3=m.Dark(o.Main,0.02)
+ac.BackgroundColor3=n.Dark(p.Main,0.02)
 ac.AutoButtonColor=false
 ac.Text=""
-ac.Parent=v
+ac.Parent=w
 addBlur(ac)
 addCorner(ac)
 makeDraggable(ac)
@@ -3768,15 +3818,15 @@ ad.Name="VapeLogo"
 ad.Size=UDim2.fromOffset(62,18)
 ad.Position=UDim2.fromOffset(11,10)
 ad.BackgroundTransparency=1
-ad.Image=u"vape/assets/new/guivape.png"
-ad.ImageColor3=select(3,o.Main:ToHSV())>0.5 and o.Text or Color3.new(1,1,1)
+ad.Image=v"vape/assets/new/guivape.png"
+ad.ImageColor3=select(3,p.Main:ToHSV())>0.5 and p.Text or Color3.new(1,1,1)
 ad.Parent=ac
 local ae=Instance.new"ImageLabel"
 ae.Name="V4Logo"
 ae.Size=UDim2.fromOffset(28,16)
 ae.Position=UDim2.new(1,1,0,1)
 ae.BackgroundTransparency=1
-ae.Image=u"vape/assets/new/guiv4.png"
+ae.Image=v"vape/assets/new/guiv4.png"
 ae.Parent=ad
 local af=Instance.new"Frame"
 af.Name="Children"
@@ -3800,19 +3850,19 @@ local ai=Instance.new"ImageLabel"
 ai.Size=UDim2.fromOffset(14,14)
 ai.Position=UDim2.fromOffset(15,12)
 ai.BackgroundTransparency=1
-ai.Image=u"vape/assets/new/guisettings.png"
-ai.ImageColor3=m.Light(o.Main,0.37)
+ai.Image=v"vape/assets/new/guisettings.png"
+ai.ImageColor3=n.Light(p.Main,0.37)
 ai.Parent=ah
 local aj=Instance.new"ImageButton"
 aj.Size=UDim2.fromOffset(16,16)
 aj.Position=UDim2.new(1,-56,0,11)
 aj.BackgroundTransparency=1
-aj.Image=u"vape/assets/new/discord.png"
+aj.Image=v"vape/assets/new/discord.png"
 aj.Parent=ac
 addTooltip(aj,"Join discord")
 local ak=Instance.new"TextButton"
 ak.Size=UDim2.fromScale(1,1)
-ak.BackgroundColor3=m.Dark(o.Main,0.02)
+ak.BackgroundColor3=n.Dark(p.Main,0.02)
 ak.AutoButtonColor=false
 ak.Visible=false
 ak.Text=""
@@ -3824,9 +3874,9 @@ al.Position=UDim2.fromOffset(math.abs(al.Size.X.Offset),11)
 al.BackgroundTransparency=1
 al.Text="Settings"
 al.TextXAlignment=Enum.TextXAlignment.Left
-al.TextColor3=o.Text
+al.TextColor3=p.Text
 al.TextSize=13
-al.FontFace=o.Font
+al.FontFace=p.Font
 al.Parent=ak
 local am=addCloseButton(ak)
 local an=Instance.new"ImageButton"
@@ -3834,8 +3884,8 @@ an.Name="Back"
 an.Size=UDim2.fromOffset(16,16)
 an.Position=UDim2.fromOffset(11,13)
 an.BackgroundTransparency=1
-an.Image=u"vape/assets/new/back.png"
-an.ImageColor3=m.Light(o.Main,0.37)
+an.Image=v"vape/assets/new/back.png"
+an.ImageColor3=n.Light(p.Main,0.37)
 an.Parent=ak
 local ao=Instance.new"TextLabel"
 ao.Name="Version"
@@ -3845,19 +3895,19 @@ ao.BackgroundTransparency=1
 ao.Text="Vape "
 ..d.Version
 .." "
-..(D"vape/profiles/commit.txt"and readfile"vape/profiles/commit.txt":sub(1,6)or"")
+..(E"vape/profiles/commit.txt"and readfile"vape/profiles/commit.txt":sub(1,6)or"")
 .." "
-ao.TextColor3=m.Dark(o.Text,0.43)
+ao.TextColor3=n.Dark(p.Text,0.43)
 ao.TextXAlignment=Enum.TextXAlignment.Right
 ao.TextSize=10
-ao.FontFace=o.Font
+ao.FontFace=p.Font
 ao.Parent=ak
 addCorner(ak)
 local ap=Instance.new"Frame"
 ap.Name="Children"
 ap.Size=UDim2.new(1,0,1,-57)
 ap.Position=UDim2.fromOffset(0,41)
-ap.BackgroundColor3=o.Main
+ap.BackgroundColor3=p.Main
 ap.BorderSizePixel=0
 ap.Parent=ak
 local aq=Instance.new"UIListLayout"
@@ -3871,14 +3921,14 @@ local as={Bind={"RightShift"}}
 
 local at=Instance.new"TextButton"
 at.Size=UDim2.fromOffset(220,40)
-at.BackgroundColor3=o.Main
+at.BackgroundColor3=p.Main
 at.BorderSizePixel=0
 at.AutoButtonColor=false
 at.Text="          Rebind GUI"
 at.TextXAlignment=Enum.TextXAlignment.Left
-at.TextColor3=m.Dark(o.Text,0.16)
+at.TextColor3=n.Dark(p.Text,0.16)
 at.TextSize=14
-at.FontFace=o.Font
+at.FontFace=p.Font
 at.Parent=ap
 addTooltip(at,"Change the bind of the GUI")
 local au=Instance.new"TextButton"
@@ -3899,8 +3949,8 @@ av.Name="Icon"
 av.Size=UDim2.fromOffset(12,12)
 av.Position=UDim2.new(0.5,-6,0,5)
 av.BackgroundTransparency=1
-av.Image=u"vape/assets/new/bind.png"
-av.ImageColor3=m.Dark(o.Text,0.43)
+av.Image=v"vape/assets/new/bind.png"
+av.ImageColor3=n.Dark(p.Text,0.43)
 av.Parent=au
 local aw=Instance.new"TextLabel"
 aw.Name="Text"
@@ -3909,9 +3959,9 @@ aw.Position=UDim2.fromOffset(0,1)
 aw.BackgroundTransparency=1
 aw.Visible=false
 aw.Text=""
-aw.TextColor3=m.Dark(o.Text,0.43)
+aw.TextColor3=n.Dark(p.Text,0.43)
 aw.TextSize=12
-aw.FontFace=o.Font
+aw.FontFace=p.Font
 aw.Parent=au
 
 function as.SetBind(ax,ay)
@@ -3926,20 +3976,20 @@ au.Visible=true
 aw.Visible=true
 av.Visible=false
 aw.Text=table.concat(d.Keybind," + "):upper()
-au.Size=UDim2.fromOffset(math.max(E(aw.Text,aw.TextSize,aw.Font).X+10,20),21)
+au.Size=UDim2.fromOffset(math.max(F(aw.Text,aw.TextSize,aw.Font).X+10,20),21)
 end
 
 au.MouseEnter:Connect(function()
 aw.Visible=false
 av.Visible=not aw.Visible
-av.Image=u"vape/assets/new/edit.png"
-av.ImageColor3=m.Dark(o.Text,0.16)
+av.Image=v"vape/assets/new/edit.png"
+av.ImageColor3=n.Dark(p.Text,0.16)
 end)
 au.MouseLeave:Connect(function()
 aw.Visible=true
 av.Visible=not aw.Visible
-av.Image=u"vape/assets/new/bind.png"
-av.ImageColor3=m.Dark(o.Text,0.43)
+av.Image=v"vape/assets/new/bind.png"
+av.ImageColor3=n.Dark(p.Text,0.43)
 end)
 au.Activated:Connect(function()
 d.Binding=as
@@ -3959,7 +4009,7 @@ Index=getTableSize(ab.Buttons),
 local au=Instance.new"TextButton"
 au.Name=as.Name
 au.Size=UDim2.fromOffset(220,40)
-au.BackgroundColor3=o.Main
+au.BackgroundColor3=p.Main
 au.BorderSizePixel=0
 au.AutoButtonColor=false
 au.Text=(
@@ -3968,9 +4018,9 @@ and"                         �
 or"             "
 )..as.Name
 au.TextXAlignment=Enum.TextXAlignment.Left
-au.TextColor3=m.Dark(o.Text,0.16)
+au.TextColor3=n.Dark(p.Text,0.16)
 au.TextSize=14
-au.FontFace=o.Font
+au.FontFace=p.Font
 au.Parent=af
 local av
 if as.Icon then
@@ -3980,7 +4030,7 @@ av.Size=as.Size
 av.Position=UDim2.fromOffset(13,13)
 av.BackgroundTransparency=1
 av.Image=as.Icon
-av.ImageColor3=m.Dark(o.Text,0.16)
+av.ImageColor3=n.Dark(p.Text,0.16)
 av.Parent=au
 end
 if as.Name=="Profiles"then
@@ -3989,11 +4039,11 @@ aw.Name="ProfileLabel"
 aw.Size=UDim2.fromOffset(53,24)
 aw.Position=UDim2.new(1,-36,0,8)
 aw.AnchorPoint=Vector2.new(1,0)
-aw.BackgroundColor3=m.Light(o.Main,0.04)
+aw.BackgroundColor3=n.Light(p.Main,0.04)
 aw.Text="default"
-aw.TextColor3=m.Dark(o.Text,0.29)
+aw.TextColor3=n.Dark(p.Text,0.29)
 aw.TextSize=12
-aw.FontFace=o.Font
+aw.FontFace=p.Font
 aw.Parent=au
 addCorner(aw)
 d.ProfileLabel=aw
@@ -4003,8 +4053,8 @@ aw.Name="Arrow"
 aw.Size=UDim2.fromOffset(4,8)
 aw.Position=UDim2.new(1,-20,0,16)
 aw.BackgroundTransparency=1
-aw.Image=u"vape/assets/new/expandright.png"
-aw.ImageColor3=m.Light(o.Main,0.37)
+aw.Image=v"vape/assets/new/expandright.png"
+aw.ImageColor3=n.Light(p.Main,0.37)
 aw.Parent=au
 at.Name=as.Name
 at.Icon=av
@@ -4017,16 +4067,16 @@ ax.Enabled=ay
 else
 ax.Enabled=not ax.Enabled
 end
-n:Tween(aw,o.Tween,{
+o:Tween(aw,p.Tween,{
 Position=UDim2.new(1,ax.Enabled and-14 or-20,0,16),
 })
 au.TextColor3=ax.Enabled
 and Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
-or o.Text
+or p.Text
 if av then
 av.ImageColor3=au.TextColor3
 end
-au.BackgroundColor3=m.Light(o.Main,0.02)
+au.BackgroundColor3=n.Light(p.Main,0.02)
 as.Window.Visible=ax.Enabled
 end
 
@@ -4036,20 +4086,20 @@ end
 
 au.MouseEnter:Connect(function()
 if not at.Enabled then
-au.TextColor3=o.Text
+au.TextColor3=p.Text
 if buttonicon then
-buttonicon.ImageColor3=o.Text
+buttonicon.ImageColor3=p.Text
 end
-au.BackgroundColor3=m.Light(o.Main,0.02)
+au.BackgroundColor3=n.Light(p.Main,0.02)
 end
 end)
 au.MouseLeave:Connect(function()
 if not at.Enabled then
-au.TextColor3=m.Dark(o.Text,0.16)
+au.TextColor3=n.Dark(p.Text,0.16)
 if buttonicon then
-buttonicon.ImageColor3=m.Dark(o.Text,0.16)
+buttonicon.ImageColor3=n.Dark(p.Text,0.16)
 end
-au.BackgroundColor3=o.Main
+au.BackgroundColor3=p.Main
 end
 end)
 au.Activated:Connect(function()
@@ -4063,7 +4113,7 @@ return at
 end
 
 function ab.CreateDivider(ar,as)
-return H.Divider(af,as)
+return I.Divider(af,as)
 end
 
 function ab.CreateOverlayBar(ar)
@@ -4072,17 +4122,17 @@ local as={Toggles={}}
 local at=Instance.new"Frame"
 at.Name="Overlays"
 at.Size=UDim2.fromOffset(220,36)
-at.BackgroundColor3=o.Main
+at.BackgroundColor3=p.Main
 at.BorderSizePixel=0
 at.Parent=af
-H.Divider(at)
+I.Divider(at)
 local au=Instance.new"ImageButton"
 au.Size=UDim2.fromOffset(24,24)
 au.Position=UDim2.new(1,-29,0,7)
 au.BackgroundTransparency=1
 au.AutoButtonColor=false
-au.Image=u"vape/assets/new/overlaysicon.png"
-au.ImageColor3=m.Light(o.Main,0.37)
+au.Image=v"vape/assets/new/overlaysicon.png"
+au.ImageColor3=n.Light(p.Main,0.37)
 au.Parent=at
 addCorner(au,UDim.new(1,0))
 addTooltip(au,"Open overlays menu")
@@ -4100,7 +4150,7 @@ addCorner(av)
 local aw=Instance.new"Frame"
 aw.Size=UDim2.fromOffset(220,42)
 aw.Position=UDim2.fromScale(0,1)
-aw.BackgroundColor3=o.Main
+aw.BackgroundColor3=p.Main
 aw.Parent=av
 addCorner(aw)
 local ax=Instance.new"ImageLabel"
@@ -4108,8 +4158,8 @@ ax.Name="Icon"
 ax.Size=UDim2.fromOffset(14,12)
 ax.Position=UDim2.fromOffset(10,13)
 ax.BackgroundTransparency=1
-ax.Image=u"vape/assets/new/overlaystab.png"
-ax.ImageColor3=o.Text
+ax.Image=v"vape/assets/new/overlaystab.png"
+ax.ImageColor3=p.Text
 ax.Parent=aw
 local ay=Instance.new"TextLabel"
 ay.Name="Title"
@@ -4118,18 +4168,18 @@ ay.Position=UDim2.fromOffset(36,0)
 ay.BackgroundTransparency=1
 ay.Text="Overlays"
 ay.TextXAlignment=Enum.TextXAlignment.Left
-ay.TextColor3=o.Text
+ay.TextColor3=p.Text
 ay.TextSize=15
-ay.FontFace=o.Font
+ay.FontFace=p.Font
 ay.Parent=aw
 local az=addCloseButton(aw,7)
-local I=Instance.new"Frame"
-I.Name="Divider"
-I.Size=UDim2.new(1,0,0,1)
-I.Position=UDim2.fromOffset(0,37)
-I.BackgroundColor3=m.Light(o.Main,0.02)
-I.BorderSizePixel=0
-I.Parent=aw
+local aA=Instance.new"Frame"
+aA.Name="Divider"
+aA.Size=UDim2.new(1,0,0,1)
+aA.Position=UDim2.fromOffset(0,37)
+aA.BackgroundColor3=n.Light(p.Main,0.02)
+aA.BorderSizePixel=0
+aA.Parent=aw
 local J=Instance.new"Frame"
 J.Position=UDim2.fromOffset(0,38)
 J.BackgroundTransparency=1
@@ -4153,11 +4203,11 @@ P.Name=M.Name.."Toggle"
 P.Size=UDim2.new(1,0,0,40)
 P.BackgroundTransparency=1
 P.AutoButtonColor=false
-P.Text=string.rep(" ",33*A.Scale)..M.Name
+P.Text=string.rep(" ",33*B.Scale)..M.Name
 P.TextXAlignment=Enum.TextXAlignment.Left
-P.TextColor3=m.Dark(o.Text,0.16)
+P.TextColor3=n.Dark(p.Text,0.16)
 P.TextSize=14
-P.FontFace=o.Font
+P.FontFace=p.Font
 P.Parent=J
 local Q=Instance.new"ImageLabel"
 Q.Name="Icon"
@@ -4165,52 +4215,52 @@ Q.Size=M.Size
 Q.Position=M.Position
 Q.BackgroundTransparency=1
 Q.Image=M.Icon
-Q.ImageColor3=o.Text
+Q.ImageColor3=p.Text
 Q.Parent=P
 local R=Instance.new"Frame"
 R.Name="Knob"
 R.Size=UDim2.fromOffset(22,12)
 R.Position=UDim2.new(1,-30,0,14)
-R.BackgroundColor3=m.Light(o.Main,0.14)
+R.BackgroundColor3=n.Light(p.Main,0.14)
 R.Parent=P
 addCorner(R,UDim.new(1,0))
 local S=R:Clone()
 S.Size=UDim2.fromOffset(8,8)
 S.Position=UDim2.fromOffset(2,2)
-S.BackgroundColor3=o.Main
+S.BackgroundColor3=p.Main
 S.Parent=R
 N.Object=P
 
 function N.Toggle(T)
 T.Enabled=not T.Enabled
 T.Toggled:Fire()
-n:Tween(R,o.Tween,{
+o:Tween(R,p.Tween,{
 BackgroundColor3=T.Enabled
 and Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
-or(O and m.Light(o.Main,0.37)or m.Light(o.Main,0.14)),
+or(O and n.Light(p.Main,0.37)or n.Light(p.Main,0.14)),
 })
-n:Tween(S,o.Tween,{
+o:Tween(S,p.Tween,{
 Position=UDim2.fromOffset(T.Enabled and 12 or 2,2),
 })
 M.Function(T.Enabled)
 end
 
-A:GetPropertyChangedSignal"Scale":Connect(function()
-P.Text=string.rep(" ",33*A.Scale)..M.Name
+B:GetPropertyChangedSignal"Scale":Connect(function()
+P.Text=string.rep(" ",33*B.Scale)..M.Name
 end)
 P.MouseEnter:Connect(function()
 O=true
 if not N.Enabled then
-n:Tween(R,o.Tween,{
-BackgroundColor3=m.Light(o.Main,0.37),
+o:Tween(R,p.Tween,{
+BackgroundColor3=n.Light(p.Main,0.37),
 })
 end
 end)
 P.MouseLeave:Connect(function()
 O=false
 if not N.Enabled then
-n:Tween(R,o.Tween,{
-BackgroundColor3=m.Light(o.Main,0.14),
+o:Tween(R,p.Tween,{
+BackgroundColor3=n.Light(p.Main,0.14),
 })
 end
 end)
@@ -4224,41 +4274,41 @@ return N
 end
 
 au.MouseEnter:Connect(function()
-au.ImageColor3=o.Text
-n:Tween(au,o.Tween,{
+au.ImageColor3=p.Text
+o:Tween(au,p.Tween,{
 BackgroundTransparency=0.9,
 })
 end)
 au.MouseLeave:Connect(function()
-au.ImageColor3=m.Light(o.Main,0.37)
-n:Tween(au,o.Tween,{
+au.ImageColor3=n.Light(p.Main,0.37)
+o:Tween(au,p.Tween,{
 BackgroundTransparency=1,
 })
 end)
 au.Activated:Connect(function()
 av.Visible=true
-n:Tween(av,o.Tween,{
+o:Tween(av,p.Tween,{
 BackgroundTransparency=0.5,
 })
-n:Tween(aw,o.Tween,{
+o:Tween(aw,p.Tween,{
 Position=UDim2.new(0,0,1,-aw.Size.Y.Offset),
 })
 end)
 az.Activated:Connect(function()
-n:Tween(av,o.Tween,{
+o:Tween(av,p.Tween,{
 BackgroundTransparency=1,
 })
-n:Tween(aw,o.Tween,{
+o:Tween(aw,p.Tween,{
 Position=UDim2.fromScale(0,1),
 })
 task.wait(0.2)
 av.Visible=false
 end)
 av.Activated:Connect(function()
-n:Tween(av,o.Tween,{
+o:Tween(av,p.Tween,{
 BackgroundTransparency=1,
 })
-n:Tween(aw,o.Tween,{
+o:Tween(aw,p.Tween,{
 Position=UDim2.fromScale(0,1),
 })
 task.wait(0.2)
@@ -4268,7 +4318,7 @@ K:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
 if d.ThreadFix then
 setthreadidentity(8)
 end
-aw.Size=UDim2.fromOffset(220,math.min(37+K.AbsoluteContentSize.Y/A.Scale,605))
+aw.Size=UDim2.fromOffset(220,math.min(37+K.AbsoluteContentSize.Y/B.Scale,605))
 J.Size=UDim2.fromOffset(220,aw.Size.Y.Offset-5)
 end)
 
@@ -4278,7 +4328,7 @@ return as
 end
 
 function ab.CreateSettingsDivider(ar)
-H.Divider(ap)
+I.Divider(ap)
 end
 
 function ab.CreateSettingsPane(ar,as)
@@ -4287,26 +4337,26 @@ local at={}
 local au=Instance.new"TextButton"
 au.Name=as.Name
 au.Size=UDim2.fromOffset(220,40)
-au.BackgroundColor3=o.Main
+au.BackgroundColor3=p.Main
 au.BorderSizePixel=0
 au.AutoButtonColor=false
 au.Text="          "..as.Name
 au.TextXAlignment=Enum.TextXAlignment.Left
-au.TextColor3=m.Dark(o.Text,0.16)
+au.TextColor3=n.Dark(p.Text,0.16)
 au.TextSize=14
-au.FontFace=o.Font
+au.FontFace=p.Font
 au.Parent=ap
 local av=Instance.new"ImageLabel"
 av.Name="Arrow"
 av.Size=UDim2.fromOffset(4,8)
 av.Position=UDim2.new(1,-20,0,16)
 av.BackgroundTransparency=1
-av.Image=u"vape/assets/new/expandright.png"
-av.ImageColor3=m.Light(o.Main,0.37)
+av.Image=v"vape/assets/new/expandright.png"
+av.ImageColor3=n.Light(p.Main,0.37)
 av.Parent=au
 local aw=Instance.new"TextButton"
 aw.Size=UDim2.fromScale(1,1)
-aw.BackgroundColor3=o.Main
+aw.BackgroundColor3=p.Main
 aw.AutoButtonColor=false
 aw.Visible=false
 aw.Text=""
@@ -4318,9 +4368,9 @@ ax.Position=UDim2.fromOffset(math.abs(ax.Size.X.Offset),11)
 ax.BackgroundTransparency=1
 ax.Text=as.Name
 ax.TextXAlignment=Enum.TextXAlignment.Left
-ax.TextColor3=o.Text
+ax.TextColor3=p.Text
 ax.TextSize=13
-ax.FontFace=o.Font
+ax.FontFace=p.Font
 ax.Parent=aw
 local ay=addCloseButton(aw)
 local az=Instance.new"ImageButton"
@@ -4328,52 +4378,52 @@ az.Name="Back"
 az.Size=UDim2.fromOffset(16,16)
 az.Position=UDim2.fromOffset(11,13)
 az.BackgroundTransparency=1
-az.Image=u"vape/assets/new/back.png"
-az.ImageColor3=m.Light(o.Main,0.37)
+az.Image=v"vape/assets/new/back.png"
+az.ImageColor3=n.Light(p.Main,0.37)
 az.Parent=aw
 addCorner(aw)
-local I=Instance.new"Frame"
-I.Name="Children"
-I.Size=UDim2.new(1,0,1,-57)
-I.Position=UDim2.fromOffset(0,41)
-I.BackgroundColor3=o.Main
-I.BorderSizePixel=0
-I.Parent=aw
+local aA=Instance.new"Frame"
+aA.Name="Children"
+aA.Size=UDim2.new(1,0,1,-57)
+aA.Position=UDim2.fromOffset(0,41)
+aA.BackgroundColor3=p.Main
+aA.BorderSizePixel=0
+aA.Parent=aw
 local J=Instance.new"Frame"
 J.Name="Divider"
 J.Size=UDim2.new(1,0,0,1)
 J.BackgroundColor3=Color3.new(1,1,1)
 J.BackgroundTransparency=0.928
 J.BorderSizePixel=0
-J.Parent=I
+J.Parent=aA
 local K=Instance.new"UIListLayout"
 K.SortOrder=Enum.SortOrder.LayoutOrder
 K.HorizontalAlignment=Enum.HorizontalAlignment.Center
-K.Parent=I
+K.Parent=aA
 
-for L,M in H do
+for L,M in I do
 at["Create"..L]=function(N,O)
-return M(O,I,ab)
+return M(O,aA,ab)
 end
 at["Add"..L]=at["Create"..L]
 end
 
 az.MouseEnter:Connect(function()
-az.ImageColor3=o.Text
+az.ImageColor3=p.Text
 end)
 az.MouseLeave:Connect(function()
-az.ImageColor3=m.Light(o.Main,0.37)
+az.ImageColor3=n.Light(p.Main,0.37)
 end)
 az.Activated:Connect(function()
 aw.Visible=false
 end)
 au.MouseEnter:Connect(function()
-au.TextColor3=o.Text
-au.BackgroundColor3=m.Light(o.Main,0.02)
+au.TextColor3=p.Text
+au.BackgroundColor3=n.Light(p.Main,0.02)
 end)
 au.MouseLeave:Connect(function()
-au.TextColor3=m.Dark(o.Text,0.16)
-au.BackgroundColor3=o.Main
+au.TextColor3=n.Dark(p.Text,0.16)
+au.BackgroundColor3=p.Main
 end)
 au.Activated:Connect(function()
 aw.Visible=true
@@ -4385,10 +4435,10 @@ ag:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
 if d.ThreadFix then
 setthreadidentity(8)
 end
-ac.Size=UDim2.fromOffset(220,45+ag.AbsoluteContentSize.Y/A.Scale)
+ac.Size=UDim2.fromOffset(220,45+ag.AbsoluteContentSize.Y/B.Scale)
 for L,M in ab.Buttons do
 if M.Icon then
-M.Object.Text=string.rep(" ",33*A.Scale)..M.Name
+M.Object.Text=string.rep(" ",33*B.Scale)..M.Name
 end
 end
 end)
@@ -4429,7 +4479,7 @@ local function createSlider(aw,ax)
 local ay=Instance.new"TextButton"
 ay.Name=as.Name.."Slider"..aw
 ay.Size=UDim2.fromOffset(220,50)
-ay.BackgroundColor3=m.Dark(o.Main,0.02)
+ay.BackgroundColor3=n.Dark(p.Main,0.02)
 ay.BorderSizePixel=0
 ay.AutoButtonColor=false
 ay.Visible=false
@@ -4442,32 +4492,32 @@ az.Position=UDim2.fromOffset(10,2)
 az.BackgroundTransparency=1
 az.Text=aw
 az.TextXAlignment=Enum.TextXAlignment.Left
-az.TextColor3=m.Dark(o.Text,0.16)
+az.TextColor3=n.Dark(p.Text,0.16)
 az.TextSize=11
-az.FontFace=o.Font
+az.FontFace=p.Font
 az.Parent=ay
-local I=Instance.new"Frame"
-I.Name="Slider"
-I.Size=UDim2.fromOffset(200,2)
-I.Position=UDim2.fromOffset(10,37)
-I.BackgroundColor3=Color3.new(1,1,1)
-I.BorderSizePixel=0
-I.Parent=ay
+local aA=Instance.new"Frame"
+aA.Name="Slider"
+aA.Size=UDim2.fromOffset(200,2)
+aA.Position=UDim2.fromOffset(10,37)
+aA.BackgroundColor3=Color3.new(1,1,1)
+aA.BorderSizePixel=0
+aA.Parent=ay
 local J=Instance.new"UIGradient"
 J.Color=ax
-J.Parent=I
-local K=I:Clone()
+J.Parent=aA
+local K=aA:Clone()
 K.Name="Fill"
 K.Size=UDim2.fromScale(math.clamp(1,0.04,0.96),1)
 K.Position=UDim2.new()
 K.BackgroundTransparency=1
-K.Parent=I
+K.Parent=aA
 local L=Instance.new"Frame"
 L.Name="Knob"
 L.Size=UDim2.fromOffset(24,4)
 L.Position=UDim2.fromScale(1,0.5)
 L.AnchorPoint=Vector2.new(0.5,0.5)
-L.BackgroundColor3=m.Dark(o.Main,0.02)
+L.BackgroundColor3=n.Dark(p.Main,0.02)
 L.BorderSizePixel=0
 L.Parent=K
 local M=Instance.new"Frame"
@@ -4475,7 +4525,7 @@ M.Name="Knob"
 M.Size=UDim2.fromOffset(14,14)
 M.Position=UDim2.fromScale(0.5,0.5)
 M.AnchorPoint=Vector2.new(0.5,0.5)
-M.BackgroundColor3=o.Text
+M.BackgroundColor3=p.Text
 M.Parent=L
 addCorner(M,UDim.new(1,0))
 if aw=="Custom color"then
@@ -4484,9 +4534,9 @@ N.Size=UDim2.fromOffset(45,20)
 N.Position=UDim2.new(1,-52,0,5)
 N.BackgroundTransparency=1
 N.Text="RESET"
-N.TextColor3=m.Dark(o.Text,0.16)
+N.TextColor3=n.Dark(p.Text,0.16)
 N.TextSize=11
-N.FontFace=o.Font
+N.FontFace=p.Font
 N.Parent=ay
 N.Activated:Connect(function()
 at:SetValue(nil,nil,nil,4)
@@ -4498,7 +4548,7 @@ if
 (
 N.UserInputType==Enum.UserInputType.MouseButton1
 or N.UserInputType==Enum.UserInputType.Touch
-)and(N.Position.Y-ay.AbsolutePosition.Y)>(20*A.Scale)
+)and(N.Position.Y-ay.AbsolutePosition.Y)>(20*B.Scale)
 then
 local O=h.InputChanged:Connect(function(O)
 if
@@ -4510,7 +4560,7 @@ or Enum.UserInputType.Touch
 )
 then
 local P=
-math.clamp((O.Position.X-I.AbsolutePosition.X)/I.AbsoluteSize.X,0,1)
+math.clamp((O.Position.X-aA.AbsolutePosition.X)/aA.AbsoluteSize.X,0,1)
 at:SetValue(
 aw=="Custom color"and P or nil,
 aw=="Saturation"and P or nil,
@@ -4521,8 +4571,8 @@ end
 end)
 
 local P
-P=N.Changed:Connect(function()
-if N.UserInputState==Enum.UserInputState.End then
+P=h.InputEnded:Connect(function(Q)
+if Q==N and N.UserInputState==Enum.UserInputState.End then
 if O then
 O:Disconnect()
 end
@@ -4534,12 +4584,12 @@ end)
 end
 end)
 ay.MouseEnter:Connect(function()
-n:Tween(M,o.Tween,{
+o:Tween(M,p.Tween,{
 Size=UDim2.fromOffset(16,16),
 })
 end)
 ay.MouseLeave:Connect(function()
-n:Tween(M,o.Tween,{
+o:Tween(M,p.Tween,{
 Size=UDim2.fromOffset(14,14),
 })
 end)
@@ -4561,9 +4611,9 @@ ax.Position=UDim2.fromOffset(10,2)
 ax.BackgroundTransparency=1
 ax.Text=as.Name
 ax.TextXAlignment=Enum.TextXAlignment.Left
-ax.TextColor3=m.Dark(o.Text,0.16)
+ax.TextColor3=n.Dark(p.Text,0.16)
 ax.TextSize=11
-ax.FontFace=o.Font
+ax.FontFace=p.Font
 ax.Parent=aw
 local ay=Instance.new"Frame"
 ay.Name="Slider"
@@ -4573,23 +4623,23 @@ ay.BackgroundTransparency=1
 ay.BorderSizePixel=0
 ay.Parent=aw
 local az=0
-for I,J in au do
+for aA,J in au do
 local K=Instance.new"Frame"
-K.Size=UDim2.fromOffset(27+(((I+1)%2)==0 and 1 or 0),2)
+K.Size=UDim2.fromOffset(27+(((aA+1)%2)==0 and 1 or 0),2)
 K.Position=UDim2.fromOffset(az,0)
 K.BackgroundColor3=J
 K.BorderSizePixel=0
 K.Parent=ay
 az+=(K.Size.X.Offset+1)
 end
-local I=Instance.new"ImageButton"
-I.Name="Preview"
-I.Size=UDim2.fromOffset(12,12)
-I.Position=UDim2.new(1,-22,0,10)
-I.BackgroundTransparency=1
-I.Image=u"vape/assets/new/colorpreview.png"
-I.ImageColor3=Color3.fromHSV(at.Hue,1,1)
-I.Parent=aw
+local aA=Instance.new"ImageButton"
+aA.Name="Preview"
+aA.Size=UDim2.fromOffset(12,12)
+aA.Position=UDim2.new(1,-22,0,10)
+aA.BackgroundTransparency=1
+aA.Image=v"vape/assets/new/colorpreview.png"
+aA.ImageColor3=Color3.fromHSV(at.Hue,1,1)
+aA.Parent=aw
 local J=Instance.new"TextBox"
 J.Name="Box"
 J.Size=UDim2.fromOffset(60,15)
@@ -4598,15 +4648,15 @@ J.BackgroundTransparency=1
 J.Visible=false
 J.Text=""
 J.TextXAlignment=Enum.TextXAlignment.Right
-J.TextColor3=m.Dark(o.Text,0.16)
+J.TextColor3=n.Dark(p.Text,0.16)
 J.TextSize=11
-J.FontFace=o.Font
+J.FontFace=p.Font
 J.ClearTextOnFocus=true
 J.Parent=aw
 local K=Instance.new"TextButton"
 K.Name="Expand"
 K.Size=UDim2.fromOffset(17,13)
-K.Position=UDim2.new(0,E(ax.Text,ax.TextSize,ax.Font).X+11,0,7)
+K.Position=UDim2.new(0,F(ax.Text,ax.TextSize,ax.Font).X+11,0,7)
 K.BackgroundTransparency=1
 K.Text=""
 K.Parent=aw
@@ -4615,8 +4665,8 @@ L.Name="Expand"
 L.Size=UDim2.fromOffset(9,5)
 L.Position=UDim2.fromOffset(4,4)
 L.BackgroundTransparency=1
-L.Image=u"vape/assets/new/expandicon.png"
-L.ImageColor3=m.Dark(o.Text,0.43)
+L.Image=v"vape/assets/new/expandicon.png"
+L.ImageColor3=n.Dark(p.Text,0.43)
 L.Parent=K
 local M=Instance.new"TextButton"
 M.Name="Rainbow"
@@ -4628,24 +4678,24 @@ M.Parent=aw
 local N=Instance.new"ImageLabel"
 N.Size=UDim2.fromOffset(12,12)
 N.BackgroundTransparency=1
-N.Image=u"vape/assets/new/rainbow_1.png"
-N.ImageColor3=m.Light(o.Main,0.37)
+N.Image=v"vape/assets/new/rainbow_1.png"
+N.ImageColor3=n.Light(p.Main,0.37)
 N.Parent=M
 local O=N:Clone()
-O.Image=u"vape/assets/new/rainbow_2.png"
+O.Image=v"vape/assets/new/rainbow_2.png"
 O.Parent=M
 local P=N:Clone()
-P.Image=u"vape/assets/new/rainbow_3.png"
+P.Image=v"vape/assets/new/rainbow_3.png"
 P.Parent=M
 local Q=N:Clone()
-Q.Image=u"vape/assets/new/rainbow_4.png"
+Q.Image=v"vape/assets/new/rainbow_4.png"
 Q.Parent=M
 local R=Instance.new"ImageLabel"
 R.Name="Knob"
 R.Size=UDim2.fromOffset(26,12)
 R.Position=UDim2.fromOffset(av[4]-3,-5)
 R.BackgroundTransparency=1
-R.Image=u"vape/assets/new/guislider.png"
+R.Image=v"vape/assets/new/guislider.png"
 R.ImageColor3=au[4]
 R.Parent=ay
 as.Function=as.Function or function()end
@@ -4668,8 +4718,8 @@ ColorSequenceKeypoint.new(0,Color3.fromHSV(0,0,0)),
 ColorSequenceKeypoint.new(1,Color3.fromHSV(at.Hue,at.Sat,1)),
 }
 )
-local W=u"vape/assets/new/guislider.png"
-local X=u"vape/assets/new/guisliderrain.png"
+local W=v"vape/assets/new/guislider.png"
+local X=v"vape/assets/new/guisliderrain.png"
 local Y
 
 function at.Save(Z,_)
@@ -4694,22 +4744,22 @@ Z:SetValue(nil,nil,nil,_.Notch)
 end
 end
 
-function at.SetValue(Z,_,aA,aB,aC)
-if aC then
+function at.SetValue(Z,_,aB,aC,aD)
+if aD then
 if Z.Rainbow then
 Z:Toggle()
 end
 Z.CustomColor=false
-_,aA,aB=au[aC]:ToHSV()
+_,aB,aC=au[aD]:ToHSV()
 else
 Z.CustomColor=true
 end
 
 Z.Hue=_ or Z.Hue
-Z.Sat=aA or Z.Sat
-Z.Value=aB or Z.Value
-Z.Notch=aC
-I.ImageColor3=Color3.fromHSV(Z.Hue,Z.Sat,Z.Value)
+Z.Sat=aB or Z.Sat
+Z.Value=aC or Z.Value
+Z.Notch=aD
+aA.ImageColor3=Color3.fromHSV(Z.Hue,Z.Sat,Z.Value)
 U.Slider.UIGradient.Color=ColorSequence.new{
 ColorSequenceKeypoint.new(0,Color3.fromHSV(0,0,Z.Value)),
 ColorSequenceKeypoint.new(1,Color3.fromHSV(Z.Hue,1,Z.Value)),
@@ -4722,14 +4772,14 @@ ColorSequenceKeypoint.new(1,Color3.fromHSV(Z.Hue,Z.Sat,1)),
 if Z.Rainbow or Z.CustomColor then
 R.Image=X
 R.ImageColor3=Color3.new(1,1,1)
-n:Tween(R,o.Tween,{
+o:Tween(R,p.Tween,{
 Position=UDim2.fromOffset(av[4]-3,-5),
 })
 else
 R.Image=W
 R.ImageColor3=Color3.fromHSV(Z.Hue,Z.Sat,Z.Value)
-n:Tween(R,o.Tween,{
-Position=UDim2.fromOffset(av[aC or 4]-3,-5),
+o:Tween(R,p.Tween,{
+Position=UDim2.fromOffset(av[aD or 4]-3,-5),
 })
 end
 
@@ -4737,25 +4787,25 @@ if Z.Rainbow then
 if _ then
 T.Slider.Fill.Size=UDim2.fromScale(math.clamp(Z.Hue,0.04,0.96),1)
 end
-if aA then
+if aB then
 U.Slider.Fill.Size=UDim2.fromScale(math.clamp(Z.Sat,0.04,0.96),1)
 end
-if aB then
+if aC then
 V.Slider.Fill.Size=UDim2.fromScale(math.clamp(Z.Value,0.04,0.96),1)
 end
 else
 if _ then
-n:Tween(T.Slider.Fill,o.Tween,{
+o:Tween(T.Slider.Fill,p.Tween,{
 Size=UDim2.fromScale(math.clamp(Z.Hue,0.04,0.96),1),
 })
 end
-if aA then
-n:Tween(U.Slider.Fill,o.Tween,{
+if aB then
+o:Tween(U.Slider.Fill,p.Tween,{
 Size=UDim2.fromScale(math.clamp(Z.Sat,0.04,0.96),1),
 })
 end
-if aB then
-n:Tween(V.Slider.Fill,o.Tween,{
+if aC then
+o:Tween(V.Slider.Fill,p.Tween,{
 Size=UDim2.fromScale(math.clamp(Z.Value,0.04,0.96),1),
 })
 end
@@ -4763,19 +4813,19 @@ end
 as.Function(Z.Hue,Z.Sat,Z.Value)
 end
 
-function at.ToColor(aA)
-return Color3.fromHSV(aA.Hue,aA.Sat,aA.Value)
+function at.ToColor(aB)
+return Color3.fromHSV(aB.Hue,aB.Sat,aB.Value)
 end
 
-function at.Toggle(aA)
-aA.Rainbow=not aA.Rainbow
+function at.Toggle(aB)
+aB.Rainbow=not aB.Rainbow
 if Y then
 task.cancel(Y)
 end
 
-if aA.Rainbow then
+if aB.Rainbow then
 R.Image=X
-table.insert(d.RainbowTable,aA)
+table.insert(d.RainbowTable,aB)
 
 N.ImageColor3=Color3.fromRGB(5,127,100)
 Y=task.delay(0.1,function()
@@ -4786,28 +4836,28 @@ Y=nil
 end)
 end)
 else
-aA:SetValue(nil,nil,nil,4)
+aB:SetValue(nil,nil,nil,4)
 R.Image=W
-local aB=table.find(d.RainbowTable,aA)
-if aB then
-table.remove(d.RainbowTable,aB)
+local aC=table.find(d.RainbowTable,aB)
+if aC then
+table.remove(d.RainbowTable,aC)
 end
 
-P.ImageColor3=m.Light(o.Main,0.37)
+P.ImageColor3=n.Light(p.Main,0.37)
 Y=task.delay(0.1,function()
-O.ImageColor3=m.Light(o.Main,0.37)
+O.ImageColor3=n.Light(p.Main,0.37)
 Y=task.delay(0.1,function()
-N.ImageColor3=m.Light(o.Main,0.37)
+N.ImageColor3=n.Light(p.Main,0.37)
 end)
 end)
 end
 end
 
 K.MouseEnter:Connect(function()
-L.ImageColor3=m.Dark(o.Text,0.16)
+L.ImageColor3=n.Dark(p.Text,0.16)
 end)
 K.MouseLeave:Connect(function()
-L.ImageColor3=m.Dark(o.Text,0.43)
+L.ImageColor3=n.Dark(p.Text,0.43)
 end)
 K.Activated:Connect(function()
 T.Visible=not T.Visible
@@ -4815,29 +4865,29 @@ U.Visible=T.Visible
 V.Visible=U.Visible
 L.Rotation=U.Visible and 180 or 0
 end)
-I.Activated:Connect(function()
-I.Visible=false
+aA.Activated:Connect(function()
+aA.Visible=false
 J.Visible=true
 J:CaptureFocus()
-local aA=Color3.fromHSV(at.Hue,at.Sat,at.Value)
-J.Text=math.round(aA.R*255)
+local aB=Color3.fromHSV(at.Hue,at.Sat,at.Value)
+J.Text=math.round(aB.R*255)
 ..", "
-..math.round(aA.G*255)
+..math.round(aB.G*255)
 ..", "
-..math.round(aA.B*255)
+..math.round(aB.B*255)
 end)
-aw.InputBegan:Connect(function(aA)
+aw.InputBegan:Connect(function(aB)
 if
 (
-aA.UserInputType==Enum.UserInputType.MouseButton1
-or aA.UserInputType==Enum.UserInputType.Touch
-)and(aA.Position.Y-aw.AbsolutePosition.Y)>(20*A.Scale)
+aB.UserInputType==Enum.UserInputType.MouseButton1
+or aB.UserInputType==Enum.UserInputType.Touch
+)and(aB.Position.Y-aw.AbsolutePosition.Y)>(20*B.Scale)
 then
-local aB=h.InputChanged:Connect(function(aB)
+local aC=h.InputChanged:Connect(function(aC)
 if
-aB.UserInputType
+aC.UserInputType
 ==(
-aA.UserInputType==Enum.UserInputType.MouseButton1
+aB.UserInputType==Enum.UserInputType.MouseButton1
 and Enum.UserInputType.MouseMovement
 or Enum.UserInputType.Touch
 )
@@ -4847,7 +4897,7 @@ nil,
 nil,
 nil,
 math.clamp(
-math.round((aB.Position.X-ay.AbsolutePosition.X)/A.Scale/27),
+math.round((aC.Position.X-ay.AbsolutePosition.X)/B.Scale/27),
 1,
 7
 )
@@ -4855,14 +4905,14 @@ math.round((aB.Position.X-ay.AbsolutePosition.X)/A.Scale/27),
 end
 end)
 
-local aC
-aC=aA.Changed:Connect(function()
-if aA.UserInputState==Enum.UserInputState.End then
-if aB then
-aB:Disconnect()
-end
+local aD
+aD=h.InputEnded:Connect(function(Z)
+if Z==aB and aB.UserInputState==Enum.UserInputState.End then
 if aC then
 aC:Disconnect()
+end
+if aD then
+aD:Disconnect()
 end
 end
 end)
@@ -4870,25 +4920,25 @@ at:SetValue(
 nil,
 nil,
 nil,
-math.clamp(math.round((aA.Position.X-ay.AbsolutePosition.X)/A.Scale/27),1,7)
+math.clamp(math.round((aB.Position.X-ay.AbsolutePosition.X)/B.Scale/27),1,7)
 )
 end
 end)
 M.Activated:Connect(function()
 at:Toggle()
 end)
-J.FocusLost:Connect(function(aA)
-I.Visible=true
+J.FocusLost:Connect(function(aB)
+aA.Visible=true
 J.Visible=false
-if aA then
-local aB=J.Text:split","
-local aC,Z=pcall(function()
-return tonumber(aB[1])
-and Color3.fromRGB(tonumber(aB[1]),tonumber(aB[2]),tonumber(aB[3]))
+if aB then
+local aC=J.Text:split","
+local aD,Z=pcall(function()
+return tonumber(aC[1])
+and Color3.fromRGB(tonumber(aC[1]),tonumber(aC[2]),tonumber(aC[3]))
 or Color3.fromHex(J.Text)
 end)
 
-if aC then
+if aD then
 if at.Rainbow then
 at:Toggle()
 end
@@ -4904,10 +4954,10 @@ return at
 end
 
 an.MouseEnter:Connect(function()
-an.ImageColor3=o.Text
+an.ImageColor3=p.Text
 end)
 an.MouseLeave:Connect(function()
-an.ImageColor3=m.Light(o.Main,0.37)
+an.ImageColor3=n.Light(p.Main,0.37)
 end)
 an.Activated:Connect(function()
 ak.Visible=false
@@ -4942,15 +4992,15 @@ end
 end)
 
 task.spawn(function()
-z.Text="Copied!"
+A.Text="Copied!"
 setclipboard"https://discord.gg/voidware"
 end)
 end)
 ah.MouseEnter:Connect(function()
-ai.ImageColor3=o.Text
+ai.ImageColor3=p.Text
 end)
 ah.MouseLeave:Connect(function()
-ai.ImageColor3=m.Light(o.Main,0.37)
+ai.ImageColor3=n.Light(p.Main,0.37)
 end)
 ah.Activated:Connect(function()
 d.MainGuiSettingsOpenedEvent:Fire()
@@ -4960,10 +5010,10 @@ ag:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
 if aa.ThreadFix then
 setthreadidentity(8)
 end
-ac.Size=UDim2.fromOffset(220,42+ag.AbsoluteContentSize.Y/A.Scale)
+ac.Size=UDim2.fromOffset(220,42+ag.AbsoluteContentSize.Y/B.Scale)
 for ar,as in ab.Buttons do
 if as.Icon then
-as.Object.Text=string.rep(" ",36*A.Scale)..as.Name
+as.Object.Text=string.rep(" ",36*B.Scale)..as.Name
 end
 end
 end)
@@ -4986,11 +5036,11 @@ local ad=Instance.new"TextButton"
 ad.Name=ab.Name.."Category"
 ad.Size=UDim2.fromOffset(220,41)
 ad.Position=UDim2.fromOffset(236,60)
-ad.BackgroundColor3=o.Main
+ad.BackgroundColor3=p.Main
 ad.AutoButtonColor=false
 ad.Visible=false
 ad.Text=""
-ad.Parent=v
+ad.Parent=w
 addBlur(ad)
 addCorner(ad)
 
@@ -5000,7 +5050,7 @@ ae.Size=ab.Size
 ae.Position=UDim2.fromOffset(12,(ae.Size.X.Offset>20 and 14 or 13))
 ae.BackgroundTransparency=1
 ae.Image=ab.Icon
-ae.ImageColor3=o.Text
+ae.ImageColor3=p.Text
 ae.Parent=ad
 local af=Instance.new"TextLabel"
 af.Name="Title"
@@ -5009,9 +5059,9 @@ af.Position=UDim2.fromOffset(math.abs(af.Size.X.Offset),0)
 af.BackgroundTransparency=1
 af.Text=ab.Name
 af.TextXAlignment=Enum.TextXAlignment.Left
-af.TextColor3=o.Text
+af.TextColor3=p.Text
 af.TextSize=13
-af.FontFace=o.Font
+af.FontFace=p.Font
 af.Parent=ad
 local ag=Instance.new"TextButton"
 ag.Name="Arrow"
@@ -5030,7 +5080,7 @@ ai.Size=UDim2.fromOffset(9,4)
 
 ai.Position=UDim2.new(0.9,0,0,18)
 ai.BackgroundTransparency=1
-ai.Image=u"vape/assets/new/expandup.png"
+ai.Image=v"vape/assets/new/expandup.png"
 ai.ImageColor3=Color3.fromRGB(140,140,140)
 ai.Rotation=180
 ai.Parent=ag
@@ -5075,26 +5125,31 @@ Category=ab.Name,
 Index=getTableSize(d.Modules),
 Toggled=c(`{tostring(an.Name)}_{tostring(ac.Name)}_{tostring(an.SavingID)}_{tostring(an.ExtraText)}`),
 }
-for ap,aq in{"Name","SavingID","LegitSynced","ExtraText","NoSave"}do
+for ap,aq in{"Name","SavingID","LegitSynced","ExtraText","NoSave","Aliases"}do
 if an[aq]~=nil then
 ao[aq]=an[aq]
 end
 end
 an.Tooltip=an.Tooltip or an.Name
+ao.Aliases=an.Aliases or d.AliasesConfig[ao.Name]or{}
+ao.SearchKeys={ao.Name}
+for ap,aq in ao.Aliases do
+table.insert(ao.SearchKeys,aq)
+end
 
 local ap=an.DisplayName or an.Name
 local aq=false
 local ar=Instance.new"TextButton"
 ar.Name=an.Name
 ar.Size=UDim2.fromOffset(220,40)
-ar.BackgroundColor3=o.Main
+ar.BackgroundColor3=p.Main
 ar.BorderSizePixel=0
 ar.AutoButtonColor=false
 ar.Text="            "..ap
 ar.TextXAlignment=Enum.TextXAlignment.Left
-ar.TextColor3=m.Dark(o.Text,0.16)
+ar.TextColor3=n.Dark(p.Text,0.16)
 ar.TextSize=14
-ar.FontFace=o.Font
+ar.FontFace=p.Font
 ar.Parent=aj
 if an.Premium then
 local as=Instance.new"TextLabel"
@@ -5109,10 +5164,10 @@ as.AnchorPoint=Vector2.new(0,0.5)
 as.Text="Premium"
 as.Position=UDim2.new(0,128,0.5,0)
 as.TextColor3=Color3.new(0,0,0)
-as.FontFace=o.Font
+as.FontFace=p.Font
 
 connectvisibilitychange(function(at)
-n:Tween(as,TweenInfo.new(0.5,Enum.EasingStyle.Quad),{
+o:Tween(as,TweenInfo.new(0.5,Enum.EasingStyle.Quad),{
 BackgroundTransparency=at and 0 or 1
 })
 end)
@@ -5156,8 +5211,8 @@ av.Name="Icon"
 av.Size=UDim2.fromOffset(12,12)
 av.Position=UDim2.new(0.5,-6,0,5)
 av.BackgroundTransparency=1
-av.Image=u"vape/assets/new/bind.png"
-av.ImageColor3=m.Dark(o.Text,0.43)
+av.Image=v"vape/assets/new/bind.png"
+av.ImageColor3=n.Dark(p.Text,0.43)
 av.Parent=au
 local aw=Instance.new"TextLabel"
 aw.Size=UDim2.fromScale(1,1)
@@ -5165,16 +5220,16 @@ aw.Position=UDim2.fromOffset(0,1)
 aw.BackgroundTransparency=1
 aw.Visible=false
 aw.Text=""
-aw.TextColor3=m.Dark(o.Text,0.43)
+aw.TextColor3=n.Dark(p.Text,0.43)
 aw.TextSize=12
-aw.FontFace=o.Font
+aw.FontFace=p.Font
 aw.Parent=au
 local ax=Instance.new"ImageLabel"
 ax.Name="Cover"
 ax.Size=UDim2.fromOffset(154,40)
 ax.BackgroundTransparency=1
 ax.Visible=false
-ax.Image=u"vape/assets/new/bindbkg.png"
+ax.Image=v"vape/assets/new/bindbkg.png"
 ax.ScaleType=Enum.ScaleType.Slice
 ax.SliceCenter=Rect.new(0,0,141,40)
 ax.Parent=ar
@@ -5183,16 +5238,16 @@ ay.Name="Text"
 ay.Size=UDim2.new(1,-10,1,-3)
 ay.BackgroundTransparency=1
 ay.Text="PRESS A KEY TO BIND"
-ay.TextColor3=o.Text
+ay.TextColor3=p.Text
 ay.TextSize=11
-ay.FontFace=o.Font
+ay.FontFace=p.Font
 ay.Parent=ax
 au.Parent=ar
 
 local az=au:Clone()
 az.Parent=ar
 az.Name="Star"
-az.Icon.Image=u"vape/assets/new/star.png"
+az.Icon.Image=v"vape/assets/new/star.png"
 az.BackgroundColor3=Color3.fromRGB(255,255,255)
 az.Visible=false
 az.BackgroundTransparency=0
@@ -5210,7 +5265,7 @@ local aB=aA
 connectvisibilitychange(function(aC)
 aB.Enabled=ao.StarActive
 if not aB.Enabled then return end
-n:Tween(aB,TweenInfo.new(0.5,Enum.EasingStyle.Quad),{
+o:Tween(aB,TweenInfo.new(0.5,Enum.EasingStyle.Quad),{
 Thickness=aC and 2 or 0,
 })
 end)
@@ -5226,13 +5281,13 @@ end)
 local function updateModuleSorting()
 local aC={}
 
-for I,J in d.Modules do
+for aD,J in d.Modules do
 aC[J.Category]=aC[J.Category]or{starred={},normal={}}
 
 local K={
 name=J.Name,
 
-textSize=E(J.Name,J.Object.TextSize,J.Object.Font).X
+textSize=F(J.Name,J.Object.TextSize,J.Object.Font).X
 }
 
 if J.StarActive then
@@ -5242,14 +5297,14 @@ table.insert(aC[J.Category].normal,K)
 end
 end
 
-local function sortByTextSize(I,J)
-if I.textSize==J.textSize then
-return I.name>J.name
+local function sortByTextSize(aD,J)
+if aD.textSize==J.textSize then
+return aD.name>J.name
 end
-return I.textSize>J.textSize
+return aD.textSize>J.textSize
 end
 
-for I,J in aC do
+for aD,J in aC do
 table.sort(J.starred,sortByTextSize)
 table.sort(J.normal,sortByTextSize)
 
@@ -5271,23 +5326,23 @@ end
 end
 end
 
-for aC,I in{az,au}do
-I:GetPropertyChangedSignal"Visible":Connect(function()
+for aC,aD in{az,au}do
+aD:GetPropertyChangedSignal"Visible":Connect(function()
 if not an.Premium then
 return
 end
-if not I.Visible then
+if not aD.Visible then
 return
 end
 
 task.defer(function()
-I.Visible=false
+aD.Visible=false
 end)
 end)
 end
 
 ao.StarActive=false
-function ao.ToggleStar(aC,I)
+function ao.ToggleStar(aC,aD)
 if an.Premium then
 ao.StarActive=false
 else
@@ -5296,7 +5351,7 @@ end
 az.BackgroundColor3=ao.StarActive and Color3.fromRGB(255,255,127)or Color3.fromRGB(255,255,255)
 aB.Enabled=ao.StarActive
 az.Visible=ao.StarActive or aq or at.Visible
-if not I then
+if not aD then
 if d.FavoriteNotifications~=nil and d.FavoriteNotifications.Enabled then
 d:CreateNotification(
 "Module Favorite",
@@ -5322,17 +5377,17 @@ aC.Position=UDim2.new(1,-25,0,0)
 aC.BackgroundTransparency=1
 aC.Text=""
 aC.Parent=ar
-local I=Instance.new"ImageLabel"
-I.Name="Dots"
-I.Size=UDim2.fromOffset(3,16)
-I.Position=UDim2.fromOffset(4,12)
-I.BackgroundTransparency=1
-I.Image=u"vape/assets/new/dots.png"
-I.ImageColor3=m.Light(o.Main,0.37)
-I.Parent=aC
+local aD=Instance.new"ImageLabel"
+aD.Name="Dots"
+aD.Size=UDim2.fromOffset(3,16)
+aD.Position=UDim2.fromOffset(4,12)
+aD.BackgroundTransparency=1
+aD.Image=v"vape/assets/new/dots.png"
+aD.ImageColor3=n.Light(p.Main,0.37)
+aD.Parent=aC
 at.Name=an.Name.."Children"
 at.Size=UDim2.new(1,0,0,0)
-at.BackgroundColor3=m.Dark(o.Main,0.02)
+at.BackgroundColor3=n.Dark(p.Main,0.02)
 at.BorderSizePixel=0
 at.Visible=false
 at.Parent=aj
@@ -5370,9 +5425,9 @@ end
 at.Visible=true
 ao.OptionsVisibilityChanged:Fire(true)
 
-local N=J.AbsoluteContentSize.Y/A.Scale
+local N=J.AbsoluteContentSize.Y/B.Scale
 
-L=n:Tween(
+L=o:Tween(
 at,
 TweenInfo.new(0.25,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),
 {Size=UDim2.new(1,0,0,N)}
@@ -5387,7 +5442,7 @@ if M then
 M:Cancel()
 end
 
-M=n:Tween(
+M=o:Tween(
 at,
 TweenInfo.new(0.2,Enum.EasingStyle.Quad,Enum.EasingDirection.In),
 {Size=UDim2.new(1,0,0,0)}
@@ -5411,7 +5466,7 @@ end
 N.Bind=table.clone(O)
 if P then
 ay.Text=#O<=0 and"BIND REMOVED"or"BOUND TO"
-ax.Size=UDim2.fromOffset(E(ay.Text,ay.TextSize).X+20,40)
+ax.Size=UDim2.fromOffset(F(ay.Text,ay.TextSize).X+20,40)
 task.delay(1,function()
 ax.Visible=false
 end)
@@ -5427,7 +5482,7 @@ aw.Visible=true
 av.Visible=false
 aw.Text=table.concat(O," + "):upper()
 au.Size=UDim2.fromOffset(
-math.max(E(aw.Text,aw.TextSize,aw.Font).X+10,20),
+math.max(F(aw.Text,aw.TextSize,aw.Font).X+10,20),
 21
 )
 end
@@ -5459,13 +5514,13 @@ N.Enabled=not N.Enabled
 N.Toggled:Fire()
 K.Visible=N.Enabled
 as.Enabled=N.Enabled
-ar.TextColor3=(aq or at.Visible)and o.Text
-or m.Dark(o.Text,0.16)
-ar.BackgroundColor3=(aq or at.Visible)and m.Light(o.Main,0.02)
-or o.Main
-I.ImageColor3=N.Enabled and Color3.fromRGB(50,50,50)or m.Light(o.Main,0.37)
-av.ImageColor3=m.Dark(o.Text,0.43)
-aw.TextColor3=m.Dark(o.Text,0.43)
+ar.TextColor3=(aq or at.Visible)and p.Text
+or n.Dark(p.Text,0.16)
+ar.BackgroundColor3=(aq or at.Visible)and n.Light(p.Main,0.02)
+or p.Main
+aD.ImageColor3=N.Enabled and Color3.fromRGB(50,50,50)or n.Light(p.Main,0.37)
+av.ImageColor3=n.Dark(p.Text,0.43)
+aw.TextColor3=n.Dark(p.Text,0.43)
 if not N.Enabled then
 for P,Q in N.Connections do
 if type(Q)=="function"then
@@ -5484,7 +5539,7 @@ end
 task.spawn(an.Function,N.Enabled)
 end
 
-for N,O in H do
+for N,O in I do
 ao["Create"..N]=function(P,Q)
 return O(Q,at,ao)
 end
@@ -5494,22 +5549,22 @@ end
 au.MouseEnter:Connect(function()
 aw.Visible=false
 av.Visible=not aw.Visible
-av.Image=u"vape/assets/new/edit.png"
+av.Image=v"vape/assets/new/edit.png"
 if not ao.Enabled then
-av.ImageColor3=m.Dark(o.Text,0.16)
+av.ImageColor3=n.Dark(p.Text,0.16)
 end
 end)
 au.MouseLeave:Connect(function()
 aw.Visible=#ao.Bind>0
 av.Visible=not aw.Visible
-av.Image=u"vape/assets/new/bind.png"
+av.Image=v"vape/assets/new/bind.png"
 if not ao.Enabled then
-av.ImageColor3=m.Dark(o.Text,0.43)
+av.ImageColor3=n.Dark(p.Text,0.43)
 end
 end)
 au.Activated:Connect(function()
 ay.Text="PRESS A KEY TO BIND"
-ax.Size=UDim2.fromOffset(E(ay.Text,ay.TextSize).X+20,40)
+ax.Size=UDim2.fromOffset(F(ay.Text,ay.TextSize).X+20,40)
 ax.Visible=true
 d.Binding=ao
 end)
@@ -5518,12 +5573,12 @@ ao:ToggleStar()
 end)
 aC.MouseEnter:Connect(function()
 if not ao.Enabled then
-I.ImageColor3=o.Text
+aD.ImageColor3=p.Text
 end
 end)
 aC.MouseLeave:Connect(function()
 if not ao.Enabled then
-I.ImageColor3=m.Light(o.Main,0.37)
+aD.ImageColor3=n.Light(p.Main,0.37)
 end
 end)
 aC.Activated:Connect(function()
@@ -5545,8 +5600,8 @@ end)
 ar.MouseEnter:Connect(function()
 aq=true
 if not ao.Enabled and not at.Visible then
-ar.TextColor3=o.Text
-ar.BackgroundColor3=m.Light(o.Main,0.02)
+ar.TextColor3=p.Text
+ar.BackgroundColor3=n.Light(p.Main,0.02)
 end
 au.Visible=#ao.Bind>0 or aq or at.Visible
 az.Visible=ao.StarActive or aq or at.Visible
@@ -5554,8 +5609,8 @@ end)
 ar.MouseLeave:Connect(function()
 aq=false
 if not ao.Enabled and not at.Visible then
-ar.TextColor3=m.Dark(o.Text,0.16)
-ar.BackgroundColor3=o.Main
+ar.TextColor3=n.Dark(p.Text,0.16)
+ar.BackgroundColor3=p.Main
 end
 au.Visible=#ao.Bind>0 or aq or at.Visible
 az.Visible=ao.StarActive or aq or at.Visible
@@ -5598,7 +5653,7 @@ S.BackgroundColor3=Color3.fromRGB(100,150,255)
 S.BorderSizePixel=0
 S.Parent=ar
 
-n:Tween(
+o:Tween(
 S,
 TweenInfo.new(R,Enum.EasingStyle.Linear),
 {Size=UDim2.new(1,0,0,3)}
@@ -5607,13 +5662,13 @@ TweenInfo.new(R,Enum.EasingStyle.Linear),
 repeat
 N=(h:GetMouseLocation()-Q).Magnitude<10
 task.wait()
-until(tick()-P)>R or not N or not v.Visible or d.Loaded==nil
+until(tick()-P)>R or not N or not w.Visible or d.Loaded==nil
 
 if S and S.Parent then
 S:Destroy()
 end
 
-if N and v.Visible then
+if N and w.Visible then
 if d.ThreadFix then
 setthreadidentity(8)
 end
@@ -5627,20 +5682,20 @@ O.BackgroundColor3=Color3.fromRGB(0,0,0)
 O.BackgroundTransparency=0.5
 O.BorderSizePixel=0
 O.ZIndex=1000
-O.Parent=v.Parent
+O.Parent=w.Parent
 
 local T=Instance.new"TextLabel"
 T.Size=UDim2.fromScale(0.8,0.2)
 T.Position=UDim2.fromScale(0.5,0.4)
 T.AnchorPoint=Vector2.new(0.5,0.5)
-T.BackgroundColor3=m.Dark(o.Main,0.1)
+T.BackgroundColor3=n.Dark(p.Main,0.1)
 T.BackgroundTransparency=0
 T.BorderSizePixel=0
 T.Text="TAP ANYWHERE TO SET BUTTON POSITION"
-T.TextColor3=o.Text
+T.TextColor3=p.Text
 T.TextSize=18
 T.TextWrapped=true
-T.FontFace=o.Font
+T.FontFace=p.Font
 T.Parent=O
 
 addCorner(T,UDim.new(0,8))
@@ -5653,18 +5708,18 @@ U.BackgroundTransparency=1
 U.Text="Module: "..an.Name
 U.TextColor3=Color3.fromRGB(150,200,255)
 U.TextSize=14
-U.FontFace=o.Font
+U.FontFace=p.Font
 U.Parent=O
 
 
-local V=n:Tween(
+local V=o:Tween(
 T,
 TweenInfo.new(0.5,Enum.EasingStyle.Quad,Enum.EasingDirection.InOut,-1,true),
 {TextTransparency=0.3}
 )
 
-v.Visible=false
-z.Visible=false
+w.Visible=false
+A.Visible=false
 d:BlurCheck()
 
 
@@ -5705,7 +5760,7 @@ d:CreateNotification(
 2
 )
 
-v.Visible=true
+w.Visible=true
 d:BlurCheck()
 
 
@@ -5735,7 +5790,7 @@ if V then
 V:Cancel()
 end
 
-v.Visible=true
+w.Visible=true
 d:BlurCheck()
 
 for Y,Z in d.Modules do
@@ -5767,7 +5822,7 @@ J:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
 if d.ThreadFix then
 setthreadidentity(8)
 end
-at.Size=UDim2.new(1,0,0,J.AbsoluteContentSize.Y/A.Scale)
+at.Size=UDim2.new(1,0,0,J.AbsoluteContentSize.Y/B.Scale)
 end)
 
 function ao.SetVisible(N,O)
@@ -5818,23 +5873,23 @@ am.Expanded=an
 else
 am.Expanded=not am.Expanded
 end
-n:Tween(ai,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+o:Tween(ai,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
 Rotation=am.Expanded and 0 or 180,
 })
 if not d.Loaded then
 aj.Visible=am.Expanded
 ad.Size=UDim2.fromOffset(
 220,
-am.Expanded and math.min(41+al.AbsoluteContentSize.Y/A.Scale,601)or 41
+am.Expanded and math.min(41+al.AbsoluteContentSize.Y/B.Scale,601)or 41
 )
 else
 if am.Expanded then
 aj.Visible=true
 end
-n:Tween(ad,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+o:Tween(ad,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
 Size=UDim2.fromOffset(
 220,
-am.Expanded and math.min(41+al.AbsoluteContentSize.Y/A.Scale,601)or 41
+am.Expanded and math.min(41+al.AbsoluteContentSize.Y/B.Scale,601)or 41
 )
 })
 
@@ -5886,9 +5941,9 @@ al:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
 if aa.ThreadFix then
 setthreadidentity(8)
 end
-aj.CanvasSize=UDim2.fromOffset(0,al.AbsoluteContentSize.Y/A.Scale)
+aj.CanvasSize=UDim2.fromOffset(0,al.AbsoluteContentSize.Y/B.Scale)
 if ac.Expanded then
-ad.Size=UDim2.fromOffset(220,math.min(41+al.AbsoluteContentSize.Y/A.Scale,601))
+ad.Size=UDim2.fromOffset(220,math.min(41+al.AbsoluteContentSize.Y/B.Scale,601))
 end
 end)
 
@@ -5923,7 +5978,7 @@ success,err=pcall(function()
 ap=Instance.new"Frame"
 ap.Name=an.Name.."ModuleCategory"
 ap.Size=UDim2.fromOffset(220,45)
-ap.BackgroundColor3=an.BackgroundColor or m.Dark(o.Main,0.08)
+ap.BackgroundColor3=an.BackgroundColor or n.Dark(p.Main,0.08)
 ap.BorderSizePixel=0
 if not(aj~=nil and aj.Parent~=nil)then
 error(`{an.Name}: Category Children are invalid!`)
@@ -6040,7 +6095,7 @@ as.Size=an.Size or UDim2.fromOffset(20,20)
 as.Position=UDim2.fromOffset(15,15)
 as.BackgroundTransparency=1
 as.Image=an.Icon or""
-as.ImageColor3=o.Text
+as.ImageColor3=p.Text
 as.Parent=aq
 end)
 if not success then
@@ -6057,9 +6112,9 @@ at.Position=UDim2.fromOffset(45,0)
 at.BackgroundTransparency=1
 at.Text=an.Name
 at.TextXAlignment=Enum.TextXAlignment.Left
-at.TextColor3=o.Text
+at.TextColor3=p.Text
 at.TextSize=14
-at.FontFace=Font.new(o.Font.Family,Enum.FontWeight.SemiBold)
+at.FontFace=Font.new(p.Font.Family,Enum.FontWeight.SemiBold)
 at.Parent=aq
 end)
 if not success then
@@ -6076,9 +6131,9 @@ au.Position=UDim2.new(1,-85,0,0)
 au.BackgroundTransparency=1
 au.Text="0"
 au.TextXAlignment=Enum.TextXAlignment.Right
-au.TextColor3=m.Dark(o.Text,0.4)
+au.TextColor3=n.Dark(p.Text,0.4)
 au.TextSize=12
-au.FontFace=o.Font
+au.FontFace=p.Font
 au.Parent=aq
 end)
 if not success then
@@ -6101,8 +6156,8 @@ aw.Name="Arrow"
 aw.Size=UDim2.fromOffset(12,7)
 aw.Position=UDim2.fromOffset(17,19)
 aw.BackgroundTransparency=1
-aw.Image=u"vape/assets/new/expandup.png"
-aw.ImageColor3=o.Text
+aw.Image=v"vape/assets/new/expandup.png"
+aw.ImageColor3=p.Text
 
 aw.Rotation=ao.UpExpand and 0 or 180
 
@@ -6182,57 +6237,57 @@ end
 
 ao.ExpandEvent:Fire()
 
-local aB=az.Expanded and ay.AbsoluteContentSize.Y/A.Scale or 0
+local aB=az.Expanded and ay.AbsoluteContentSize.Y/B.Scale or 0
 
 task.spawn(function()
 flickerTextEffect(at,true,an.Name)
 end)
 
 local aC=az.UpExpand and 180 or 0
-local I=az.UpExpand and 0 or 180
+local aD=az.UpExpand and 0 or 180
 
-n:Tween(aw,TweenInfo.new(0.25,Enum.EasingStyle.Quad),{
-Rotation=az.Expanded and aC or I,
+o:Tween(aw,TweenInfo.new(0.25,Enum.EasingStyle.Quad),{
+Rotation=az.Expanded and aC or aD,
 ImageColor3=az.Expanded
 and(an.AccentColor or an.StrokeColor or Color3.fromRGB(
 100,
 150,
 255
 ))
-or o.Text,
+or p.Text,
 })
 
-n:Tween(as,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+o:Tween(as,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
 ImageColor3=az.Expanded
 and(an.AccentColor or an.StrokeColor or Color3.fromRGB(
 100,
 150,
 255
 ))
-or o.Text,
+or p.Text,
 })
 
-n:Tween(as,TweenInfo.new(0.5,Enum.EasingStyle.Quad),{
+o:Tween(as,TweenInfo.new(0.5,Enum.EasingStyle.Quad),{
 Rotation=az.Expanded and 360 or 0,
 })
 
-n:Tween(ap,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
-BackgroundColor3=az.Expanded and m.Dark(o.Main,0.12)
-or(an.BackgroundColor or m.Dark(o.Main,0.08)),
+o:Tween(ap,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+BackgroundColor3=az.Expanded and n.Dark(p.Main,0.12)
+or(an.BackgroundColor or n.Dark(p.Main,0.08)),
 })
 
 ax.Visible=true
-n:Tween(ax,TweenInfo.new(0.3,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{
+o:Tween(ax,TweenInfo.new(0.3,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{
 Size=UDim2.new(1,0,0,aB),
 })
 
 if az.UpExpand then
-n:Tween(ap,TweenInfo.new(0.3,Enum.EasingStyle.Quad),{
+o:Tween(ap,TweenInfo.new(0.3,Enum.EasingStyle.Quad),{
 Size=UDim2.fromOffset(220,45+aB),
 Position=UDim2.fromOffset(0,-(az.Expanded and aB or 0)),
 })
 else
-n:Tween(ap,TweenInfo.new(0.3,Enum.EasingStyle.Quad),{
+o:Tween(ap,TweenInfo.new(0.3,Enum.EasingStyle.Quad),{
 Size=UDim2.fromOffset(220,45+aB),
 })
 end
@@ -6257,9 +6312,9 @@ end
 function ao.Load(az,aA)
 success,err=pcall(function()
 for aB,aC in aA do
-local I=d.Modules[aC]
-if I then
-az:AddModule(I)
+local aD=d.Modules[aC]
+if aD then
+az:AddModule(aD)
 end
 end
 end)
@@ -6351,10 +6406,10 @@ end)
 
 aq.MouseEnter:Connect(function()
 if not ao.Expanded then
-n:Tween(ap,TweenInfo.new(0.15),{
-BackgroundColor3=m.Light(an.BackgroundColor or o.Main,0.05),
+o:Tween(ap,TweenInfo.new(0.15),{
+BackgroundColor3=n.Light(an.BackgroundColor or p.Main,0.05),
 })
-n:Tween(aw,TweenInfo.new(0.15),{
+o:Tween(aw,TweenInfo.new(0.15),{
 ImageColor3=an.AccentColor
 or an.StrokeColor
 or Color3.fromRGB(100,150,255),
@@ -6364,18 +6419,18 @@ end)
 
 aq.MouseLeave:Connect(function()
 if not ao.Expanded then
-n:Tween(ap,TweenInfo.new(0.15),{
-BackgroundColor3=an.BackgroundColor or m.Dark(o.Main,0.08),
+o:Tween(ap,TweenInfo.new(0.15),{
+BackgroundColor3=an.BackgroundColor or n.Dark(p.Main,0.08),
 })
-n:Tween(aw,TweenInfo.new(0.15),{
-ImageColor3=o.Text,
+o:Tween(aw,TweenInfo.new(0.15),{
+ImageColor3=p.Text,
 })
 end
 end)
 
 ay:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
 if ao.Expanded then
-local az=ay.AbsoluteContentSize.Y/A.Scale
+local az=ay.AbsoluteContentSize.Y/B.Scale
 ax.Size=UDim2.new(1,0,0,az)
 ap.Size=UDim2.fromOffset(220,45+az)
 
@@ -6441,7 +6496,7 @@ return ac
 end
 
 local aa=shared.LANGUAGE_FLAGS_CACHE
-or F(
+or G(
 function()
 return game:GetService"HttpService":JSONDecode(
 d.http_function(
@@ -6453,7 +6508,7 @@ end,
 10,
 function(aa,ab)
 if not(aa and ab~=nil and type(ab)=="table")then
-return F(
+return G(
 function()
 return game:GetService"HttpService"
 :JSONDecode(readfile(`voidware_translations/LanguageFlags.json`))
@@ -6468,7 +6523,7 @@ end
 end
 )
 else
-F(function()
+G(function()
 if not isfolder"voidware_translations"then
 makefolder"voidware_translations"
 end
@@ -6485,7 +6540,7 @@ end
 d.LanguageFlags=aa
 
 local ab=shared.TargetLanguage and tostring(shared.TargetLanguage)
-or F(
+or G(
 function()
 return readfile"voidware_translations/lang.txt"
 end,
@@ -6523,7 +6578,7 @@ shared.TargetLanguage=ab
 local ac={
 lang=ab,
 languages=shared.LANGUAGES_TRANSLATION_API_CACHE
-or F(
+or G(
 function()
 return game:GetService"HttpService":JSONDecode(
 d.http_function(
@@ -6535,7 +6590,7 @@ end,
 10,
 function(ac,ad)
 if not(ac and ad~=nil and type(ad)=="table")then
-return F(
+return G(
 function()
 return game:GetService"HttpService"
 :JSONDecode(readfile(`voidware_translations/Languages.json`))
@@ -6550,7 +6605,7 @@ end
 end
 )
 else
-F(function()
+G(function()
 if not isfolder"voidware_translations"then
 makefolder"voidware_translations"
 end
@@ -6566,12 +6621,12 @@ end
 end
 ),
 data=shared[`TRANSLATION_API_LANGUAGE_CACHE_{tostring(ab)}`]
-or F(
+or G(
 function()
 if ab=="en"then
 return{}
 end
-if tostring(shared.environment)=="translator_env"and isfolder"voidware_translations"and D(`voidware_translations/{ab}.json`)then
+if tostring(shared.environment)=="translator_env"and isfolder"voidware_translations"and E(`voidware_translations/{ab}.json`)then
 return decode(readfile(`voidware_translations/{ab}.json`))
 end
 return decode(
@@ -6584,7 +6639,7 @@ end,
 10,
 function(ac,ad)
 if not(ac and ad~=nil and type(ad)=="table")then
-return F(
+return G(
 function()
 return game:GetService"HttpService"
 :JSONDecode(readfile(`voidware_translations/{ab}.json`))
@@ -6599,7 +6654,7 @@ end
 end
 )
 else
-F(function()
+G(function()
 if not isfolder"voidware_translations"then
 makefolder"voidware_translations"
 end
@@ -6705,7 +6760,7 @@ UpExpand=ag.UpExpand or false,
 Button=af.Overlays:CreateToggle{
 Name=ag.Name,
 Function=function(aj)
-ah.Visible=aj and(v.Visible or ai.Pinned)
+ah.Visible=aj and(w.Visible or ai.Pinned)
 if not aj then
 for ak,al in ai.Connections do
 al:Disconnect()
@@ -6733,11 +6788,11 @@ ah=Instance.new"TextButton"
 ah.Name=ag.Name.."Overlay"
 ah.Size=UDim2.fromOffset(ag.CategorySize or 220,41)
 ah.Position=UDim2.fromOffset(240,46)
-ah.BackgroundColor3=o.Main
+ah.BackgroundColor3=p.Main
 ah.AutoButtonColor=false
 ah.Visible=false
 ah.Text=""
-ah.Parent=w
+ah.Parent=x
 
 ai.WindowXOffset=(ag.CategorySize or 220)
 
@@ -6751,7 +6806,7 @@ ak.Size=ag.Size
 ak.Position=UDim2.fromOffset(12,(ak.Size.X.Offset>14 and 14 or 13))
 ak.BackgroundTransparency=1
 ak.Image=ag.Icon
-ak.ImageColor3=o.Text
+ak.ImageColor3=p.Text
 ak.Parent=ah
 
 local al=Instance.new"TextLabel"
@@ -6761,9 +6816,9 @@ al.Position=UDim2.fromOffset(math.abs(al.Size.X.Offset),0)
 al.BackgroundTransparency=1
 al.Text=ag.Name
 al.TextXAlignment=Enum.TextXAlignment.Left
-al.TextColor3=o.Text
+al.TextColor3=p.Text
 al.TextSize=13
-al.FontFace=o.Font
+al.FontFace=p.Font
 al.Parent=ah
 
 local am=Instance.new"ImageButton"
@@ -6772,8 +6827,8 @@ am.Size=UDim2.fromOffset(16,16)
 am.Position=UDim2.new(1,-47,0,12)
 am.BackgroundTransparency=1
 am.AutoButtonColor=false
-am.Image=u"vape/assets/new/pin.png"
-am.ImageColor3=m.Dark(o.Text,0.43)
+am.Image=v"vape/assets/new/pin.png"
+am.ImageColor3=n.Dark(p.Text,0.43)
 am.Parent=ah
 am.Visible=not ag.Pinned
 
@@ -6790,8 +6845,8 @@ ao.Name="Dots"
 ao.Size=UDim2.fromOffset(3,16)
 ao.Position=UDim2.fromOffset(4,12)
 ao.BackgroundTransparency=1
-ao.Image=u"vape/assets/new/dots.png"
-ao.ImageColor3=m.Light(o.Main,0.37)
+ao.Image=v"vape/assets/new/dots.png"
+ao.ImageColor3=n.Light(p.Main,0.37)
 ao.Parent=an
 
 local ap=Instance.new"Frame"
@@ -6812,7 +6867,7 @@ else
 aq.Position=UDim2.fromOffset(0,37)
 end
 
-aq.BackgroundColor3=m.Dark(o.Main,0.02)
+aq.BackgroundColor3=n.Dark(p.Main,0.02)
 aq.BorderSizePixel=0
 aq.Visible=false
 aq.ScrollBarThickness=2
@@ -6834,31 +6889,31 @@ return
 end
 as.Expanded=not as.Expanded
 aq.Visible=as.Expanded
-ao.ImageColor3=as.Expanded and o.Text or m.Light(o.Main,0.37)
+ao.ImageColor3=as.Expanded and p.Text or n.Light(p.Main,0.37)
 
-local au=ar.AbsoluteContentSize.Y/A.Scale
+local au=ar.AbsoluteContentSize.Y/B.Scale
 local av=math.min(41+au,601)
 
 if as.Expanded then
 if as.UpExpand then
-n:Tween(ah,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+o:Tween(ah,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
 Size=UDim2.fromOffset(220,av),
 Position=UDim2.fromOffset(ah.Position.X.Offset,ah.Position.Y.Offset-(av-41)),
 })
 else
-n:Tween(ah,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+o:Tween(ah,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
 Size=UDim2.fromOffset(220,av),
 })
 end
 else
 if as.UpExpand then
 local aw=ah.Size.Y.Offset
-n:Tween(ah,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+o:Tween(ah,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
 Size=UDim2.fromOffset(as.WindowXOffset,41),
 Position=UDim2.fromOffset(ah.Position.X.Offset,ah.Position.Y.Offset+(aw-41)),
 })
 else
-n:Tween(ah,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+o:Tween(ah,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
 Size=UDim2.fromOffset(as.WindowXOffset,41),
 })
 end
@@ -6870,7 +6925,7 @@ as.Pinned=not as.Pinned
 if ag.Pinned then
 as.Pinned=true
 end
-am.ImageColor3=as.Pinned and o.Text or m.Dark(o.Text,0.43)
+am.ImageColor3=as.Pinned and p.Text or n.Dark(p.Text,0.43)
 end
 
 if ag.Pinned then
@@ -6878,11 +6933,11 @@ ai.Pinned=true
 end
 
 function ai.Update(as)
-ah.Visible=as.Button.Enabled and(v.Visible or as.Pinned)
+ah.Visible=as.Button.Enabled and(w.Visible or as.Pinned)
 if as.Expanded then
 as:Expand()
 end
-if v.Visible then
+if w.Visible then
 ah.Size=UDim2.fromOffset(ah.Size.X.Offset,41)
 ah.BackgroundTransparency=0
 aj.Visible=true
@@ -6901,7 +6956,7 @@ an.Visible=false
 end
 end
 
-for as,at in H do
+for as,at in I do
 ai["Create"..as]=function(au,av)
 return at(av,aq,ai)
 end
@@ -6910,12 +6965,12 @@ end
 
 an.MouseEnter:Connect(function()
 if not aq.Visible then
-ao.ImageColor3=o.Text
+ao.ImageColor3=p.Text
 end
 end)
 an.MouseLeave:Connect(function()
 if not aq.Visible then
-ao.ImageColor3=m.Light(o.Main,0.37)
+ao.ImageColor3=n.Light(p.Main,0.37)
 end
 end)
 an.Activated:Connect(function()
@@ -6939,9 +6994,9 @@ ar:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
 if af.ThreadFix then
 setthreadidentity(8)
 end
-aq.CanvasSize=UDim2.fromOffset(0,ar.AbsoluteContentSize.Y/A.Scale)
+aq.CanvasSize=UDim2.fromOffset(0,ar.AbsoluteContentSize.Y/B.Scale)
 if ai.Expanded then
-local as=ar.AbsoluteContentSize.Y/A.Scale
+local as=ar.AbsoluteContentSize.Y/B.Scale
 local at=math.min(41+as,601)
 
 if ai.UpExpand then
@@ -6954,7 +7009,7 @@ ah.Size=UDim2.fromOffset(ah.Size.X.Offset,at)
 end
 end
 end)
-af:Clean(v:GetPropertyChangedSignal"Visible":Connect(function()
+af:Clean(w:GetPropertyChangedSignal"Visible":Connect(function()
 ai:Update()
 end))
 
@@ -6974,369 +7029,423 @@ local aj
 local ak=a.createCustomSignal"ProfilesGUI_DropdownEvent"
 local al=a.createCustomSignal"modeActivated_Signal"
 local am=a.createCustomSignal"uploadPopupClosed_Signal"
+local an=a.createCustomSignal"refreshButtonsVisibility_Signal"
 ag.PublicConfigs=ai
 
-local an="newest"
+local ao="newest"
 
-local ao=function()end
 local ap=function()end
 local aq=function()end
+
 local ar=function()end
 local as=function()end
+local at=function()end
+local au=function()end
 
-local at=false
-local au=false
 local av=false
+local aw=false
+local ax=false
+local ay=false
 
+local az=false
+local aA=false
+local aB=false
 
-local aw=Instance.new"Frame"
-aw.Name="ConfigGUI"
-aw.Size=UDim2.fromOffset(1000,550)
-aw.Position=UDim2.new(0.5,-500,0.5,-275)
-aw.BackgroundColor3=o.Main
-aw.BackgroundColor3=Color3.fromRGB(20,20,20)
-aw.Visible=false
-aw.Parent=w
-x=aw
-addBlur(aw)
-addCorner(aw)
-makeDraggable(aw)
+local aC="STAGING"
 
-ai.Window=aw
-table.insert(d.Windows,aw)
+local function checkWhitelistForRating()
+if aC~="PRODUCTION"then
+az=true
+aB=false
+end
 
+if az then
+an:Fire()
+return aB
+end
 
-local ax=Instance.new"TextButton"
-ax.BackgroundTransparency=1
-ax.Text=""
-ax.Modal=true
-ax.Parent=aw
+if not d._profile_loaded then
+return false
+end
 
+local aD=d.Libraries.whitelist
+if not aD then
+return false
+end
 
-local ay=Instance.new"TextButton"
-ay.Name="UploadButton"
-ay.Parent=aw
-ay.BackgroundColor3=Color3.fromRGB(5,134,105)
-ay.Size=UDim2.fromOffset(140,40)
-ay.Position=UDim2.new(1,-156,0,54)
-ay.Font=Enum.Font.GothamBold
-ay.Text="UPLOAD CONFIG"
-ay.TextColor3=Color3.new(1,1,1)
-ay.TextSize=12
-ay.AutoButtonColor=false
-ay.ZIndex=3
-ay.Visible=(getgenv().username~=nil and getgenv().password~=nil)
-addCorner(ay)
+if not aD.refreshEvent then
+return
+end
 
-ay.MouseEnter:Connect(function()
-if av then return end
-g:Create(ay,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(10,160,120)}):Play()
+if not aA then
+aA=true
+aD.refreshEvent:Connect(function()
+aB=aD.localprio>0
+an:Fire()
 end)
-ay.MouseLeave:Connect(function()
-if av then return end
-g:Create(ay,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(5,134,105)}):Play()
+end
+
+if aD and aD.localprio then
+aB=aD.localprio>0
+else
+aB=false
+end
+an:Fire()
+
+az=true
+
+return aB
+end
+
+
+local aD=Instance.new"Frame"
+aD.Name="ConfigGUI"
+aD.Size=UDim2.fromOffset(1000,550)
+aD.Position=UDim2.new(0.5,-500,0.5,-275)
+aD.BackgroundColor3=p.Main
+aD.BackgroundColor3=Color3.fromRGB(20,20,20)
+aD.Visible=false
+aD.Parent=x
+y=aD
+addBlur(aD)
+addCorner(aD)
+makeDraggable(aD)
+
+ai.Window=aD
+table.insert(d.Windows,aD)
+
+
+local J=Instance.new"TextButton"
+J.BackgroundTransparency=1
+J.Text=""
+J.Modal=true
+J.Parent=aD
+
+
+local K=Instance.new"TextButton"
+K.Name="UploadButton"
+K.Parent=aD
+K.BackgroundColor3=Color3.fromRGB(5,134,105)
+K.Size=UDim2.fromOffset(140,40)
+K.Position=UDim2.new(1,-156,0,54)
+K.Font=Enum.Font.GothamBold
+K.Text="UPLOAD CONFIG"
+K.TextColor3=Color3.new(1,1,1)
+K.TextSize=12
+K.AutoButtonColor=false
+K.ZIndex=3
+K.Visible=(getgenv().username~=nil and getgenv().password~=nil)
+addCorner(K)
+
+K.MouseEnter:Connect(function()
+if ax then return end
+g:Create(K,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(10,160,120)}):Play()
+end)
+K.MouseLeave:Connect(function()
+if ax then return end
+g:Create(K,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(5,134,105)}):Play()
 end)
 
 
-local az=Instance.new"Frame"
-az.Name="UploadPopup"
-az.Parent=aw
-az.AnchorPoint=Vector2.new(0.5,0.5)
-az.Position=UDim2.fromScale(0.5,0.55)
-az.Size=UDim2.fromOffset(420,320)
-az.BackgroundColor3=m.Dark(o.Main,0.1)
-az.Visible=false
-az.ZIndex=2
-az.ChildAdded:Connect(function(aA)
+local L=Instance.new"Frame"
+L.Name="UploadPopup"
+L.Parent=aD
+L.AnchorPoint=Vector2.new(0.5,0.5)
+L.Position=UDim2.fromScale(0.5,0.55)
+L.Size=UDim2.fromOffset(420,320)
+L.BackgroundColor3=n.Dark(p.Main,0.1)
+L.Visible=false
+L.ZIndex=2
+L.ChildAdded:Connect(function(M)
 pcall(function()
-aA.ZIndex=2
+M.ZIndex=2
 end)
 end)
-addCorner(az)
-addBlur(az)
+addCorner(L)
+addBlur(L)
 
-local aA=Instance.new"UIStroke"
-aA.Color=Color3.fromRGB(42,41,42)
-aA.Thickness=2
-aA.Parent=az
+local M=Instance.new"UIStroke"
+M.Color=Color3.fromRGB(42,41,42)
+M.Thickness=2
+M.Parent=L
 
-local aB=addCloseButton(az)
-aB.ZIndex=11
-
-
+local N=addCloseButton(L)
+N.ZIndex=11
 
 
 
 
-aB.Activated:Connect(function()
-az.Visible=false
+
+
+N.Activated:Connect(function()
+L.Visible=false
 am:Fire()
 al:Fire""
 end)
 
-local aC=true
+local O=true
 
 
-local I=Instance.new"TextLabel"
-I.Parent=az
-I.BackgroundTransparency=1
-I.Position=UDim2.new(0,16,0,12)
-I.Size=UDim2.new(1,-32,0,30)
-I.Font=Enum.Font.GothamBold
-I.Text="Upload Config"
-I.TextColor3=Color3.fromRGB(220,220,220)
-I.TextSize=16
-I.TextXAlignment=Enum.TextXAlignment.Left
+local P=Instance.new"TextLabel"
+P.Parent=L
+P.BackgroundTransparency=1
+P.Position=UDim2.new(0,16,0,12)
+P.Size=UDim2.new(1,-32,0,30)
+P.Font=Enum.Font.GothamBold
+P.Text="Upload Config"
+P.TextColor3=Color3.fromRGB(220,220,220)
+P.TextSize=16
+P.TextXAlignment=Enum.TextXAlignment.Left
 
-local J=Instance.new"ScrollingFrame"
-J.Parent=az
-J.BackgroundTransparency=1
-J.Size=UDim2.fromScale(1,0.23)
-J.AutomaticCanvasSize=Enum.AutomaticSize.Y
-J.ScrollBarThickness=4
-J.Position=UDim2.new(0,10,0,60)
-J.CanvasSize=UDim2.new()
+local Q=Instance.new"ScrollingFrame"
+Q.Parent=L
+Q.BackgroundTransparency=1
+Q.Size=UDim2.fromScale(1,0.23)
+Q.AutomaticCanvasSize=Enum.AutomaticSize.Y
+Q.ScrollBarThickness=4
+Q.Position=UDim2.new(0,10,0,60)
+Q.CanvasSize=UDim2.new()
 
-local K=Instance.new"UIScale"
-K.Parent=J
-K.Scale=0.97
+local R=Instance.new"UIScale"
+R.Parent=Q
+R.Scale=0.97
 
-J.ChildAdded:Connect(function(L)
+Q.ChildAdded:Connect(function(S)
 pcall(function()
-L.ZIndex=3
+S.ZIndex=3
 end)
 end)
 
-local L=Instance.new"UIListLayout"
-L.Parent=J
-L.Padding=UDim.new(0,6)
-L.SortOrder=Enum.SortOrder.LayoutOrder
+local S=Instance.new"UIListLayout"
+S.Parent=Q
+S.Padding=UDim.new(0,6)
+S.SortOrder=Enum.SortOrder.LayoutOrder
 
-local M
+local T
 
 local function populateLocalProfiles()
-for N,O in J:GetChildren()do
-if O:IsA"TextButton"then
-O:Destroy()
+for U,V in Q:GetChildren()do
+if V:IsA"TextButton"then
+V:Destroy()
 end
 end
-for N,O in d.Profiles do
-local P=Instance.new"TextButton"
-P.Parent=J
-P.BackgroundColor3=Color3.fromRGB(40,40,40)
-P.Size=UDim2.new(1,-10,0,38)
-P.Text=O.Name
-P.TextColor3=Color3.new(1,1,1)
-P.Font=Enum.Font.Gotham
-P.TextSize=16
-P.ZIndex=2
-P.TextTruncate=Enum.TextTruncate.AtEnd
-addCorner(P)
+for U,V in d.Profiles do
+local W=Instance.new"TextButton"
+W.Parent=Q
+W.BackgroundColor3=Color3.fromRGB(40,40,40)
+W.Size=UDim2.new(1,-10,0,38)
+W.Text=V.Name
+W.TextColor3=Color3.new(1,1,1)
+W.Font=Enum.Font.Gotham
+W.TextSize=16
+W.ZIndex=2
+W.TextTruncate=Enum.TextTruncate.AtEnd
+addCorner(W)
 
-P.Activated:Connect(function()
-M=O.Name
-for Q,R in J:GetChildren()do
-if R:IsA"TextButton"then
-R.BackgroundColor3=Color3.fromRGB(40,40,40)
+W.Activated:Connect(function()
+T=V.Name
+for X,Y in Q:GetChildren()do
+if Y:IsA"TextButton"then
+Y.BackgroundColor3=Color3.fromRGB(40,40,40)
 end
 end
-P.BackgroundColor3=Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
+W.BackgroundColor3=Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
 end)
 end
-J.CanvasSize=UDim2.fromOffset(0,L.AbsoluteContentSize.Y+10)
+Q.CanvasSize=UDim2.fromOffset(0,S.AbsoluteContentSize.Y+10)
 end
 
 populateLocalProfiles()
 
 
-local N=Instance.new"TextBox"
-N.Parent=az
-N.BackgroundColor3=m.Light(o.Main,0.3)
-N.Position=UDim2.new(0,16,0,150)
-N.Size=UDim2.new(1,-32,0,36)
-N.PlaceholderText="Config name (required)"
-N.Text=""
-N.Font=Enum.Font.Gotham
-N.TextColor3=Color3.new(1,1,1)
-N.TextSize=15
-addCorner(N)
-
-
-local O=Instance.new"TextBox"
-O.Parent=az
-O.BackgroundColor3=m.Light(o.Main,0.3)
-O.Position=UDim2.new(0,16,0,190)
-O.Size=UDim2.new(1,-32,0,36)
-O.PlaceholderText="Description (optional)"
-O.Text=""
-O.Font=Enum.Font.Gotham
-O.TextColor3=Color3.new(1,1,1)
-O.TextSize=15
-addCorner(O)
-
-
-local P=Instance.new"TextButton"
-P.Parent=az
-P.BackgroundColor3=Color3.fromRGB(5,134,105)
-P.Position=UDim2.new(0,16,1,-60)
-P.Size=UDim2.new(0.5,-24,0,40)
-P.Text="PUBLISH"
-P.TextColor3=Color3.new(1,1,1)
-P.Font=Enum.Font.GothamBold
-P.TextSize=13
-addCorner(P)
-
-local Q=Instance.new"TextButton"
-Q.Parent=az
-Q.BackgroundColor3=Color3.fromRGB(60,60,60)
-Q.Position=UDim2.new(0.5,8,1,-60)
-Q.Size=UDim2.new(0.5,-24,0,40)
-Q.Text="CANCEL"
-Q.TextColor3=Color3.new(1,1,1)
-Q.Font=Enum.Font.GothamBold
-Q.TextSize=13
-addCorner(Q)
-
-local R=function()end
-local function resetConfigs()
-for S,T in ai do
-pcall(function()
-if T.instance~=nil then
-pcall(function()
-T:Destroy()
-end)
-end
-end)
-end
-end
-
-local S=function()end
-
-local T=Instance.new"TextButton"
-T.Name="DeleteButton"
-T.Parent=aw
-T.BackgroundColor3=Color3.fromRGB(180,40,40)
-T.Size=UDim2.fromOffset(140,40)
-T.Position=UDim2.new(1,-312,0,54)
-T.Font=Enum.Font.GothamBold
-T.Text="DELETE CONFIG"
-T.TextColor3=Color3.new(1,1,1)
-T.TextSize=12
-T.AutoButtonColor=false
-T.Visible=(getgenv().username and getgenv().password)and true or false
-T.ZIndex=2
-addCorner(T)
-
-T.MouseEnter:Connect(function()
-if at then return end
-g:Create(T,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(220,50,50)}):Play()
-end)
-T.MouseLeave:Connect(function()
-if at then return end
-g:Create(T,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(180,40,40)}):Play()
-end)
-
-local U=Instance.new"TextButton"
-U.Name="UpdateButton"
-U.Parent=aw
-U.BackgroundColor3=Color3.fromRGB(100,80,200)
-U.Size=UDim2.fromOffset(140,40)
-U.Position=UDim2.new(1,-468,0,54)
-U.Font=Enum.Font.GothamBold
-U.Text="UPDATE CONFIG"
+local U=Instance.new"TextBox"
+U.Parent=L
+U.BackgroundColor3=n.Light(p.Main,0.3)
+U.Position=UDim2.new(0,16,0,150)
+U.Size=UDim2.new(1,-32,0,36)
+U.PlaceholderText="Config name (required)"
+U.Text=""
+U.Font=Enum.Font.Gotham
 U.TextColor3=Color3.new(1,1,1)
-U.TextSize=12
-U.AutoButtonColor=false
-U.Visible=(getgenv().username and getgenv().password)and true or false
-U.ZIndex=2
+U.TextSize=15
 addCorner(U)
 
 
+local V=Instance.new"TextBox"
+V.Parent=L
+V.BackgroundColor3=n.Light(p.Main,0.3)
+V.Position=UDim2.new(0,16,0,190)
+V.Size=UDim2.new(1,-32,0,36)
+V.PlaceholderText="Description (optional)"
+V.Text=""
+V.Font=Enum.Font.Gotham
+V.TextColor3=Color3.new(1,1,1)
+V.TextSize=15
+addCorner(V)
 
-U.MouseEnter:Connect(function()
-if au then return end
-g:Create(U,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(130,100,230)}):Play()
-end)
-U.MouseLeave:Connect(function()
-if au then return end
-g:Create(U,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(100,80,200)}):Play()
-end)
 
-local function revertToNormalMode(V)
-au=false
-al:Fire"None"
-if not V then
-as()
+local W=Instance.new"TextButton"
+W.Parent=L
+W.BackgroundColor3=Color3.fromRGB(5,134,105)
+W.Position=UDim2.new(0,16,1,-60)
+W.Size=UDim2.new(0.5,-24,0,40)
+W.Text="PUBLISH"
+W.TextColor3=Color3.new(1,1,1)
+W.Font=Enum.Font.GothamBold
+W.TextSize=13
+addCorner(W)
+
+local X=Instance.new"TextButton"
+X.Parent=L
+X.BackgroundColor3=Color3.fromRGB(60,60,60)
+X.Position=UDim2.new(0.5,8,1,-60)
+X.Size=UDim2.new(0.5,-24,0,40)
+X.Text="CANCEL"
+X.TextColor3=Color3.new(1,1,1)
+X.Font=Enum.Font.GothamBold
+X.TextSize=13
+addCorner(X)
+
+local Y=function()end
+local function resetConfigs()
+for Z,_ in ai do
+pcall(function()
+if _.instance~=nil then
+pcall(function()
+_:Destroy()
+end)
+end
+end)
+end
 end
 
-for W,X in ai do
-if X.instance and X.deleteIcon and X.canDelete and not X.specialDelete then
-X.deleteIcon.Image=u("trash",true)
-n:Tween(X.deleteIcon,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
+local Z=function()end
+
+local _=Instance.new"TextButton"
+_.Name="DeleteButton"
+_.Parent=aD
+_.BackgroundColor3=Color3.fromRGB(180,40,40)
+_.Size=UDim2.fromOffset(140,40)
+_.Position=UDim2.new(1,-312,0,54)
+_.Font=Enum.Font.GothamBold
+_.Text="DELETE CONFIG"
+_.TextColor3=Color3.new(1,1,1)
+_.TextSize=12
+_.AutoButtonColor=false
+_.Visible=(getgenv().username and getgenv().password)and true or false
+_.ZIndex=2
+addCorner(_)
+
+_.MouseEnter:Connect(function()
+if av then return end
+g:Create(_,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(220,50,50)}):Play()
+end)
+_.MouseLeave:Connect(function()
+if av then return end
+g:Create(_,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(180,40,40)}):Play()
+end)
+
+local aE=Instance.new"TextButton"
+aE.Name="UpdateButton"
+aE.Parent=aD
+aE.BackgroundColor3=Color3.fromRGB(100,80,200)
+aE.Size=UDim2.fromOffset(140,40)
+aE.Position=UDim2.new(1,-468,0,54)
+aE.Font=Enum.Font.GothamBold
+aE.Text="UPDATE CONFIG"
+aE.TextColor3=Color3.new(1,1,1)
+aE.TextSize=12
+aE.AutoButtonColor=false
+aE.Visible=(getgenv().username and getgenv().password)and true or false
+aE.ZIndex=2
+addCorner(aE)
+
+
+
+aE.MouseEnter:Connect(function()
+if aw then return end
+g:Create(aE,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(130,100,230)}):Play()
+end)
+aE.MouseLeave:Connect(function()
+if aw then return end
+g:Create(aE,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(100,80,200)}):Play()
+end)
+
+local function revertToNormalMode(aF)
+aw=false
+al:Fire"None"
+if not aF then
+aq()
+end
+
+for aG,aH in ai do
+if aH.instance and aH.deleteIcon and aH.canDelete and not aH.specialDelete then
+aH.deleteIcon.Image=v("trash",true)
+o:Tween(aH.deleteIcon,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
 BackgroundColor3=Color3.fromRGB(60,60,60)
 })
-local Y=X.deleteIcon:FindFirstChild"UpdateStroke"
-if Y then
-Y:Destroy()
+local aI=aH.deleteIcon:FindFirstChild"UpdateStroke"
+if aI then
+aI:Destroy()
 end
 end
 end
 end
 
-aq=function()
-au=true
+at=function()
+aw=true
 
-local V=0
+local aF=0
 
-for W,X in ai do
-if X.instance and X.deleteIcon and X.canDelete and not X.specialDelete then
-V=V+1
-X.deleteIcon.Image=u("upload",true)
-n:Tween(X.deleteIcon,TweenInfo.new(0.3,Enum.EasingStyle.Quad),{
+for aG,aH in ai do
+if aH.instance and aH.deleteIcon and aH.canDelete and not aH.specialDelete then
+aF=aF+1
+aH.deleteIcon.Image=v("upload",true)
+o:Tween(aH.deleteIcon,TweenInfo.new(0.3,Enum.EasingStyle.Quad),{
 BackgroundColor3=Color3.fromRGB(70,60,140)
 })
 
 
-local Y=Instance.new"UIStroke"
-Y.Name="UpdateStroke"
-Y.Color=Color3.fromRGB(130,100,230)
-Y.Thickness=0
-Y.Transparency=1
-n:Tween(Y,TweenInfo.new(0.3,Enum.EasingStyle.Quad),{
+local aI=Instance.new"UIStroke"
+aI.Name="UpdateStroke"
+aI.Color=Color3.fromRGB(130,100,230)
+aI.Thickness=0
+aI.Transparency=1
+o:Tween(aI,TweenInfo.new(0.3,Enum.EasingStyle.Quad),{
 Thickness=1.5,
 Transparency=0.3
 })
-Y.Parent=X.deleteIcon
+aI.Parent=aH.deleteIcon
 end
 end
-if V==0 then
-flickerTextEffect(U,true,"UPDATE CONFIG")
-n:Tween(U,TweenInfo.new(0.15),{
+if aF==0 then
+flickerTextEffect(aE,true,"UPDATE CONFIG")
+o:Tween(aE,TweenInfo.new(0.15),{
 BackgroundColor3=Color3.fromRGB(100,80,200),
 })
 revertToNormalMode(true)
-ar("No Configs To Update :c",true)
+ap("No Configs To Update :c",true)
 task.delay(1.3,function()
-as()
+aq()
 end)
 else
 d:CreateNotification("Vape","Click the upload icon on any of your configs to update them",5,"info")
-ar("Click the 'Upload' icon to update a config",true)
+ap("Click the 'Upload' icon to update a config",true)
 end
 end
 
-al:Connect(function(V)
-if V=="Update"then return end
-if au then
-flickerTextEffect(U,true,"UPDATE CONFIG")
-n:Tween(U,TweenInfo.new(0.15),{
+al:Connect(function(aF)
+if aF=="Update"then return end
+if aw then
+flickerTextEffect(aE,true,"UPDATE CONFIG")
+o:Tween(aE,TweenInfo.new(0.15),{
 BackgroundColor3=Color3.fromRGB(100,80,200),
 })
 revertToNormalMode()
 end
 end)
 
-U.Activated:Connect(function()
+aE.Activated:Connect(function()
 if not getgenv().username or not getgenv().password then
 d:CreateNotification("Vape","You must be logged in to update configs",6,"warning")
 return
@@ -7344,217 +7453,739 @@ end
 
 al:Fire"Update"
 
-if au then
+if aw then
 
-flickerTextEffect(U,true,"UPDATE CONFIG")
-n:Tween(U,TweenInfo.new(0.15),{
+flickerTextEffect(aE,true,"UPDATE CONFIG")
+o:Tween(aE,TweenInfo.new(0.15),{
 BackgroundColor3=Color3.fromRGB(100,80,200),
 })
 revertToNormalMode()
 d:CreateNotification("Vape","Update mode cancelled",3,"info")
 else
 
-flickerTextEffect(U,true,"STOP UPDATING")
-n:Tween(U,TweenInfo.new(0.15),{
-BackgroundColor3=m.Dark(Color3.fromRGB(100,80,200),0.3)
+flickerTextEffect(aE,true,"STOP UPDATING")
+o:Tween(aE,TweenInfo.new(0.15),{
+BackgroundColor3=n.Dark(Color3.fromRGB(100,80,200),0.3)
 })
-aq()
+at()
 end
 end)
 
+local aF=Instance.new"TextButton"
+aF.Name="RateButton"
+aF.Parent=aD
+aF.BackgroundColor3=Color3.fromRGB(200,160,20)
+aF.Size=UDim2.fromOffset(140,40)
+aF.Position=UDim2.new(1,-624,0,54)
+aF.Font=Enum.Font.GothamBold
+aF.Text="RATE CONFIG"
+aF.TextColor3=Color3.new(1,1,1)
+aF.TextSize=12
+aF.AutoButtonColor=false
+aF.Visible=true
+aF.ZIndex=2
+addCorner(aF)
 
-local function timestampToDate(V)
-local W=(os.time()-(tonumber(V)or 0))/86400
-if W<1 then
+aF.MouseEnter:Connect(function()
+if ay then
+return
+end
+g:Create(aF,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(230,190,50)}):Play()
+end)
+aF.MouseLeave:Connect(function()
+if ay then
+return
+end
+g:Create(aF,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(200,160,20)}):Play()
+end)
+
+local aG=Instance.new"Frame"
+aG.Name="RatingPopup"
+aG.Parent=aD
+aG.AnchorPoint=Vector2.new(0.5,0.5)
+aG.Position=UDim2.fromScale(0.5,0.55)
+aG.Size=UDim2.fromOffset(450,400)
+aG.BackgroundColor3=n.Dark(p.Main,0.1)
+aG.Visible=false
+aG.ZIndex=2
+aG.ChildAdded:Connect(function(aH)
+pcall(function()
+aH.ZIndex=2
+end)
+end)
+addCorner(aG)
+addBlur(aG)
+
+local aH=Instance.new"UIStroke"
+aH.Color=Color3.fromRGB(42,41,42)
+aH.Thickness=2
+aH.Parent=aG
+
+local aI=addCloseButton(aG)
+aI.ZIndex=11
+
+local aJ=a.createCustomSignal"ratingPopupClosed_Signal"
+
+aI.Activated:Connect(function()
+aG.Visible=false
+aJ:Fire()
+al:Fire""
+end)
+
+local aK=Instance.new"TextLabel"
+aK.Parent=aG
+aK.BackgroundTransparency=1
+aK.Position=UDim2.new(0,16,0,12)
+aK.Size=UDim2.new(1,-32,0,30)
+aK.Font=Enum.Font.GothamBold
+aK.Text="Rate Config"
+aK.TextColor3=Color3.fromRGB(220,220,220)
+aK.TextSize=16
+aK.TextXAlignment=Enum.TextXAlignment.Left
+
+
+local aL=Instance.new"TextLabel"
+aL.Parent=aG
+aL.BackgroundTransparency=1
+aL.Position=UDim2.new(0,16,0,45)
+aL.Size=UDim2.new(1,-32,0,20)
+aL.Font=Enum.Font.Gotham
+aL.Text=""
+aL.TextColor3=Color3.fromRGB(150,150,150)
+aL.TextSize=14
+aL.TextXAlignment=Enum.TextXAlignment.Left
+
+local aM=Instance.new"Frame"
+aM.Parent=aG
+aM.BackgroundTransparency=1
+aM.Position=UDim2.new(0,16,0,80)
+aM.Size=UDim2.new(1,-32,0,60)
+
+local aN=Instance.new"UIListLayout"
+aN.Parent=aM
+aN.FillDirection=Enum.FillDirection.Horizontal
+aN.SortOrder=Enum.SortOrder.LayoutOrder
+aN.Padding=UDim.new(0,12)
+aN.HorizontalAlignment=Enum.HorizontalAlignment.Center
+
+local aO=0
+local aP={}
+local aQ
+
+for aR=1,5 do
+local aS=Instance.new"ImageButton"
+aS.Parent=aM
+aS.BackgroundTransparency=1
+aS.Size=UDim2.fromOffset(50,50)
+aS.Image=v("star",true)
+aS.ImageColor3=Color3.fromRGB(100,100,100)
+aS.LayoutOrder=aR
+aS.ZIndex=3
+
+local aT={
+Button=aS,
+Index=aR,
+SetFilled=function(aT,aU)
+o:Tween(aS,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+ImageColor3=aU and Color3.fromRGB(255,200,50)or Color3.fromRGB(100,100,100),
+Size=aU and UDim2.fromOffset(55,55)or UDim2.fromOffset(50,50),
+})
+end,
+}
+
+aS.MouseEnter:Connect(function()
+for aU=1,5 do
+aP[aU]:SetFilled(aU<=aR)
+end
+end)
+
+aS.MouseLeave:Connect(function()
+for aU=1,5 do
+aP[aU]:SetFilled(aU<=aO)
+end
+end)
+
+aS.Activated:Connect(function()
+aO=aR
+for aU=1,5 do
+aP[aU]:SetFilled(aU<=aO)
+end
+end)
+
+table.insert(aP,aT)
+end
+
+local aR=Instance.new"TextLabel"
+aR.Parent=aG
+aR.BackgroundTransparency=1
+aR.Position=UDim2.new(0,16,0,145)
+aR.Size=UDim2.new(1,-32,0,20)
+aR.Font=Enum.Font.GothamBold
+aR.Text="Click a star to rate"
+aR.TextColor3=Color3.fromRGB(180,180,180)
+aR.TextSize=13
+
+local aS={
+"Terrible",
+"Poor",
+"Average",
+"Good",
+"Excellent",
+}
+
+for aT,aU in aP do
+aU.Button.Activated:Connect(function()
+aR.Text=aS[aT]or""
+aR.TextColor3=Color3.fromHSV(math.clamp((aT-1)/4*0.33,0,0.33),0.7,0.9)
+end)
+end
+
+local aT=Instance.new"TextLabel"
+aT.Parent=aG
+aT.BackgroundTransparency=1
+aT.Position=UDim2.new(0,16,0,175)
+aT.Size=UDim2.new(1,-32,0,20)
+aT.Font=Enum.Font.GothamBold
+aT.Text="Comment (Optional)"
+aT.TextColor3=Color3.fromRGB(200,200,200)
+aT.TextSize=13
+aT.TextXAlignment=Enum.TextXAlignment.Left
+
+local aU=Instance.new"TextBox"
+aU.Parent=aG
+aU.BackgroundColor3=n.Light(p.Main,0.3)
+aU.Position=UDim2.new(0,16,0,200)
+aU.Size=UDim2.new(1,-32,0,110)
+aU.PlaceholderText="Share your thoughts about this config... (max 500 characters)"
+aU.Text=""
+aU.Font=Enum.Font.Gotham
+aU.TextColor3=Color3.new(1,1,1)
+aU.TextSize=14
+aU.TextWrapped=true
+aU.TextXAlignment=Enum.TextXAlignment.Left
+aU.TextYAlignment=Enum.TextYAlignment.Top
+aU.MultiLine=true
+aU.ClearTextOnFocus=false
+aU.ZIndex=3
+addCorner(aU)
+
+local aV=Instance.new"TextLabel"
+aV.Parent=aU
+aV.BackgroundTransparency=1
+aV.Position=UDim2.new(1,-60,1,-22)
+aV.Size=UDim2.fromOffset(50,20)
+aV.Font=Enum.Font.Gotham
+aV.Text="0/500"
+aV.TextColor3=Color3.fromRGB(120,120,120)
+aV.TextSize=11
+aV.TextXAlignment=Enum.TextXAlignment.Right
+aV.ZIndex=4
+
+aU:GetPropertyChangedSignal"Text":Connect(function()
+local aW=#aU.Text
+if aW>500 then
+aU.Text=aU.Text:sub(1,500)
+aW=500
+end
+aV.Text=aW.."/500"
+aV.TextColor3=aW>450 and Color3.fromRGB(255,150,150)or Color3.fromRGB(120,120,120)
+end)
+
+local aW=Instance.new"TextButton"
+aW.Parent=aG
+aW.BackgroundColor3=Color3.fromRGB(200,160,20)
+aW.Position=UDim2.new(0,16,1,-60)
+aW.Size=UDim2.new(0.5,-24,0,40)
+aW.Text="SUBMIT RATING"
+aW.TextColor3=Color3.new(1,1,1)
+aW.Font=Enum.Font.GothamBold
+aW.TextSize=13
+aW.ZIndex=3
+addCorner(aW)
+
+aW.MouseEnter:Connect(function()
+g
+:Create(aW,TweenInfo.new(0.15),{
+BackgroundColor3=Color3.fromRGB(230,190,50),
+})
+:Play()
+end)
+
+aW.MouseLeave:Connect(function()
+g
+:Create(aW,TweenInfo.new(0.15),{
+BackgroundColor3=Color3.fromRGB(200,160,20),
+})
+:Play()
+end)
+
+local aX=Instance.new"TextButton"
+aX.Parent=aG
+aX.BackgroundColor3=Color3.fromRGB(60,60,60)
+aX.Position=UDim2.new(0.5,8,1,-60)
+aX.Size=UDim2.new(0.5,-24,0,40)
+aX.Text="CANCEL"
+aX.TextColor3=Color3.new(1,1,1)
+aX.Font=Enum.Font.GothamBold
+aX.TextSize=13
+aX.ZIndex=3
+addCorner(aX)
+
+aX.MouseEnter:Connect(function()
+g
+:Create(aX,TweenInfo.new(0.15),{
+BackgroundColor3=Color3.fromRGB(80,80,80),
+})
+:Play()
+end)
+
+aX.MouseLeave:Connect(function()
+g
+:Create(aX,TweenInfo.new(0.15),{
+BackgroundColor3=Color3.fromRGB(60,60,60),
+})
+:Play()
+end)
+
+aX.Activated:Connect(function()
+aG.Visible=false
+aJ:Fire()
+end)
+
+
+aW.Activated:Connect(function()
+if not checkWhitelistForRating()then
+d:CreateNotification("Vape","You must be whitelisted (Rank 1+) to rate configs",6,"warning")
+return
+end
+
+if aO==0 then
+d:CreateNotification("Vape","Please select a star rating",5,"warning")
+flickerTextEffect(aR,true,"Please select a rating!")
+task.wait(0.5)
+flickerTextEffect(aR,true,"Click a star to rate")
+return
+end
+
+if not aQ then
+d:CreateNotification("Vape","Invalid config reference",5,"warning")
+return
+end
+
+d:CreateNotification("Vape","Submitting rating...",4,"info")
+
+local aY=d.Libraries.whitelist~=nil and select(5,d.Libraries.whitelist:get(m.LocalPlayer))
+
+local aZ={
+hash=aY,
+config_name=aQ.name,
+rating=aO,
+comment=aU.Text~=""and aU.Text or nil,
+place=tostring(d.Place or game.PlaceId),
+}
+
+local a_,a0=pcall(function()
+return request{
+Url="https://configs.vapevoidware.xyz/configs/rate",
+Method="POST",
+Headers={["Content-Type"]="application/json"},
+Body=l:JSONEncode(aZ),
+}
+end)
+
+if a_ and a0 and a0.StatusCode==200 then
+d:CreateNotification("Vape","Rating submitted successfully!",6,"info")
+aG.Visible=false
+aJ:Fire()
+
+task.spawn(function()
+task.wait(1)
+Z()
+end)
+else
+local a1=a0 and a0.Body or"Unknown error"
+if a0 and a0.StatusCode==401 then
+a1="Unable to verify whitelist :c"
+elseif a0 and a0.StatusCode==409 then
+a1="You've already rated this config"
+else
+local a2=decode(a1)
+if a2~=nil and type(a2)=="table"and a2.detail~=nil then
+a1=a2.detail
+end
+end
+d:CreateNotification("Vape","Failed to submit rating: "..a1,8,"warning")
+end
+end)
+
+local function revertFromRatingMode(aY)
+ay=false
+al:Fire"None"
+if not aY then
+aq()
+end
+
+
+for aZ,a_ in ai do
+if a_.instance and tostring(a_.username)~=getgenv().username then
+
+if a_.deleteIcon and a_.canDelete and not a_.specialDelete then
+a_.deleteIcon.Image=v("trash",true)
+o:Tween(a_.deleteIcon,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
+BackgroundColor3=Color3.fromRGB(60,60,60),
+})
+local a0=a_.deleteIcon:FindFirstChild"RatingStroke"
+if a0 then
+a0:Destroy()
+end
+end
+
+
+if a_.tempRatingIcon then
+a_.tempRatingIcon:Destroy()
+a_.tempRatingIcon=nil
+
+
+if a_.downloadButto and not a_.specialDelete then
+o:Tween(a_.downloadButton,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+Size=UDim2.new(1,-24,0,38),
+})
+end
+end
+end
+end
+end
+
+au=function()
+ay=true
+
+local aY=0
+
+for aZ,a_ in ai do
+if a_.instance and tostring(a_.username)~=getgenv().username then
+aY=aY+1
+
+
+if a_.deleteIcon and a_.canDelete and not a_.specialDelete then
+a_.deleteIcon.Image=v("star",true)
+o:Tween(a_.deleteIcon,TweenInfo.new(0.3,Enum.EasingStyle.Quad),{
+BackgroundColor3=Color3.fromRGB(140,110,20),
+})
+
+
+local a0=Instance.new"UIStroke"
+a0.Name="RatingStroke"
+a0.Color=Color3.fromRGB(230,190,50)
+a0.Thickness=0
+a0.Transparency=1
+o:Tween(a0,TweenInfo.new(0.3,Enum.EasingStyle.Quad),{
+Thickness=1.5,
+Transparency=0.3,
+})
+a0.Parent=a_.deleteIcon
+else
+
+local a0=Instance.new"ImageButton"
+a0.Parent=a_.instance
+a0.Size=UDim2.fromOffset(35,35)
+a0.Position=UDim2.new(1,-47,1,-50)
+a0.BackgroundColor3=Color3.fromRGB(140,110,20)
+a0.AutoButtonColor=false
+a0.Image=v("star",true)
+a0.ImageColor3=Color3.fromRGB(255,220,100)
+a0.ZIndex=a_.downloadButton.ZIndex
+addCorner(a0)
+
+
+local a1=Instance.new"UIStroke"
+a1.Name="RatingStroke"
+a1.Color=Color3.fromRGB(230,190,50)
+a1.Thickness=1.5
+a1.Transparency=0.3
+a1.Parent=a0
+
+a_.tempRatingIcon=a0
+
+
+o:Tween(a_.downloadButton,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+Size=UDim2.new(1,-64,0,38),
+})
+
+
+a0.Activated:Connect(function()
+if not checkWhitelistForRating()then
+d:CreateNotification(
+"Vape",
+"You must be whitelisted (Rank 1+) to rate configs",
+6,
+"warning"
+)
+return
+end
+
+aQ=a_
+aL.Text='"'..a_.name..'" by @'..a_.username
+aG.Visible=true
+end)
+end
+end
+end
+
+if aY==0 then
+flickerTextEffect(aF,true,"RATE CONFIG")
+o:Tween(aF,TweenInfo.new(0.15),{
+BackgroundColor3=Color3.fromRGB(200,160,20),
+})
+revertFromRatingMode(true)
+ap("No Configs To Rate :c",true)
+task.delay(1.3,function()
+aq()
+end)
+else
+d:CreateNotification("Vape","Click the star icon on any config to rate it",5,"info")
+ap("Click the 'Star' icon to rate a config",true)
+end
+end
+
+al:Connect(function(aY)
+if aY=="Rating"then
+return
+end
+if ay then
+flickerTextEffect(aF,true,"RATE CONFIG")
+o:Tween(aF,TweenInfo.new(0.15),{
+BackgroundColor3=Color3.fromRGB(200,160,20),
+})
+revertFromRatingMode()
+end
+end)
+
+aF.Activated:Connect(function()
+al:Fire"Rating"
+
+if ay then
+
+flickerTextEffect(aF,true,"RATE CONFIG")
+o:Tween(aF,TweenInfo.new(0.15),{
+BackgroundColor3=Color3.fromRGB(200,160,20),
+})
+revertFromRatingMode()
+d:CreateNotification("Vape","Rating mode cancelled",3,"info")
+else
+
+flickerTextEffect(aF,true,"STOP RATING")
+o:Tween(aF,TweenInfo.new(0.15),{
+BackgroundColor3=n.Dark(Color3.fromRGB(200,160,20),0.3),
+})
+au()
+end
+end)
+
+aJ:Connect(function()
+aO=0
+aU.Text=""
+aQ=nil
+aL.Text=""
+for aY,aZ in aP do
+aZ:SetFilled(false)
+end
+aR.Text="Click a star to rate"
+aR.TextColor3=Color3.fromRGB(180,180,180)
+end)
+
+
+local function timestampToDate(aY)
+local aZ=(os.time()-(tonumber(aY)or 0))/86400
+if aZ<1 then
 return"Today"
 else
-local X=math.floor(W)
-return X.." day"..(X>1 and"s"or"").." ago"
+local a_=math.floor(aZ)
+return a_.." day"..(a_>1 and"s"or"").." ago"
 end
 end
 
-local V={}
-local W
-local X="all"
+local aY={}
+local aZ
+local a_="all"
 
-local Y=Instance.new"Frame"
-Y.Name="PlaceFilterFrame"
-Y.Parent=az
-Y.BackgroundTransparency=1
-Y.Position=UDim2.new(0,16,0,50)
-Y.Size=UDim2.new(1,-32,0,30)
-Y.Visible=false
+local a0=Instance.new"Frame"
+a0.Name="PlaceFilterFrame"
+a0.Parent=L
+a0.BackgroundTransparency=1
+a0.Position=UDim2.new(0,16,0,50)
+a0.Size=UDim2.new(1,-32,0,30)
+a0.Visible=false
 
-local Z=Instance.new"UIListLayout"
-Z.Parent=Y
-Z.FillDirection=Enum.FillDirection.Horizontal
-Z.SortOrder=Enum.SortOrder.LayoutOrder
-Z.Padding=UDim.new(0,6)
-Z.HorizontalAlignment=Enum.HorizontalAlignment.Left
+local a1=Instance.new"UIListLayout"
+a1.Parent=a0
+a1.FillDirection=Enum.FillDirection.Horizontal
+a1.SortOrder=Enum.SortOrder.LayoutOrder
+a1.Padding=UDim.new(0,6)
+a1.HorizontalAlignment=Enum.HorizontalAlignment.Left
 
-local _={}
+local a2={}
 
-local aD={
+local a3={
 ["6872265039"]="BW Lobby",
 ["6872274481"]="BW Game"
 }
 
-local function createPlaceFilterButton(aE,aF)
-local aG=Instance.new"TextButton"
-aG.Name=aD[aE]or aE
-aG.Parent=Y
-aG.ZIndex=3
-aG.BackgroundColor3=Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
-aG.BackgroundTransparency=(X==aF)and 0 or 0.8
-aG.Size=UDim2.fromOffset(85,28)
-aG.Font=Enum.Font.GothamBold
-aG.Text=aG.Name:upper()
-aG.TextColor3=Color3.new(1,1,1)
-aG.TextSize=10
-aG.TextTransparency=(X==aF)and 0 or 0.6
-aG.AutoButtonColor=false
-addCorner(aG)
+local function createPlaceFilterButton(a4,a5)
+local a6=Instance.new"TextButton"
+a6.Name=a3[a4]or a4
+a6.Parent=a0
+a6.ZIndex=3
+a6.BackgroundColor3=Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
+a6.BackgroundTransparency=(a_==a5)and 0 or 0.8
+a6.Size=UDim2.fromOffset(85,28)
+a6.Font=Enum.Font.GothamBold
+a6.Text=a6.Name:upper()
+a6.TextColor3=Color3.new(1,1,1)
+a6.TextSize=10
+a6.TextTransparency=(a_==a5)and 0 or 0.6
+a6.AutoButtonColor=false
+addCorner(a6)
 
-local aH={
-Button=aG,
-PlaceId=aF,
-SetActive=function(aH,aI)
-aG.BackgroundTransparency=aI and 0 or 0.8
-aG.TextTransparency=aI and 0 or 0.6
+local a7={
+Button=a6,
+PlaceId=a5,
+SetActive=function(a7,a8)
+a6.BackgroundTransparency=a8 and 0 or 0.8
+a6.TextTransparency=a8 and 0 or 0.6
 end,
 }
 
-aG.Activated:Connect(function()
-X=aF
-for aI,aJ in _ do
-aJ:SetActive(false)
+a6.Activated:Connect(function()
+a_=a5
+for a8,a9 in a2 do
+a9:SetActive(false)
 end
-aH:SetActive(true)
-ao()
+a7:SetActive(true)
+ar()
 end)
 
-connectguicolorchange(function(aI,aJ,aK)
-aG.BackgroundColor3=Color3.fromHSV(aI,aJ,aK)
+connectguicolorchange(function(a8,a9,ba)
+a6.BackgroundColor3=Color3.fromHSV(a8,a9,ba)
 end)
 
-table.insert(_,aH)
-return aH
+table.insert(a2,a7)
+return a7
 end
 
 local function populateDeleteConfigs()
-for aE,aF in J:GetChildren()do
-if aF:IsA"TextButton"or aF:IsA"TextLabel"then
-aF:Destroy()
+for a4,a5 in Q:GetChildren()do
+if a5:IsA"TextButton"or a5:IsA"TextLabel"then
+a5:Destroy()
 end
 end
 
-local aE={}
-for aF,aG in V do
-local aH=tostring(aG.place or"")
-if X=="all"then
-table.insert(aE,aG)
-elseif X=="no_place"then
-if aH==""or aH=="nil"then
-table.insert(aE,aG)
+local a4={}
+for a5,a6 in aY do
+local a7=tostring(a6.place or"")
+if a_=="all"then
+table.insert(a4,a6)
+elseif a_=="no_place"then
+if a7==""or a7=="nil"then
+table.insert(a4,a6)
 end
 else
-if aH==X then
-table.insert(aE,aG)
+if a7==a_ then
+table.insert(a4,a6)
 end
 end
 end
 
-if#aE==0 then
-local aF=Instance.new"TextLabel"
-aF.Parent=J
-aF.BackgroundTransparency=1
-aF.Size=UDim2.new(1,-10,0,40)
-aF.Text="No configs found for this filter"
-aF.TextColor3=Color3.fromRGB(150,150,150)
-aF.Font=Enum.Font.Gotham
-aF.TextSize=13
+if#a4==0 then
+local a5=Instance.new"TextLabel"
+a5.Parent=Q
+a5.BackgroundTransparency=1
+a5.Size=UDim2.new(1,-10,0,40)
+a5.Text="No configs found for this filter"
+a5.TextColor3=Color3.fromRGB(150,150,150)
+a5.Font=Enum.Font.Gotham
+a5.TextSize=13
 return
 end
 
-for aF,aG in aE do
-local aH=Instance.new"TextButton"
-aH.Parent=J
-aH.BackgroundColor3=Color3.fromRGB(40,40,40)
-aH.Size=UDim2.new(1,-10,0,40)
+for a5,a6 in a4 do
+local a7=Instance.new"TextButton"
+a7.Parent=Q
+a7.BackgroundColor3=Color3.fromRGB(40,40,40)
+a7.Size=UDim2.new(1,-10,0,40)
 
-local aI=""
-local aJ=tostring(aG.place or"")
-if aJ~=""and aJ~="nil"then
-aI=" [Place: "..aJ.."]"
+local a8=""
+local a9=tostring(a6.place or"")
+if a9~=""and a9~="nil"then
+a8=" [Place: "..a9 .."]"
 end
 
-aH.Text=aG.name..aI.." (Last Edited: "..timestampToDate(aG.edited)..")"
-aH.TextColor3=Color3.new(1,1,1)
-aH.Font=Enum.Font.Gotham
-aH.TextSize=14
-aH.TextTruncate=Enum.TextTruncate.AtEnd
-addCorner(aH)
+a7.Text=a6.name..a8 .." (Last Edited: "..timestampToDate(a6.edited)..")"
+a7.TextColor3=Color3.new(1,1,1)
+a7.Font=Enum.Font.Gotham
+a7.TextSize=14
+a7.TextTruncate=Enum.TextTruncate.AtEnd
+addCorner(a7)
 
-aH.Activated:Connect(function()
-W=aG.name
-for aK,aL in J:GetChildren()do
-if aL:IsA"TextButton"then
-aL.BackgroundColor3=Color3.fromRGB(40,40,40)
+a7.Activated:Connect(function()
+aZ=a6.name
+for ba,bb in Q:GetChildren()do
+if bb:IsA"TextButton"then
+bb.BackgroundColor3=Color3.fromRGB(40,40,40)
 end
 end
-aH.BackgroundColor3=Color3.fromRGB(180,40,40)
+a7.BackgroundColor3=Color3.fromRGB(180,40,40)
 end)
 end
 
-J.CanvasSize=UDim2.fromOffset(0,L.AbsoluteContentSize.Y+10)
+Q.CanvasSize=UDim2.fromOffset(0,S.AbsoluteContentSize.Y+10)
 end
 
-ao=function()
-ar("Click on the config you want to delete",true)
-I.Text="Delete Config"
-J.Size=UDim2.fromScale(1,0.52)
-J.Position=UDim2.new(0,10,0,90)
-N.Visible=false
-O.Visible=false
-P.Text="DELETE"
-P.BackgroundColor3=Color3.fromRGB(180,40,40)
-Q.Text="CANCEL"
-Y.Visible=true
+ar=function()
+ap("Click on the config you want to delete",true)
+P.Text="Delete Config"
+Q.Size=UDim2.fromScale(1,0.52)
+Q.Position=UDim2.new(0,10,0,90)
+U.Visible=false
+V.Visible=false
+W.Text="DELETE"
+W.BackgroundColor3=Color3.fromRGB(180,40,40)
+X.Text="CANCEL"
+a0.Visible=true
 
 
-for aE,aF in _ do
-aF.Button:Destroy()
+for a4,a5 in a2 do
+a5.Button:Destroy()
 end
-_={}
+a2={}
 
-if#V==0 then
-Y.Visible=false
-for aE,aF in J:GetChildren()do
-if aF:IsA"TextButton"or aF:IsA"TextLabel"then
-aF:Destroy()
+if#aY==0 then
+a0.Visible=false
+for a4,a5 in Q:GetChildren()do
+if a5:IsA"TextButton"or a5:IsA"TextLabel"then
+a5:Destroy()
 end
 end
-local aE=Instance.new"TextLabel"
-aE.Parent=J
-aE.BackgroundTransparency=1
-aE.Size=UDim2.new(1,-10,0,40)
-aE.Text="No uploaded configs found"
-aE.TextColor3=Color3.fromRGB(150,150,150)
-aE.Font=Enum.Font.Gotham
-aE.TextSize=13
+local a4=Instance.new"TextLabel"
+a4.Parent=Q
+a4.BackgroundTransparency=1
+a4.Size=UDim2.new(1,-10,0,40)
+a4.Text="No uploaded configs found"
+a4.TextColor3=Color3.fromRGB(150,150,150)
+a4.Font=Enum.Font.Gotham
+a4.TextSize=13
 return
 end
 
 
-local aE={}
-local aF=false
-for aG,aH in V do
-local aI=tostring(aH.place or"")
-if aI==""or aI=="nil"then
-aF=true
+local a4={}
+local a5=false
+for a6,a7 in aY do
+local a8=tostring(a7.place or"")
+if a8==""or a8=="nil"then
+a5=true
 else
-if not table.find(aE,aI)then
-table.insert(aE,aI)
+if not table.find(a4,a8)then
+table.insert(a4,a8)
 end
 end
 end
@@ -7563,42 +8194,42 @@ end
 createPlaceFilterButton("All","all")
 
 
-if aF then
+if a5 then
 createPlaceFilterButton("No Place","no_place")
 end
 
 
-table.sort(aE)
-for aG,aH in aE do
-local aI=aH
+table.sort(a4)
+for a6,a7 in a4 do
+local a8=a7
 
-if#aH>10 then
-aI=aH:sub(1,8)..".."
+if#a7>10 then
+a8=a7:sub(1,8)..".."
 end
-createPlaceFilterButton(aI,aH)
+createPlaceFilterButton(a8,a7)
 end
 
 
-for aG,aH in _ do
-aH:SetActive(aH.PlaceId==X)
+for a6,a7 in a2 do
+a7:SetActive(a7.PlaceId==a_)
 end
 
 populateDeleteConfigs()
 end
 
-ap=function()
-ar("Click on the config you want to upload",true)
-av=true
-I.Text="Upload Config"
-N.Visible=true
-O.Visible=true
-P.Text="PUBLISH"
-P.BackgroundColor3=Color3.fromRGB(5,134,105)
-Q.Text="CANCEL"
-M=nil
-Y.Visible=false
-J.Size=UDim2.fromScale(1,0.23)
-J.Position=UDim2.new(0,10,0,60)
+as=function()
+ap("Click on the config you want to upload",true)
+ax=true
+P.Text="Upload Config"
+U.Visible=true
+V.Visible=true
+W.Text="PUBLISH"
+W.BackgroundColor3=Color3.fromRGB(5,134,105)
+X.Text="CANCEL"
+T=nil
+a0.Visible=false
+Q.Size=UDim2.fromScale(1,0.23)
+Q.Position=UDim2.new(0,10,0,60)
 populateLocalProfiles()
 end
 
@@ -7666,39 +8297,39 @@ end
 
 
 
-local aE={
-oldest=function(aE,aF)
-return(aE.edited or 0)<(aF.edited or 0)
+local a4={
+oldest=function(a4,a5)
+return(a4.edited or 0)<(a5.edited or 0)
 end,
-newest=function(aE,aF)
-return(aE.edited or 0)>(aF.edited or 0)
+newest=function(a4,a5)
+return(a4.edited or 0)>(a5.edited or 0)
 end,
 }
 
 am:Connect(function()
-if at then
-flickerTextEffect(T,true,"DELETE CONFIG")
-n:Tween(T,TweenInfo.new(0.15),{
+if av then
+flickerTextEffect(_,true,"DELETE CONFIG")
+o:Tween(_,TweenInfo.new(0.15),{
 BackgroundColor3=Color3.fromRGB(180,40,40),
 })
-as()
+aq()
 end
-at=false
+av=false
 end)
 
-al:Connect(function(aF)
-if aF=="Delete"then return end
-if at then
-flickerTextEffect(T,true,"DELETE CONFIG")
-n:Tween(T,TweenInfo.new(0.15),{
+al:Connect(function(a5)
+if a5=="Delete"then return end
+if av then
+flickerTextEffect(_,true,"DELETE CONFIG")
+o:Tween(_,TweenInfo.new(0.15),{
 BackgroundColor3=Color3.fromRGB(180,40,40),
 })
 end
-at=false
-az.Visible=false
+av=false
+L.Visible=false
 end)
 
-T.Activated:Connect(function()
+_.Activated:Connect(function()
 if not getgenv().username or not getgenv().password then
 d:CreateNotification("Vape","You must be logged in to delete configs",6,"warning")
 return
@@ -7706,9 +8337,9 @@ end
 al:Fire"Delete"
 
 d:CreateNotification("Vape","Fetching your uploaded configs...",4,"info")
-ar("Fetching uploaded configs...",true)
+ap("Fetching uploaded configs...",true)
 
-local aF,aG=pcall(function()
+local a5,a6=pcall(function()
 return request{
 Url="https://configs.vapevoidware.xyz/configs/by-username",
 Method="POST",
@@ -7720,60 +8351,60 @@ password=getgenv().password,
 }
 end)
 
-if at then
-flickerTextEffect(T,true,"DELETE CONFIG")
-n:Tween(T,TweenInfo.new(0.15),{
+if av then
+flickerTextEffect(_,true,"DELETE CONFIG")
+o:Tween(_,TweenInfo.new(0.15),{
 BackgroundColor3=Color3.fromRGB(180,40,40),
 })
 else
-flickerTextEffect(T,true,"STOP DELETING")
-n:Tween(T,TweenInfo.new(0.15),{
-BackgroundColor3=m.Dark(Color3.fromRGB(180,40,40),0.3),
+flickerTextEffect(_,true,"STOP DELETING")
+o:Tween(_,TweenInfo.new(0.15),{
+BackgroundColor3=n.Dark(Color3.fromRGB(180,40,40),0.3),
 })
 end
 
-if aF and aG and aG.StatusCode==200 then
-local aH=l:JSONDecode(aG.Body)
-V=aH.configs or{}
+if a5 and a6 and a6.StatusCode==200 then
+local a7=l:JSONDecode(a6.Body)
+aY=a7.configs or{}
 
-if#V==0 then
+if#aY==0 then
 d:CreateNotification("Vape","You have no uploaded configs",5,"info")
 return
 end
 
-at=true
-ao()
-J.Visible=true
-az.Visible=true
+av=true
+ar()
+Q.Visible=true
+L.Visible=true
 else
-local aH=aG and aG.Body or"Request failed"
-if aG and aG.StatusCode==401 then
-aH="Invalid username/password"
+local a7=a6 and a6.Body or"Request failed"
+if a6 and a6.StatusCode==401 then
+a7="Invalid username/password"
 else
-local aI=decode(aH)
-if aI~=nil and type(aI)=="table"and aI.detail~=nil then
-aH=aI.detail
+local a8=decode(a7)
+if a8~=nil and type(a8)=="table"and a8.detail~=nil then
+a7=a8.detail
 end
 end
 
-ar("Couldn't fetch your configs :c",true)
+ap("Couldn't fetch your configs :c",true)
 task.delay(0.5,function()
-as()
+aq()
 end)
-d:CreateNotification("Vape","Failed to fetch your configs: "..aH,8,"warning")
+d:CreateNotification("Vape","Failed to fetch your configs: "..a7,8,"warning")
 end
 end)
 
-P.Activated:Connect(function()
-if at then
-if not W then
+W.Activated:Connect(function()
+if av then
+if not aZ then
 d:CreateNotification("Vape","Please select a config to delete",5,"warning")
 return
 end
 
-d:CreateNotification("Vape",`Deleting {W}...`,5,"info")
+d:CreateNotification("Vape",`Deleting {aZ}...`,5,"info")
 
-local aF,aG=pcall(function()
+local a5,a6=pcall(function()
 return request{
 Url="https://configs.vapevoidware.xyz/configs",
 Method="DELETE",
@@ -7781,356 +8412,358 @@ Headers={["Content-Type"]="application/json"},
 Body=l:JSONEncode{
 username=getgenv().username,
 password=getgenv().password,
-config=W,
+config=aZ,
 place=tostring(d.Place or game.PlaceId)
 }
 }
 end)
 
-if aF and aG and aG.StatusCode==200 then
-d:CreateNotification("Vape",`Successfully deleted {W}`,6,"info")
-az.Visible=false
+if a5 and a6 and a6.StatusCode==200 then
+d:CreateNotification("Vape",`Successfully deleted {aZ}`,6,"info")
+L.Visible=false
 am:Fire()
 
 task.spawn(function()
 task.wait(1)
-S()
+Z()
 end)
 else
-local aH=aG and aG.Body or"Unknown error"
-if aG and aG.StatusCode==401 then
-aH="Invalid username/password!"
+local a7=a6 and a6.Body or"Unknown error"
+if a6 and a6.StatusCode==401 then
+a7="Invalid username/password!"
 else
-local aI=decode(aH)
-if aI~=nil and type(aI)=="table"and aI.detail~=nil then
-aH=aI.detail
+local a8=decode(a7)
+if a8~=nil and type(a8)=="table"and a8.detail~=nil then
+a7=a8.detail
 end
 end
-d:CreateNotification("Vape","Delete failed: "..aH,8,"warning")
+d:CreateNotification("Vape","Delete failed: "..a7,8,"warning")
 end
 else
-if not M then
+if not T then
 d:CreateNotification("Vape","Please select a local profile first",5,"warning")
 return
 end
-if N.Text==""then
+if U.Text==""then
 d:CreateNotification("Vape","Config name is required",5,"warning")
-flickerTextEffect(N,true,"Name Required!")
+flickerTextEffect(U,true,"Name Required!")
 task.wait(0.3)
-flickerTextEffect(N,true,"")
+flickerTextEffect(U,true,"")
 return
 end
 
-local aF="vape/profiles/"..M..d.Place..".txt"
-if not D(aF)then
+local a5="vape/profiles/"..T..d.Place..".txt"
+if not E(a5)then
 d:CreateNotification("Vape","Failed to read config file. Please choose different profile :c",6,"warning")
 return
 end
-local aG,aH=pcall(readfile,aF)
-if not(aG and aH~=nil)then
+local a6,a7=pcall(readfile,a5)
+if not(a6 and a7~=nil)then
 d:CreateNotification("Vape","Failed to read config file. Please choose different profile :c",6,"warning")
 return
 end
 
 d:CreateNotification("Vape","Publishing config...",5,"info")
 
-local aI={
+local a8={
 username=getgenv().username,
 password=getgenv().password,
-config_name=N.Text,
-config=aH,
+config_name=U.Text,
+config=a7,
 color={d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value},
-description=O.Text,
+description=V.Text,
 }
-if aC then
-aI.place=d.Place or game.PlaceId
-aI.place=tostring(aI.place)
+if O then
+a8.place=d.Place or game.PlaceId
+a8.place=tostring(a8.place)
 end
 
-local aJ,aK=pcall(function()
+local a9,ba=pcall(function()
 return request{
 Url="https://configs.vapevoidware.xyz/configs",
 Method="POST",
 Headers={["Content-Type"]="application/json"},
-Body=l:JSONEncode(aI)
+Body=l:JSONEncode(a8)
 }
 end)
 
-if aJ and aK and aK.StatusCode==200 then
-local aL=aK.Body
-local aM=string.find(aL,"isOverwritten")and true or false
+if a9 and ba and ba.StatusCode==200 then
+local bb=ba.Body
+local bc=string.find(bb,"isOverwritten")and true or false
 d:CreateNotification(
 "Vape",
-`Successfully published "{N.Text}"`
-..(aM and" (overwritten)"or"")
-..(aC and" [Place Based]"or""),
+`Successfully published "{U.Text}"`
+..(bc and" (overwritten)"or"")
+..(O and" [Place Based]"or""),
 8,
 "info"
 )
 
-az.Visible=false
+L.Visible=false
 am:Fire()
 
 task.spawn(function()
 task.wait(1)
-S()
+Z()
 end)
 else
-local aL=aJ and(aK and aK.Body or"Unknown error")or tostring(aK)
-if aK.StatusCode==401 then
-aL="Username or Password missing/invalid!"
+local bb=a9 and(ba and ba.Body or"Unknown error")or tostring(ba)
+if ba.StatusCode==401 then
+bb="Username or Password missing/invalid!"
 else
-local aM=decode(aL)
-if aM~=nil and type(aM)=="table"and aM.detail~=nil then
-aL=aM.detail
+local bc=decode(bb)
+if bc~=nil and type(bc)=="table"and bc.detail~=nil then
+bb=bc.detail
 end
 end
-if string.lower(aL):find"rate limit"then
-ar("Please wait before uploading a config!",true)
+if string.lower(bb):find"rate limit"then
+ap("Please wait before uploading a config!",true)
 task.delay(2,function()
-ar("Click on the config you want to upload",true)
+ap("Click on the config you want to upload",true)
 end)
 end
-d:CreateNotification("Vape","Failed to publish: "..aL,10,"warning")
+d:CreateNotification("Vape","Failed to publish: "..bb,10,"warning")
 end
 end
 end)
 
-Q.Activated:Connect(function()
-az.Visible=false
+X.Activated:Connect(function()
+L.Visible=false
 am:Fire()
-at=false
-if av then
 av=false
+if ax then
+ax=false
 else
-ap()
+as()
 end
 end)
 
 am:Connect(function()
-if av then
-flickerTextEffect(ay,true,"UPLOAD CONFIG")
-n:Tween(ay,TweenInfo.new(0.15),{
+if ax then
+flickerTextEffect(K,true,"UPLOAD CONFIG")
+o:Tween(K,TweenInfo.new(0.15),{
 BackgroundColor3=Color3.fromRGB(5,134,105),
 })
-av=false
-as()
+ax=false
+aq()
 end
 end)
 
-al:Connect(function(aF)
-if aF=="Upload"then return end
-if av then
-flickerTextEffect(ay,true,"UPLOAD CONFIG")
-n:Tween(ay,TweenInfo.new(0.15),{
+al:Connect(function(a5)
+if a5=="Upload"then return end
+if ax then
+flickerTextEffect(K,true,"UPLOAD CONFIG")
+o:Tween(K,TweenInfo.new(0.15),{
 BackgroundColor3=Color3.fromRGB(5,134,105),
 })
-av=false
-az.Visible=false
-as()
+ax=false
+L.Visible=false
+aq()
 end
 end)
 
-ay.Activated:Connect(function()
+K.Activated:Connect(function()
 al:Fire"Upload"
-at=false
+av=false
 
-if av then
+if ax then
 
-flickerTextEffect(ay,true,"UPLOAD CONFIG")
-n:Tween(ay,TweenInfo.new(0.15),{
+flickerTextEffect(K,true,"UPLOAD CONFIG")
+o:Tween(K,TweenInfo.new(0.15),{
 BackgroundColor3=Color3.fromRGB(5,134,105),
 })
-av=false
-az.Visible=false
-as()
+ax=false
+L.Visible=false
+aq()
 else
-flickerTextEffect(ay,true,"STOP UPLOADING")
-n:Tween(ay,TweenInfo.new(0.15),{
-BackgroundColor3=m.Dark(Color3.fromRGB(5,134,105),0.3),
+flickerTextEffect(K,true,"STOP UPLOADING")
+o:Tween(K,TweenInfo.new(0.15),{
+BackgroundColor3=n.Dark(Color3.fromRGB(5,134,105),0.3),
 })
-av=true
-ap()
+ax=true
+as()
 populateLocalProfiles()
-O.Text=""
-az.Visible=true
+V.Text=""
+L.Visible=true
 end
 end)
 
 local function updateDeleteButtonVisibility()
-T.Visible=(getgenv().username~=nil and getgenv().password~=nil)
-ay.Visible=T.Visible
-U.Visible=T.Visible
+_.Visible=(getgenv().username~=nil and getgenv().password~=nil)
+K.Visible=_.Visible
+aE.Visible=_.Visible
+aF.Visible=aB
 end
 updateDeleteButtonVisibility()
+an:Connect(updateDeleteButtonVisibility)
 
 
-local aF=Instance.new"ImageLabel"
-aF.Name="Icon"
-aF.Size=UDim2.fromOffset(16,16)
-aF.Position=UDim2.fromOffset(16,14)
-aF.BackgroundTransparency=1
-aF.Image=u"vape/assets/new/profilesicon.png"
-aF.ImageColor3=o.Text
-aF.Parent=aw
+local a5=Instance.new"ImageLabel"
+a5.Name="Icon"
+a5.Size=UDim2.fromOffset(16,16)
+a5.Position=UDim2.fromOffset(16,14)
+a5.BackgroundTransparency=1
+a5.Image=v"vape/assets/new/profilesicon.png"
+a5.ImageColor3=p.Text
+a5.Parent=aD
 
-local aG=Instance.new"TextLabel"
-aG.Parent=aF
-aG.BackgroundTransparency=1
-aG.Position=UDim2.new(0,24,0,0)
-aG.Size=UDim2.new(1,100,0,16)
-aG.Font=Enum.Font.GothamBold
-aG.Text="Public Profiles"
-aG.TextColor3=o.Text
-aG.TextSize=14
-aG.TextXAlignment=Enum.TextXAlignment.Left
+local a6=Instance.new"TextLabel"
+a6.Parent=a5
+a6.BackgroundTransparency=1
+a6.Position=UDim2.new(0,24,0,0)
+a6.Size=UDim2.new(1,100,0,16)
+a6.Font=Enum.Font.GothamBold
+a6.Text="Public Profiles"
+a6.TextColor3=p.Text
+a6.TextSize=14
+a6.TextXAlignment=Enum.TextXAlignment.Left
 
 
-local aH=Instance.new"Frame"
-aH.Name="BadgeContainer"
-aH.Parent=aw
-aH.BackgroundTransparency=1
-aH.Position=UDim2.new(0,160,0,12)
-aH.Size=UDim2.fromOffset(400,20)
+local a7=Instance.new"Frame"
+a7.Name="BadgeContainer"
+a7.Parent=aD
+a7.BackgroundTransparency=1
+a7.Position=UDim2.new(0,160,0,12)
+a7.Size=UDim2.fromOffset(400,20)
 
-local aI=Instance.new"UIListLayout"
-aI.Parent=aH
-aI.FillDirection=Enum.FillDirection.Horizontal
-aI.SortOrder=Enum.SortOrder.LayoutOrder
-aI.Padding=UDim.new(0,6)
-aI.VerticalAlignment=Enum.VerticalAlignment.Center
+local a8=Instance.new"UIListLayout"
+a8.Parent=a7
+a8.FillDirection=Enum.FillDirection.Horizontal
+a8.SortOrder=Enum.SortOrder.LayoutOrder
+a8.Padding=UDim.new(0,6)
+a8.VerticalAlignment=Enum.VerticalAlignment.Center
 
 
 if getgenv().username then
-local aJ=Instance.new"Frame"
-aJ.Name="UserBadge"
-aJ.Parent=aH
-aJ.BackgroundColor3=Color3.fromRGB(45,45,45)
-aJ.Size=UDim2.fromOffset(0,20)
-aJ.AutomaticSize=Enum.AutomaticSize.X
-addCorner(aJ,UDim.new(0,10))
+local a9=Instance.new"Frame"
+a9.Name="UserBadge"
+a9.Parent=a7
+a9.BackgroundColor3=Color3.fromRGB(45,45,45)
+a9.Size=UDim2.fromOffset(0,20)
+a9.AutomaticSize=Enum.AutomaticSize.X
+addCorner(a9,UDim.new(0,10))
 
-local aK=Instance.new"UIPadding"
-aK.Parent=aJ
-aK.PaddingLeft=UDim.new(0,8)
-aK.PaddingRight=UDim.new(0,8)
+local ba=Instance.new"UIPadding"
+ba.Parent=a9
+ba.PaddingLeft=UDim.new(0,8)
+ba.PaddingRight=UDim.new(0,8)
 
-local aL=Instance.new"TextLabel"
-aL.Parent=aJ
-aL.BackgroundTransparency=1
-aL.Position=UDim2.fromOffset(4,-1)
-aL.Size=UDim2.fromOffset(12,20)
-aL.Font=Enum.Font.GothamBold
-aL.Text="@"
-aL.TextColor3=Color3.fromRGB(150,150,150)
-aL.TextSize=12
+local bb=Instance.new"TextLabel"
+bb.Parent=a9
+bb.BackgroundTransparency=1
+bb.Position=UDim2.fromOffset(4,-1)
+bb.Size=UDim2.fromOffset(12,20)
+bb.Font=Enum.Font.GothamBold
+bb.Text="@"
+bb.TextColor3=Color3.fromRGB(150,150,150)
+bb.TextSize=12
 
-local aM=Instance.new"TextLabel"
-aM.Parent=aJ
-aM.BackgroundTransparency=1
-aM.Position=UDim2.fromOffset(16,0)
-aM.Size=UDim2.fromOffset(0,20)
-aM.AutomaticSize=Enum.AutomaticSize.X
-aM.Font=Enum.Font.Gotham
-aM.Text=tostring(getgenv().username)
-aM.TextColor3=Color3.fromRGB(200,200,200)
-aM.TextSize=13
-aM.TextXAlignment=Enum.TextXAlignment.Left
+local bc=Instance.new"TextLabel"
+bc.Parent=a9
+bc.BackgroundTransparency=1
+bc.Position=UDim2.fromOffset(16,0)
+bc.Size=UDim2.fromOffset(0,20)
+bc.AutomaticSize=Enum.AutomaticSize.X
+bc.Font=Enum.Font.Gotham
+bc.Text=tostring(getgenv().username)
+bc.TextColor3=Color3.fromRGB(200,200,200)
+bc.TextSize=13
+bc.TextXAlignment=Enum.TextXAlignment.Left
 
-local aN=Instance.new"UIStroke"
-aN.Color=Color3.fromRGB(70,70,70)
-aN.Thickness=1
-aN.Parent=aJ
+local bd=Instance.new"UIStroke"
+bd.Color=Color3.fromRGB(70,70,70)
+bd.Thickness=1
+bd.Parent=a9
 end
 
 
 if getgenv().admin_config_api_key~=nil and shared.VoidDev then
-local aJ=Instance.new"Frame"
-aJ.Name="AdminBadge"
-aJ.Parent=aH
-aJ.BackgroundColor3=Color3.fromRGB(60,30,30)
-aJ.Size=UDim2.fromOffset(0,20)
-aJ.AutomaticSize=Enum.AutomaticSize.X
-addCorner(aJ,UDim.new(0,10))
+local a9=Instance.new"Frame"
+a9.Name="AdminBadge"
+a9.Parent=a7
+a9.BackgroundColor3=Color3.fromRGB(60,30,30)
+a9.Size=UDim2.fromOffset(0,20)
+a9.AutomaticSize=Enum.AutomaticSize.X
+addCorner(a9,UDim.new(0,10))
 
-local aK=Instance.new"UIPadding"
-aK.Parent=aJ
-aK.PaddingLeft=UDim.new(0,8)
-aK.PaddingRight=UDim.new(0,8)
+local ba=Instance.new"UIPadding"
+ba.Parent=a9
+ba.PaddingLeft=UDim.new(0,8)
+ba.PaddingRight=UDim.new(0,8)
 
-local aL=Instance.new"TextLabel"
-aL.Parent=aJ
-aL.BackgroundTransparency=1
-aL.Position=UDim2.fromOffset(3,-1)
-aL.Size=UDim2.fromOffset(12,20)
-aL.Font=Enum.Font.GothamBold
-aL.Text="★"
-aL.TextColor3=Color3.fromRGB(255,100,100)
-aL.TextSize=12
+local bb=Instance.new"TextLabel"
+bb.Parent=a9
+bb.BackgroundTransparency=1
+bb.Position=UDim2.fromOffset(3,-1)
+bb.Size=UDim2.fromOffset(12,20)
+bb.Font=Enum.Font.GothamBold
+bb.Text="★"
+bb.TextColor3=Color3.fromRGB(255,100,100)
+bb.TextSize=12
 
-local aM=Instance.new"TextLabel"
-aM.Parent=aJ
-aM.BackgroundTransparency=1
-aM.Position=UDim2.fromOffset(16,0)
-aM.Size=UDim2.fromOffset(0,20)
-aM.AutomaticSize=Enum.AutomaticSize.X
-aM.Font=Enum.Font.GothamBold
-aM.Text="ADMIN"
-aM.TextColor3=Color3.fromRGB(255,120,120)
-aM.TextSize=13
-aM.TextXAlignment=Enum.TextXAlignment.Left
+local bc=Instance.new"TextLabel"
+bc.Parent=a9
+bc.BackgroundTransparency=1
+bc.Position=UDim2.fromOffset(16,0)
+bc.Size=UDim2.fromOffset(0,20)
+bc.AutomaticSize=Enum.AutomaticSize.X
+bc.Font=Enum.Font.GothamBold
+bc.Text="ADMIN"
+bc.TextColor3=Color3.fromRGB(255,120,120)
+bc.TextSize=13
+bc.TextXAlignment=Enum.TextXAlignment.Left
 
-local aN=Instance.new"UIStroke"
-aN.Color=Color3.fromRGB(255,80,80)
-aN.Thickness=1
-aN.Transparency=0.3
-aN.Parent=aJ
+local bd=Instance.new"UIStroke"
+bd.Color=Color3.fromRGB(255,80,80)
+bd.Thickness=1
+bd.Transparency=0.3
+bd.Parent=a9
 end
 
-local aJ=Instance.new"TextLabel"
-aJ.Parent=aF
-aJ.BackgroundTransparency=1
-aJ.Position=UDim2.new(0,24,0,0)
-aJ.Size=UDim2.new(1,100,0,16)
-aJ.Font=Enum.Font.GothamBold
-aJ.Text="Public Profiles"
-aJ.TextColor3=o.Text
-aJ.TextSize=14
-aJ.TextXAlignment=Enum.TextXAlignment.Left
+local a9=Instance.new"TextLabel"
+a9.Parent=a5
+a9.BackgroundTransparency=1
+a9.Position=UDim2.new(0,24,0,0)
+a9.Size=UDim2.new(1,100,0,16)
+a9.Font=Enum.Font.GothamBold
+a9.Text="Public Profiles"
+a9.TextColor3=p.Text
+a9.TextSize=14
+a9.TextXAlignment=Enum.TextXAlignment.Left
 
 
-local aK=Instance.new"ImageButton"
-aK.Name="CloseButton"
-aK.Size=UDim2.fromOffset(24,24)
-aK.Position=UDim2.new(1,-40,0,12)
-aK.BackgroundColor3=Color3.fromRGB(60,60,60)
-aK.AutoButtonColor=false
-aK.Image=u"vape/assets/new/close.png"
-aK.ImageColor3=Color3.fromRGB(200,200,200)
-aK.Parent=aw
-addCorner(aK)
+local ba=Instance.new"ImageButton"
+ba.Name="CloseButton"
+ba.Size=UDim2.fromOffset(24,24)
+ba.Position=UDim2.new(1,-40,0,12)
+ba.BackgroundColor3=Color3.fromRGB(60,60,60)
+ba.AutoButtonColor=false
+ba.Image=v"vape/assets/new/close.png"
+ba.ImageColor3=Color3.fromRGB(200,200,200)
+ba.Parent=aD
+addCorner(ba)
 
-aK.MouseEnter:Connect(function()
+ba.MouseEnter:Connect(function()
 g
-:Create(aK,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
+:Create(ba,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
 BackgroundColor3=Color3.fromRGB(220,53,53),
 ImageColor3=Color3.fromRGB(255,255,255),
 })
 :Play()
 end)
 
-aK.MouseLeave:Connect(function()
+ba.MouseLeave:Connect(function()
 g
-:Create(aK,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
+:Create(ba,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
 BackgroundColor3=Color3.fromRGB(60,60,60),
 ImageColor3=Color3.fromRGB(200,200,200),
 })
 :Play()
 end)
 
-aK.Activated:Connect(function()
-aw.Visible=false
-v.Visible=true
+ba.Activated:Connect(function()
+aD.Visible=false
+w.Visible=true
 if d.TutorialAPI.isActive then
 d.TutorialAPI:setText"Tutorial Cancelled"
 task.delay(0.3,function()
@@ -8139,323 +8772,326 @@ end)
 end
 end)
 
-local aL=Instance.new"Frame"
-aL.Parent=aw
-aL.BackgroundColor3=Color3.new(1,1,1)
-aL.BackgroundTransparency=0.95
-aL.BorderSizePixel=0
-aL.Position=UDim2.new(0,0,0,44)
-aL.Size=UDim2.new(1,0,0,1)
+local bb=Instance.new"Frame"
+bb.Parent=aD
+bb.BackgroundColor3=Color3.new(1,1,1)
+bb.BackgroundTransparency=0.95
+bb.BorderSizePixel=0
+bb.Position=UDim2.new(0,0,0,44)
+bb.Size=UDim2.new(1,0,0,1)
 
-local aM=Instance.new"Frame"
-aM.Name="Search"
-aM.Parent=aw
-aM.BackgroundColor3=m.Dark(o.Main,0.05)
-aM.BorderSizePixel=0
-aM.Position=UDim2.new(0,16,0,54)
-aM.Size=UDim2.fromOffset(968,40)
+local bc=Instance.new"Frame"
+bc.Name="Search"
+bc.Parent=aD
+bc.BackgroundColor3=n.Dark(p.Main,0.05)
+bc.BorderSizePixel=0
+bc.Position=UDim2.new(0,16,0,54)
+bc.Size=UDim2.fromOffset(968,40)
 
-local aN=Instance.new"UIStroke"
-aN.Color=Color3.fromRGB(42,41,42)
-aN.Thickness=1
-aN.Parent=aM
+local bd=Instance.new"UIStroke"
+bd.Color=Color3.fromRGB(42,41,42)
+bd.Thickness=1
+bd.Parent=bc
 
-addCorner(aM)
+addCorner(bc)
 
-local aO=Instance.new"ImageLabel"
-aO.Parent=aM
-aO.BackgroundTransparency=1
-aO.BorderSizePixel=0
-aO.Position=UDim2.new(0,14,0.5,-8)
-aO.Size=UDim2.fromOffset(16,16)
-aO.Image=u"vape/assets/new/search.png"
-aO.ImageColor3=Color3.fromRGB(150,150,150)
+local be=Instance.new"ImageLabel"
+be.Parent=bc
+be.BackgroundTransparency=1
+be.BorderSizePixel=0
+be.Position=UDim2.new(0,14,0.5,-8)
+be.Size=UDim2.fromOffset(16,16)
+be.Image=v"vape/assets/new/search.png"
+be.ImageColor3=Color3.fromRGB(150,150,150)
 
-local aP=Instance.new"TextBox"
-aP.Parent=aM
-aP.BackgroundTransparency=1
-aP.BorderSizePixel=0
-aP.Position=UDim2.new(0,40,0,0)
-aP.Size=UDim2.new(1,-50,1,0)
-aP.Font=Enum.Font.Gotham
-aP.PlaceholderColor3=Color3.fromRGB(180,180,180)
-aP.PlaceholderText="Search profile name or username..."
-aP.Text=""
-aP.TextColor3=Color3.fromRGB(200,200,200)
-aP.TextSize=15
-aP.TextXAlignment=Enum.TextXAlignment.Left
+local bf=Instance.new"TextBox"
+bf.Parent=bc
+bf.BackgroundTransparency=1
+bf.BorderSizePixel=0
+bf.Position=UDim2.new(0,40,0,0)
+bf.Size=UDim2.new(1,-50,1,0)
+bf.Font=Enum.Font.Gotham
+bf.PlaceholderColor3=Color3.fromRGB(180,180,180)
+bf.PlaceholderText="Search profile name or username..."
+bf.Text=""
+bf.TextColor3=Color3.fromRGB(200,200,200)
+bf.TextSize=15
+bf.TextXAlignment=Enum.TextXAlignment.Left
 
-local aQ=Instance.new"Frame"
-aQ.Parent=aw
-aQ.BackgroundTransparency=1
-aQ.BorderSizePixel=0
-aQ.Position=UDim2.new(0,16,0,104)
-aQ.Size=UDim2.fromOffset(968,32)
+local bg=Instance.new"Frame"
+bg.Parent=aD
+bg.BackgroundTransparency=1
+bg.BorderSizePixel=0
+bg.Position=UDim2.new(0,16,0,104)
+bg.Size=UDim2.fromOffset(968,32)
 
-local aR=Instance.new"UIListLayout"
-aR.Parent=aQ
-aR.FillDirection=Enum.FillDirection.Horizontal
-aR.SortOrder=Enum.SortOrder.LayoutOrder
-aR.VerticalAlignment=Enum.VerticalAlignment.Center
-aR.Padding=UDim.new(0,8)
+local bh=Instance.new"UIListLayout"
+bh.Parent=bg
+bh.FillDirection=Enum.FillDirection.Horizontal
+bh.SortOrder=Enum.SortOrder.LayoutOrder
+bh.VerticalAlignment=Enum.VerticalAlignment.Center
+bh.Padding=UDim.new(0,8)
 
-local aS=Instance.new"ScrollingFrame"
-aS.Name="Children"
-aS.Parent=aw
-aS.Position=UDim2.new(0,16,0,144)
-aS.Size=UDim2.fromOffset(968,390)
-aS.BackgroundTransparency=1
-aS.BorderSizePixel=0
-aS.ScrollBarThickness=3
-aS.ScrollBarImageTransparency=0.5
-aS.AutomaticCanvasSize=Enum.AutomaticSize.XY
-aS.CanvasSize=UDim2.new()
-aS.ClipsDescendants=false
+local bi=Instance.new"ScrollingFrame"
+bi.Name="Children"
+bi.Parent=aD
+bi.Position=UDim2.new(0,16,0,144)
+bi.Size=UDim2.fromOffset(968,390)
+bi.BackgroundTransparency=1
+bi.BorderSizePixel=0
+bi.ScrollBarThickness=3
+bi.ScrollBarImageTransparency=0.5
+bi.AutomaticCanvasSize=Enum.AutomaticSize.XY
+bi.CanvasSize=UDim2.new()
+bi.ClipsDescendants=false
 
-local aT=Instance.new"TextLabel"
-aT.Name="ConfigsInfo"
-aT.Parent=aw
-aT.Position=aS.Position
-aT.Size=aS.Size
-aT.Text="No configs found :c"
-aT.BackgroundColor3=Color3.fromRGB(30,30,30)
-aT.TextSize=18
-aT.Visible=false
+local bj=Instance.new"TextLabel"
+bj.Name="ConfigsInfo"
+bj.Parent=aD
+bj.Position=bi.Position
+bj.Size=bi.Size
+bj.Text="No configs found :c"
+bj.BackgroundColor3=Color3.fromRGB(30,30,30)
+bj.TextSize=40
+bj.TextColor3=Color3.fromRGB(200,200,200)
+bj.Visible=false
 
-local aU={
-SetStep=function(aU,aV,aW)
-if aW~=nil then
-aT.Visible=aW
+local bk={
+SetStep=function(bk,bl,bm)
+if bm~=nil then
+bj.Visible=bm
 end
-if aV~=nil then
-aT.Text=aV
+if bl~=nil then
+bj.Text=bl
 end
 end
 }
 
-S=function()
-ar("Refreshing Configs...",true)
-local aV,aW=F(function()
+Z=function()
+ap("Refreshing Configs...",true)
+local bl,bm=G(function()
 return l:JSONDecode(d.http_function"https://configs.vapevoidware.xyz")
 end,3)
-if not aV then
+if not bl then
 errorNotification("Voidware | Configs","Couldn't load the configs data :c Try again later",5)
-ar("Couldn't load configs :c",true)
+ap("Couldn't load configs :c",true)
 return
 end
 
 resetConfigs()
-for aX,aY in aS:GetChildren()do
+for bn,bo in bi:GetChildren()do
 pcall(function()
-if aY:IsA"TextButton"then
-aY:Destroy()
+if bo:IsA"TextButton"then
+bo:Destroy()
 end
 end)
 end
 ai={Sorts=ai.Sorts}
 
-table.sort(aW,aE[an])
-local aX=0
-for aY,aZ in aW do
-local a_=d.Place or game.PlaceId
-if not aZ.place or tostring(aZ.place)==tostring(a_)then
-aX=aX+1
-aS.ClipsDescendants=(aX>10)
-R(aZ.name,aZ.username,aZ)
+table.sort(bm,a4[ao])
+local bn=0
+for bo,bp in bm do
+local bq=d.Place or game.PlaceId
+if not bp.place or tostring(bp.place)==tostring(bq)then
+bn=bn+1
+bi.ClipsDescendants=(bn>10)
+Y(bp.name,bp.username,bp)
 end
 end
-if aX<1 then
-aU:SetStep("No Configs found :C",true)
+if bn<1 then
+bk:SetStep("No Configs found :C",true)
 else
-aU:SetStep(nil,false)
+bk:SetStep(nil,false)
 end
 if aj~=nil then
-local aY={"all"}
-for aZ,a_ in table.clone(aW)do
-if not a_.username then continue end
-a_.username=tostring(a_.username)
-if table.find(aY,a_.username)then continue end
-table.insert(aY,a_.username)
+local bo={"all"}
+for bp,bq in table.clone(bm)do
+if not bq.username then continue end
+bq.username=tostring(bq.username)
+if table.find(bo,bq.username)then continue end
+table.insert(bo,bq.username)
 end
-aj:SetValues(aY,"all")
+aj:SetValues(bo,"all")
 end
-as()
+aq()
 end
 d.ConfigsAPIRefresh=function()
-task.spawn(S)
+task.spawn(Z)
 end
 
-local aV=Instance.new"UIGridLayout"
-aV.Parent=aS
-aV.SortOrder=Enum.SortOrder.LayoutOrder
-aV.CellSize=UDim2.fromOffset(180,180)
-aV.CellPadding=UDim2.fromOffset(12,12)
-aV.HorizontalAlignment=Enum.HorizontalAlignment.Center
+local bl=Instance.new"UIGridLayout"
+bl.Parent=bi
+bl.SortOrder=Enum.SortOrder.LayoutOrder
+bl.CellSize=UDim2.fromOffset(180,180)
+bl.CellPadding=UDim2.fromOffset(12,12)
+bl.HorizontalAlignment=Enum.HorizontalAlignment.Center
 
-aV:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
+bl:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
 if ag.ThreadFix then
 setthreadidentity(8)
 end
-aS.CanvasSize=UDim2.fromOffset(0,aV.AbsoluteContentSize.Y+20)
+bi.CanvasSize=UDim2.fromOffset(0,bl.AbsoluteContentSize.Y+20)
 end)
 
 ak:Connect(function()
-local aW=aj.Value
-for aX,aY in ai do
-if aY.instance~=nil and aY.username~=nil then
-aY.instance.Visible=(aW=="all"or tostring(aY.username)==aW)
+local bm=aj.Value
+for bn,bo in ai do
+if bo.instance~=nil and bo.username~=nil then
+bo.instance.Visible=(bm=="all"or tostring(bo.username)==bm)
 end
 end
 end)
 
-R=function(aW,aX,aY)
-if ai[aW]then return end
-ai[aW]=table.clone(aY)
+Y=function(bm,bn,bo)
+if ai[bm]then return end
+ai[bm]=table.clone(bo)
 
-local aZ=false
-local a_=false
+local bp=false
+local bq=false
 
-if getgenv().username and aX and aX:lower()==tostring(getgenv().username):lower()then
-a_=true
+if getgenv().username and bn and bn:lower()==tostring(getgenv().username):lower()then
+bq=true
 elseif getgenv().admin_config_api_key~=nil and shared.VoidDev then
-a_=true
-aZ=true
+bq=true
+bp=true
 end
-local a0=Instance.new"TextButton"
-a0.Parent=aS
-a0.BackgroundTransparency=1
-a0.LayoutOrder=#aS:GetChildren()+1
-a0.ClipsDescendants=false
-a0.AutoButtonColor=false
-a0.Text=""
-a0.Size=UDim2.fromOffset(220,220)
+local br=Instance.new"TextButton"
+br.Parent=bi
+br.BackgroundTransparency=1
+br.LayoutOrder=#bi:GetChildren()+1
+br.ClipsDescendants=false
+br.AutoButtonColor=false
+br.Text=""
+br.Size=UDim2.fromOffset(220,220)
 
-ai[aW].instance=a0
+ai[bm].instance=br
 
-local a1,a2
-if aY.color~=nil and type(aY.color)=="table"then
-a1,a2=hsv(unpack(aY.color))
+local bs,bt
+if bo.color~=nil and type(bo.color)=="table"then
+bs,bt=hsv(unpack(bo.color))
 else
-a1=false
-a2=nil
+bs=false
+bt=nil
 end
 
-local a3=a1 and a2~=nil and"config"or"gui"
+local bu=bs and bt~=nil and"config"or"gui"
 local function getStrokeColor()
-return a3=="gui"and Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)or a2
+return bu=="gui"and Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)or bt
 end
 
-local a4=Instance.new"UIStroke"
-a4.Color=Color3.fromRGB(50,50,50)
-if a3=="gui"then
-connectguicolorchange(function(a5,a6,a7)
-a4.Color=Color3.fromHSV(a5,a6,a7)
+local bv=Instance.new"UIStroke"
+bv.Color=Color3.fromRGB(50,50,50)
+if bu=="gui"then
+connectguicolorchange(function(bw,bx,by)
+bv.Color=Color3.fromHSV(bw,bx,by)
 end)
 else
-a4.Color=a2
+bv.Color=bt
 end
-a4.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
-a4.Thickness=1
-a4.Parent=a0
+bv.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
+bv.Thickness=1
+bv.Parent=br
 
-addCorner(a0)
-
-
-local a5=Instance.new"TextLabel"
-a5.Parent=a0
-a5.BackgroundTransparency=1
-a5.Position=UDim2.new(0,12,0,12)
-a5.Size=UDim2.new(1,-24,0,40)
-a5.Font=Enum.Font.GothamBold
-a5.RichText=true
-a5.Text=aW
-a5.TextColor3=Color3.fromRGB(220,220,220)
-a5.TextSize=15
-a5.TextWrapped=true
-a5.TextXAlignment=Enum.TextXAlignment.Left
-a5.TextYAlignment=Enum.TextYAlignment.Top
+addCorner(br)
 
 
-local a6=Instance.new"TextLabel"
-a6.Parent=a0
-a6.BackgroundTransparency=1
-a6.Position=UDim2.new(0,12,0,52)
-a6.Size=UDim2.new(1,-24,0,18)
-a6.Font=Enum.Font.Gotham
-a6.Text="By: @"..aX
-a6.TextColor3=Color3.fromRGB(150,150,150)
-a6.TextSize=15
-a6.TextXAlignment=Enum.TextXAlignment.Left
+local bw=Instance.new"TextLabel"
+bw.Parent=br
+bw.BackgroundTransparency=1
+bw.Position=UDim2.new(0,12,0,12)
+bw.Size=UDim2.new(1,-24,0,40)
+bw.Font=Enum.Font.GothamBold
+bw.RichText=true
+bw.Text=bm
+bw.TextColor3=Color3.fromRGB(220,220,220)
+bw.TextSize=15
+bw.TextWrapped=true
+bw.TextXAlignment=Enum.TextXAlignment.Left
+bw.TextYAlignment=Enum.TextYAlignment.Top
 
 
-local a7=Instance.new"TextLabel"
-a7.Parent=a0
-a7.BackgroundTransparency=1
-a7.Position=UDim2.new(0,12,0,70)
-a7.Size=UDim2.new(1,-24,0,65)
-a7.Font=Enum.Font.Gotham
-a7.Text=aY.description or"No description provided"
-a7.TextColor3=Color3.fromRGB(130,130,130)
-a7.TextSize=15
-a7.TextWrapped=true
-a7.TextXAlignment=Enum.TextXAlignment.Left
-a7.TextYAlignment=Enum.TextYAlignment.Top
+local bx=Instance.new"TextLabel"
+bx.Parent=br
+bx.BackgroundTransparency=1
+bx.Position=UDim2.new(0,12,0,52)
+bx.Size=UDim2.new(1,-24,0,18)
+bx.Font=Enum.Font.Gotham
+bx.Text="By: @"..bn
+bx.TextColor3=Color3.fromRGB(150,150,150)
+bx.TextSize=15
+bx.TextXAlignment=Enum.TextXAlignment.Left
 
 
-local a8=Instance.new"TextLabel"
-a8.Parent=a0
-a8.BackgroundTransparency=1
-a8.Position=UDim2.new(0,12,0,100)
-a8.Size=UDim2.new(1,-24,0,16)
-a8.Font=Enum.Font.Gotham
-a8.Text="Last Update: "..timestampToDate(aY.edited)
-a8.TextColor3=Color3.fromRGB(100,100,100)
-a8.TextSize=14
+local by=Instance.new"TextLabel"
+by.Parent=br
+by.BackgroundTransparency=1
+by.Position=UDim2.new(0,12,0,70)
+by.Size=UDim2.new(1,-24,0,65)
+by.Font=Enum.Font.Gotham
+by.Text=bo.description or"No description provided"
+by.TextColor3=Color3.fromRGB(130,130,130)
+by.TextSize=15
+by.TextWrapped=true
+by.TextXAlignment=Enum.TextXAlignment.Left
+by.TextYAlignment=Enum.TextYAlignment.Top
 
-local a9=false
+
+local bz=Instance.new"TextLabel"
+bz.Parent=br
+bz.BackgroundTransparency=1
+bz.Position=UDim2.new(0,12,0,100)
+bz.Size=UDim2.new(1,-24,0,16)
+bz.Font=Enum.Font.Gotham
+bz.Text="Last Update: "..timestampToDate(bo.edited)
+bz.TextColor3=Color3.fromRGB(100,100,100)
+bz.TextSize=14
+
+local bA=false
 
 
-local ba=Instance.new"TextButton"
-ba.Parent=a0
-ba.BackgroundColor3=Color3.fromRGB(5,134,105)
-connectguicolorchange(function(bb,bc,bd)
-ba.BackgroundColor3=a9 and m.Dark(Color3.fromHSV(bb,bc,bd),0.3)or Color3.fromHSV(bb,bc,bd)
+local bB=Instance.new"TextButton"
+bB.Parent=br
+bB.BackgroundColor3=Color3.fromRGB(5,134,105)
+connectguicolorchange(function(bC,bD,bE)
+bB.BackgroundColor3=bA and n.Dark(Color3.fromHSV(bC,bD,bE),0.3)or Color3.fromHSV(bC,bD,bE)
 end)
-ba.Size=a_ and UDim2.new(1,-64,0,38)or UDim2.new(1,-24,0,38)
-ba.Position=UDim2.new(0,12,1,-50)
-ba.Font=Enum.Font.GothamBold
-ba.Text="DOWNLOAD"
-ba.TextColor3=Color3.fromRGB(255,255,255)
-ba.TextSize=12
-ba.AutoButtonColor=false
-ba.BorderSizePixel=0
+bB.Size=bq and UDim2.new(1,-64,0,38)or UDim2.new(1,-24,0,38)
+bB.Position=UDim2.new(0,12,1,-50)
+bB.Font=Enum.Font.GothamBold
+bB.Text="DOWNLOAD"
+bB.TextColor3=Color3.fromRGB(255,255,255)
+bB.TextSize=12
+bB.AutoButtonColor=false
+bB.BorderSizePixel=0
 
-addCorner(ba)
+ai[bm].downloadButton=bB
 
-ba.MouseEnter:Connect(function()
-local bb,bc,bd=d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value
-local be=a9 and m.Dark(Color3.fromHSV(bb,bc,bd),0.3)or Color3.fromHSV(bb,bc,bd)
+addCorner(bB)
+
+bB.MouseEnter:Connect(function()
+local bC,bD,bE=d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value
+local bF=bA and n.Dark(Color3.fromHSV(bC,bD,bE),0.3)or Color3.fromHSV(bC,bD,bE)
 g
-:Create(ba,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
-BackgroundColor3=m.Light(be,0.3),
+:Create(bB,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
+BackgroundColor3=n.Light(bF,0.3),
 })
 :Play()
 end)
 
-ba.MouseLeave:Connect(function()
-local bb,bc,bd=d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value
-local be=a9 and m.Dark(Color3.fromHSV(bb,bc,bd),0.3)or Color3.fromHSV(bb,bc,bd)
+bB.MouseLeave:Connect(function()
+local bC,bD,bE=d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value
+local bF=bA and n.Dark(Color3.fromHSV(bC,bD,bE),0.3)or Color3.fromHSV(bC,bD,bE)
 g
-:Create(ba,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
-BackgroundColor3=be
+:Create(bB,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
+BackgroundColor3=bF
 })
 :Play()
 end)
 
-if a_ then
-local bb=aZ
+if bq then
+local bC=bp
 
-local bc=bb
+local bD=bC
 and{
 Title="Force Delete Config",
 ActionWord='<b><font color="#ff3b3b">Force Deleting</font></b>',
@@ -8473,63 +9109,77 @@ PromptNote='<br/><font color="#ff6b6b">This action cannot be undone.</font>',
 Accent=Color3.fromRGB(180,40,40),
 }
 
-local bd=Instance.new"ImageButton"
-bd.Parent=a0
-bd.Size=UDim2.fromOffset(35,35)
-bd.Position=UDim2.new(1,-47,1,-50)
-bd.BackgroundColor3=Color3.fromRGB(60,60,60)
-bd.AutoButtonColor=false
-bd.Image=u((aZ and"hammer"or"trash"),true)
-bd.ImageColor3=Color3.fromRGB(220,220,220)
-bd.ZIndex=ba.ZIndex
-addCorner(bd)
+local bE=Instance.new"ImageButton"
+bE.Parent=br
+bE.Size=UDim2.fromOffset(35,35)
+bE.Position=UDim2.new(1,-47,1,-50)
+bE.BackgroundColor3=Color3.fromRGB(60,60,60)
+bE.AutoButtonColor=false
+bE.Image=v((bp and"hammer"or"trash"),true)
+bE.ImageColor3=Color3.fromRGB(220,220,220)
+bE.ZIndex=bB.ZIndex
+addCorner(bE)
 
-ai[aW].deleteIcon=bd
-ai[aW].canDelete=a_
-ai[aW].specialDelete=aZ
+ai[bm].deleteIcon=bE
+ai[bm].canDelete=bq
+ai[bm].specialDelete=bp
 
-if bb then
-bd.BackgroundColor3=Color3.fromRGB(90,30,30)
+if bC then
+bE.BackgroundColor3=Color3.fromRGB(90,30,30)
 
-local be=Instance.new"UIStroke"
-be.Color=Color3.fromRGB(255,80,80)
-be.Thickness=1.5
-be.Transparency=0.3
-be.Parent=bd
+local bF=Instance.new"UIStroke"
+bF.Color=Color3.fromRGB(255,80,80)
+bF.Thickness=1.5
+bF.Transparency=0.3
+bF.Parent=bE
 else
-bd.MouseEnter:Connect(function()
-g:Create(bd,TweenInfo.new(0.15),{
+bE.MouseEnter:Connect(function()
+g:Create(bE,TweenInfo.new(0.15),{
 BackgroundColor3=Color3.fromRGB(180,40,40),
 ImageColor3=Color3.fromRGB(255,255,255),
 }):Play()
 end)
 
-bd.MouseLeave:Connect(function()
-g:Create(bd,TweenInfo.new(0.15),{
+bE.MouseLeave:Connect(function()
+g:Create(bE,TweenInfo.new(0.15),{
 BackgroundColor3=Color3.fromRGB(60,60,60),
 ImageColor3=Color3.fromRGB(220,220,220),
 }):Play()
 end)
 end
 
-bd.Activated:Connect(function()
-if au then
+bE.Activated:Connect(function()
+if ay then
+if not checkWhitelistForRating()then
+d:CreateNotification(
+"Vape",
+"You must be whitelisted (Rank 1+) to rate configs",
+6,
+"warning"
+)
+return
+end
 
-local be=d.Profile or"Unknown Profile"
+aQ=v
+aL.Text='"'..v.name..'" by @'..v.username
+aG.Visible=true
+elseif aw then
+
+local bF=d.Profile or"Unknown Profile"
 
 d:CreatePrompt{
 Title="Update Config",
 Text=string.format(
 'Overwrite <b><font color="rgb(150,150,255)">"%s"</font></b> with your current profile <b><font color="rgb(100,200,100)">"%s"</font></b>?\n<font color="rgb(180,180,180)">This will update the config with your current settings and GUI color.</font>',
-aW,
-be
+bm,
+bF
 ),
 ConfirmText="UPDATE",
 CancelText="CANCEL",
 OnConfirm=function()
 
-local bf="vape/profiles/"..be..d.Place..".txt"
-if not D(bf)then
+local bG="vape/profiles/"..bF..d.Place..".txt"
+if not E(bG)then
 d:CreateNotification(
 "Vape",
 "Failed to read current profile config file",
@@ -8539,8 +9189,8 @@ d:CreateNotification(
 revertToNormalMode()
 return
 end
-local bg,bh=pcall(readfile,bf)
-if not(bg and bh~=nil)then
+local bH,bI=pcall(readfile,bG)
+if not(bH and bI~=nil)then
 d:CreateNotification(
 "Vape",
 "Failed to read current profile config file",
@@ -8551,35 +9201,35 @@ revertToNormalMode()
 return
 end
 
-d:CreateNotification("Vape",`Updating "{aW}"...`,5,"info")
+d:CreateNotification("Vape",`Updating "{bm}"...`,5,"info")
 
-local bi={
+local bJ={
 username=getgenv().username,
 password=getgenv().password,
-config_name=aW,
-config=bh,
+config_name=bm,
+config=bI,
 color={d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value},
-description=aY.description or"",
+description=bo.description or"",
 }
 
-if aC then
-bi.place=d.Place or game.PlaceId
-bi.place=tostring(bi.place)
+if O then
+bJ.place=d.Place or game.PlaceId
+bJ.place=tostring(bJ.place)
 end
 
-local bj,bk=pcall(function()
+local bK,bL=pcall(function()
 return request{
 Url="https://configs.vapevoidware.xyz/configs",
 Method="POST",
 Headers={["Content-Type"]="application/json"},
-Body=l:JSONEncode(bi),
+Body=l:JSONEncode(bJ),
 }
 end)
 
-if bj and bk and bk.StatusCode==200 then
+if bK and bL and bL.StatusCode==200 then
 d:CreateNotification(
 "Vape",
-`Successfully updated "{aW}" with profile "{be}"!`,
+`Successfully updated "{bm}" with profile "{bF}"!`,
 8,
 "info"
 )
@@ -8588,20 +9238,20 @@ revertToNormalMode()
 
 task.spawn(function()
 task.wait(1)
-S()
+Z()
 end)
 else
-local bl=bj and(bk and bk.Body or"Unknown error")
-or tostring(bk)
-if bk and bk.StatusCode==401 then
-bl="Username or Password missing/invalid!"
+local bM=bK and(bL and bL.Body or"Unknown error")
+or tostring(bL)
+if bL and bL.StatusCode==401 then
+bM="Username or Password missing/invalid!"
 else
-local bm=decode(bl)
-if bm~=nil and type(bm)=="table"and bm.detail~=nil then
-bl=bm.detail
+local bN=decode(bM)
+if bN~=nil and type(bN)=="table"and bN.detail~=nil then
+bM=bN.detail
 end
 end
-d:CreateNotification("Vape","Failed to update: "..bl,10,"warning")
+d:CreateNotification("Vape","Failed to update: "..bM,10,"warning")
 revertToNormalMode()
 end
 end,
@@ -8612,62 +9262,62 @@ end,
 else
 
 d:CreatePrompt{
-Title=bc.Title,
-Text=([[Are you sure you want to delete "%s"?%s]]):format('<br/><font color="#ffffff">'..aW..'</font>',bc.PromptNote),
+Title=bD.Title,
+Text=([[Are you sure you want to delete "%s"?%s]]):format('<br/><font color="#ffffff">'..bm..'</font>',bD.PromptNote),
 ConfirmText="DELETE",
 CancelText="CANCEL",
 OnConfirm=function()
 d:CreateNotification(
 "Vape",
-(bc.ActionWord..' "%s"...'):format(aW),
+(bD.ActionWord..' "%s"...'):format(bm),
 5,
 "info"
 )
 
-local be={
+local bF={
 username=getgenv().username,
 password=getgenv().password,
-config=aW,
+config=bm,
 place=tostring(d.Place or game.PlaceId),
 }
 
-if bb then
-be.adminkey=getgenv().admin_config_api_key
-be.username=tostring(aX)
-be.password=nil
+if bC then
+bF.adminkey=getgenv().admin_config_api_key
+bF.username=tostring(bn)
+bF.password=nil
 end
 
-local bf,bg=pcall(function()
+local bG,bH=pcall(function()
 return request{
 Url="https://configs.vapevoidware.xyz/configs",
 Method="DELETE",
 Headers={["Content-Type"]="application/json"},
-Body=l:JSONEncode(be),
+Body=l:JSONEncode(bF),
 }
 end)
 
-if bf and bg and bg.StatusCode==200 then
+if bG and bH and bH.StatusCode==200 then
 d:CreateNotification(
 "Vape",
-(bc.DoneWord..' "%s"'):format(aW),
+(bD.DoneWord..' "%s"'):format(bm),
 6,
 "info"
 )
-S()
+Z()
 else
-local bh=bg and bg.Body or"Unknown error"
-if bg and bg.StatusCode==401 then
-bh="Invalid username/password!"
+local bI=bH and bH.Body or"Unknown error"
+if bH and bH.StatusCode==401 then
+bI="Invalid username/password!"
 else
-local bi=decode(bh)
-if bi and type(bi)=="table"and bi.detail then
-bh=bi.detail
+local bJ=decode(bI)
+if bJ and type(bJ)=="table"and bJ.detail then
+bI=bJ.detail
 end
 end
 
 d:CreateNotification(
 "Vape",
-(bc.FailWord..": %s"):format(bh),
+(bD.FailWord..": %s"):format(bI),
 8,
 "warning"
 )
@@ -8678,66 +9328,66 @@ end
 end)
 end
 
-n:Tween(a0,TweenInfo.new(0.3,Enum.EasingStyle.Quad),{
-BackgroundColor3=m.Light(o.Main,0.08),
+o:Tween(br,TweenInfo.new(0.3,Enum.EasingStyle.Quad),{
+BackgroundColor3=n.Light(p.Main,0.08),
 BackgroundTransparency=0,
 })
 
-a0.MouseEnter:Connect(function()
-n:Tween(a0,TweenInfo.new(0.1,Enum.EasingStyle.Quad),{
-BackgroundColor3=m.Light(o.Main,0.2),
+br.MouseEnter:Connect(function()
+o:Tween(br,TweenInfo.new(0.1,Enum.EasingStyle.Quad),{
+BackgroundColor3=n.Light(p.Main,0.2),
 })
-n:Tween(a5,TweenInfo.new(0.1,Enum.EasingStyle.Quad),{
+o:Tween(bw,TweenInfo.new(0.1,Enum.EasingStyle.Quad),{
 TextSize=17,
 })
-n:Tween(a6,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
+o:Tween(bx,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
 TextColor3=Color3.fromRGB(230,230,230),
 })
-n:Tween(a8,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
+o:Tween(bz,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
 TextColor3=Color3.fromRGB(200,200,200),
 })
-n:Tween(a4,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
+o:Tween(bv,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
 
 Color=getStrokeColor(),
 Thickness=2,
 })
 end)
 
-a0.MouseLeave:Connect(function()
-n:Tween(a0,TweenInfo.new(0.1,Enum.EasingStyle.Quad),{
-BackgroundColor3=m.Light(o.Main,0.08),
+br.MouseLeave:Connect(function()
+o:Tween(br,TweenInfo.new(0.1,Enum.EasingStyle.Quad),{
+BackgroundColor3=n.Light(p.Main,0.08),
 })
-n:Tween(a5,TweenInfo.new(0.1,Enum.EasingStyle.Quad),{
+o:Tween(bw,TweenInfo.new(0.1,Enum.EasingStyle.Quad),{
 TextSize=15,
 })
-n:Tween(a6,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
+o:Tween(bx,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
 TextColor3=Color3.fromRGB(150,150,150),
 })
-n:Tween(a8,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
+o:Tween(bz,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
 TextColor3=Color3.fromRGB(100,100,100),
 })
-n:Tween(a4,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
+o:Tween(bv,TweenInfo.new(0.15,Enum.EasingStyle.Quad),{
 
-Color=m.Dark(getStrokeColor(),0.3),
+Color=n.Dark(getStrokeColor(),0.3),
 Thickness=1,
 })
 end)
 
 pcall(function()
-local bb=ai[aW]
-if bb then
-local bc=`{bb.name} ({bb.username})`
-local bd=d.Profiles
-if(bd~=nil and type(bd)=="table")then
-for be,bf in bd do
-if type(bf)~="table"then continue end
-if bf.Name==bc then
-ba.Text="REINSTALL"
-a9=true
-local bg,bh,bi=d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value
-ba.BackgroundColor3=a9
-and m.Dark(Color3.fromHSV(bg,bh,bi),0.3)
-or Color3.fromHSV(bg,bh,bi)
+local bC=ai[bm]
+if bC then
+local bD=`{bC.name} ({bC.username})`
+local bE=d.Profiles
+if(bE~=nil and type(bE)=="table")then
+for bF,bG in bE do
+if type(bG)~="table"then continue end
+if bG.Name==bD then
+bB.Text="REINSTALL"
+bA=true
+local bH,bI,bJ=d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value
+bB.BackgroundColor3=bA
+and n.Dark(Color3.fromHSV(bH,bI,bJ),0.3)
+or Color3.fromHSV(bH,bI,bJ)
 break
 end
 end
@@ -8745,131 +9395,131 @@ end
 end
 end)
 
-ba.Activated:Connect(function()
-local bb=ai[aW]
-if bb then
-local bc=string.format("%s (%s)",bb.name,bb.username)
-local bd,be=bb.link:match"^(.-/)([^/]+)$"
-if not bd or not be then
-errorNotification("Voidware | Configs",`Invalid URL for {tostring(aW)}. Please report this to a developer in discord.gg/voidware`,10)
-warn("Invalid URL:",bb.link)
+bB.Activated:Connect(function()
+local bC=ai[bm]
+if bC then
+local bD=string.format("%s (%s)",bC.name,bC.username)
+local bE,bF=bC.link:match"^(.-/)([^/]+)$"
+if not bE or not bF then
+errorNotification("Voidware | Configs",`Invalid URL for {tostring(bm)}. Please report this to a developer in discord.gg/voidware`,10)
+warn("Invalid URL:",bC.link)
 return
 end local
-bf, bg=pcall(function()
-return bd..l:UrlEncode(be)
+bG, bH=pcall(function()
+return bE..l:UrlEncode(bF)
 end)
-if not bg then
-errorNotification("Voidware | Configs",`Couldn't resolve the url for {tostring(aW)}. Please report this to a developer in discord.gg/voidware`,10)
-warn(`Invalid URL resolve: {tostring(bg)}`)
+if not bH then
+errorNotification("Voidware | Configs",`Couldn't resolve the url for {tostring(bm)}. Please report this to a developer in discord.gg/voidware`,10)
+warn(`Invalid URL resolve: {tostring(bH)}`)
 return
 end
-local bh=d.http_function(bg)
-if bh:sub(1,1)=='"'and bh:sub(-1)=='"'then
-local bi,bj=pcall(function()
-return l:JSONDecode(bh)
+local bI=d.http_function(bH)
+if bI:sub(1,1)=='"'and bI:sub(-1)=='"'then
+local bJ,bK=pcall(function()
+return l:JSONDecode(bI)
 end)
-if bi then
-bh=bj
+if bJ then
+bI=bK
 end
 end
-local bi=false
-for bj,bk in d.Profiles do
-if bk.Name==bc then
-bi=true
+local bJ=false
+for bK,bL in d.Profiles do
+if bL.Name==bD then
+bJ=true
 break
 end
 end
-if not bi then
-table.insert(d.Profiles,{Name=bc,Bind={}})
+if not bJ then
+table.insert(d.Profiles,{Name=bD,Bind={}})
 end
-local bj
-if bb.color~=nil and type(bb.color)=="table"then
-local bk,bl,bm=unpack(bb.color)
-bk,bl,bm=num(bk),num(bl),num(bm)
-if bk~=nil and bl~=nil and bm~=nil then
-bj={
-Hue=bk,
-Sat=bl,
-Value=bm,
+local bK
+if bC.color~=nil and type(bC.color)=="table"then
+local bL,bM,bN=unpack(bC.color)
+bL,bM,bN=num(bL),num(bM),num(bN)
+if bL~=nil and bM~=nil and bN~=nil then
+bK={
+Hue=bL,
+Sat=bM,
+Value=bN,
 CustomColor=true,
 Rainbow=false
 }
-shared[`FORCE_PROFILE_GUI_COLOR_SET_{tostring(bc)}`]=bj
+shared[`FORCE_PROFILE_GUI_COLOR_SET_{tostring(bD)}`]=bK
 end
 end
-if bb.description~=nil then
-shared[`FORCE_PROFILE_TEXT_GUI_CUSTOM_TEXT_{tostring(bc)}`]=tostring(bb.description)
+if bC.description~=nil then
+shared[`FORCE_PROFILE_TEXT_GUI_CUSTOM_TEXT_{tostring(bD)}`]=tostring(bC.description)
 end
-d:Save(bc)
-writefile("vape/profiles/"..bc..d.Place..".txt",bh)
-d:Load(true,bc)
-local bk=bi and"Reinstalled"or"Downloaded"
-d:CreateNotification("Vape",`{bk} "{aW}" by @{bb.username}`,5,"info")
-ba.Text="REINSTALL"
-a9=true
-local bl,bm,bn=d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value
-ba.BackgroundColor3=a9 and m.Dark(Color3.fromHSV(bl,bm,bn),0.3)
-or Color3.fromHSV(bl,bm,bn)
-S()
+d:Save(bD)
+writefile("vape/profiles/"..bD..d.Place..".txt",bI)
+d:Load(true,bD)
+local bL=bJ and"Reinstalled"or"Downloaded"
+d:CreateNotification("Vape",`{bL} "{bm}" by @{bC.username}`,5,"info")
+bB.Text="REINSTALL"
+bA=true
+local bM,bN,bO=d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value
+bB.BackgroundColor3=bA and n.Dark(Color3.fromHSV(bM,bN,bO),0.3)
+or Color3.fromHSV(bM,bN,bO)
+Z()
 else
-d:CreateNotification("Vape",`Failed to fetch config ({aW})`,10,"warning")
+d:CreateNotification("Vape",`Failed to fetch config ({bm})`,10,"warning")
 end
 end)
 task.wait(0.15)
 end
 
 
-local function addSorting(aW,aX,aY)
-local aZ=aY.Size
-local a_=aY.On
+local function addSorting(bm,bn,bo)
+local bp=bo.Size
+local bq=bo.On
 
-local a0=Instance.new"TextButton"
-a0.Name=aW
-a0.Parent=aQ
-a0.BackgroundColor3=Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
-connectguicolorchange(a0)
-a0.BackgroundTransparency=a_ and 0 or 0.8
-a0.BorderSizePixel=0
-a0.Text=""
-a0.AutoButtonColor=false
-a0.Size=aZ
+local br=Instance.new"TextButton"
+br.Name=bm
+br.Parent=bg
+br.BackgroundColor3=Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
+connectguicolorchange(br)
+br.BackgroundTransparency=bq and 0 or 0.8
+br.BorderSizePixel=0
+br.Text=""
+br.AutoButtonColor=false
+br.Size=bp
 
-local a1=Instance.new"TextLabel"
-a1.Parent=a0
-a1.Name="label"
-a1.BackgroundTransparency=1
-a1.BorderSizePixel=0
-a1.Size=UDim2.new(1,0,1,0)
-a1.Font=Enum.Font.GothamBold
-a1.TextTransparency=a_ and 0 or 0.6
-a1.Text=aW:upper()
-a1.TextColor3=Color3.new(1,1,1)
-a1.TextSize=11
+local bs=Instance.new"TextLabel"
+bs.Parent=br
+bs.Name="label"
+bs.BackgroundTransparency=1
+bs.BorderSizePixel=0
+bs.Size=UDim2.new(1,0,1,0)
+bs.Font=Enum.Font.GothamBold
+bs.TextTransparency=bq and 0 or 0.6
+bs.Text=bm:upper()
+bs.TextColor3=Color3.new(1,1,1)
+bs.TextSize=11
 
-addCorner(a0,UDim.new(1,0))
+addCorner(br,UDim.new(1,0))
 
-local a2={
-SetVisible=function(a2)
-for a3,a4 in ai.Sorts do
-a4.Window.BackgroundTransparency=0.8
-a4.Window.label.TextTransparency=0.6
+local bt={
+SetVisible=function(bt)
+for bu,bv in ai.Sorts do
+bv.Window.BackgroundTransparency=0.8
+bv.Window.label.TextTransparency=0.6
 end
 
-a0.BackgroundTransparency=a2 and 0 or 0.8
-a1.TextTransparency=a2 and 0 or 0.6
+br.BackgroundTransparency=bt and 0 or 0.8
+bs.TextTransparency=bt and 0 or 0.6
 end,
-Window=a0,
+Window=br,
 }
 
-a0.Activated:Connect(function()
-a2:SetVisible(true)
-an=aW:lower()
-S()
+br.Activated:Connect(function()
+bt:SetVisible(true)
+ao=bm:lower()
+Z()
 end)
 
-table.insert(ai.Sorts,a2)
+table.insert(ai.Sorts,bt)
 
-return a2
+return bt
 end
 
 addSorting("newest",nil,{
@@ -8882,79 +9532,79 @@ Size=UDim2.fromOffset(90,32),
 On=false,
 })
 
-aj=H.Dropdown({
+aj=I.Dropdown({
 Name="Author",
 List={"all"},
-Function=function(aW)
-ak:Fire(aW)
+Function=function(bm)
+ak:Fire(bm)
 end,
 Default="all",
 Size=UDim2.new(0.2,0,0,40),
 Visible=false,
-},aQ,{Options={}})
+},bg,{Options={}})
 aj.Object.BackgroundTransparency=1
 
-local aW=Instance.new"TextLabel"
-aW.Parent=aQ
-aW.TextSize=15
-aW.LayoutOrder=5
-aW.TextColor3=Color3.fromRGB(200,200,200)
-aW.TextTransparency=1
-aW.Size=UDim2.new(0,600,1,0)
-aW.BackgroundTransparency=1
+local bm=Instance.new"TextLabel"
+bm.Parent=bg
+bm.TextSize=15
+bm.LayoutOrder=5
+bm.TextColor3=Color3.fromRGB(200,200,200)
+bm.TextTransparency=1
+bm.Size=UDim2.new(0,600,1,0)
+bm.BackgroundTransparency=1
 
-ar=function(aX,aY)
+ap=function(bn,bo)
 task.spawn(function()
-if aY~=nil then
-flickerTextEffect(aW,aY,aX)
-elseif aX~=nil then
-aW.Text=aX
+if bo~=nil then
+flickerTextEffect(bm,bo,bn)
+elseif bn~=nil then
+bm.Text=bn
 end
 end)
 end
 
 if getgenv().username~=nil then
-ar(`Welcome back {tostring(getgenv().username)}!`,true)
+ap(`Welcome back {tostring(getgenv().username)}!`,true)
 end
 
-as=function()
-ar(`Awesome configs made by & for awesome people :D`,true)
+aq=function()
+ap(`Awesome configs made by & for awesome people :D`,true)
 end
 
 
-aP:GetPropertyChangedSignal"Text":Connect(function()
-for aX,aY in ai do
-if aY and typeof(aY)=="table"and aY.instance then
-aY.instance.Visible=false
+bf:GetPropertyChangedSignal"Text":Connect(function()
+for bn,bo in ai do
+if bo and typeof(bo)=="table"and bo.instance then
+bo.instance.Visible=false
 
 if
-aX:lower():gsub(" ",""):find(aP.Text:lower():gsub(" ",""),1,true)
-or aP.Text==""
+bn:lower():gsub(" ",""):find(bf.Text:lower():gsub(" ",""),1,true)
+or bf.Text==""
 then
-aY.instance.Visible=true
+bo.instance.Visible=true
 end
 end
 end
 end)
 
-af.Event:Connect(S)
+af.Event:Connect(Z)
 
 
-local aX=false
-aw:GetPropertyChangedSignal"Visible":Connect(function()
-if not aw.Visible then
-if aX then
-v.Visible=true
-aX=false
+local bn=false
+aD:GetPropertyChangedSignal"Visible":Connect(function()
+if not aD.Visible then
+if bn then
+w.Visible=true
+bn=false
 end
-az.Visible=false
+L.Visible=false
 else
-v.Visible=false
-aX=true
+w.Visible=false
+bn=true
 end
-local aY=d
-if not aY.UpdateGUI then return end
-aY:UpdateGUI(aY.GUIColor.Hue,aY.GUIColor.Sat,aY.GUIColor.Value)
+local bo=d
+if not bo.UpdateGUI then return end
+bo:UpdateGUI(bo.GUIColor.Hue,bo.GUIColor.Sat,bo.GUIColor.Value)
 end)
 
 ag.PublicConfigs=ai
@@ -8977,7 +9627,7 @@ local aj=Instance.new"TextButton"
 aj.Name=ah.Name.."CategoryList"
 aj.Size=UDim2.fromOffset(220,45)
 aj.Position=UDim2.fromOffset(240,46)
-aj.BackgroundColor3=o.Main
+aj.BackgroundColor3=p.Main
 aj.AutoButtonColor=false
 aj.Visible=false
 local ak
@@ -8996,7 +9646,7 @@ am.Thickness=0
 connectguicolorchange(function(an,ao,ap)
 local aq=Color3.fromHSV(an,ao,ap)
 if not ag.NewUser then
-am.Color=m.Light(aq,0.2)
+am.Color=n.Light(aq,0.2)
 else
 am.Color=Color3.fromRGB(255,255,255)
 end
@@ -9018,12 +9668,12 @@ ao.globeicon=ak
 if not an then
 an=true
 aj.MouseEnter:Connect(function()
-n:Tween(am,TweenInfo.new(0.15),{
+o:Tween(am,TweenInfo.new(0.15),{
 Thickness=3
 })
 end)
 aj.MouseLeave:Connect(function()
-n:Tween(am,TweenInfo.new(0.15),{
+o:Tween(am,TweenInfo.new(0.15),{
 Thickness=0
 })
 end)
@@ -9033,7 +9683,7 @@ end
 }
 end
 aj.Text=""
-aj.Parent=v
+aj.Parent=w
 addBlur(aj)
 addCorner(aj)
 makeDraggable(aj)
@@ -9044,7 +9694,7 @@ al.Position=ah.Position
 or UDim2.fromOffset(12,(ah.Size.X.Offset>20 and 13 or 12))
 al.BackgroundTransparency=1
 al.Image=ah.Icon
-al.ImageColor3=o.Text
+al.ImageColor3=p.Text
 al.Parent=aj
 local am=Instance.new"TextLabel"
 am.Name="Title"
@@ -9053,9 +9703,9 @@ am.Position=UDim2.fromOffset(math.abs(am.Size.X.Offset),12)
 am.BackgroundTransparency=1
 am.Text=ah.Name
 am.TextXAlignment=Enum.TextXAlignment.Left
-am.TextColor3=o.Text
+am.TextColor3=p.Text
 am.TextSize=13
-am.FontFace=o.Font
+am.FontFace=p.Font
 am.Parent=aj
 local an=Instance.new"TextButton"
 an.Name="Arrow"
@@ -9069,7 +9719,7 @@ ao.Name="Arrow"
 ao.Size=UDim2.fromOffset(9,4)
 ao.Position=UDim2.fromOffset(20,19)
 ao.BackgroundTransparency=1
-ao.Image=u"vape/assets/new/expandup.png"
+ao.Image=v"vape/assets/new/expandup.png"
 ao.ImageColor3=Color3.fromRGB(140,140,140)
 ao.Rotation=180
 ao.Parent=an
@@ -9086,7 +9736,7 @@ ap.CanvasSize=UDim2.new()
 ap.Parent=aj
 local aq=Instance.new"Frame"
 aq.BackgroundTransparency=1
-aq.BackgroundColor3=m.Dark(o.Main,0.02)
+aq.BackgroundColor3=n.Dark(p.Main,0.02)
 aq.Visible=false
 aq.Parent=ap
 local ar=Instance.new"ImageButton"
@@ -9095,8 +9745,8 @@ ar.Size=UDim2.fromOffset(16,16)
 ar.Position=UDim2.new(1,-52,0,13)
 ar.BackgroundTransparency=1
 ar.AutoButtonColor=false
-ar.Image=ah.Name~="Profiles"and u"vape/assets/new/customsettings.png"or u"vape/assets/new/worldicon.png"
-ar.ImageColor3=m.Dark(o.Text,0.43)
+ar.Image=ah.Name~="Profiles"and v"vape/assets/new/customsettings.png"or v"vape/assets/new/worldicon.png"
+ar.ImageColor3=n.Dark(p.Text,0.43)
 ar.Parent=aj
 if ah.Profiles then
 ak=ar
@@ -9123,7 +9773,7 @@ au.Parent=aq
 local av
 local aw
 if ah.Profiles then
-av=H.Button({
+av=I.Button({
 Name="Sync to 'default' profile",
 Function=function()
 local ax=d.Profile
@@ -9139,7 +9789,7 @@ Tooltip="Transfers your current profile to the 'default' one",
 Visible=false,
 BackgroundTransparency=1
 },ap,{Options={}})
-aw=H.Button({
+aw=I.Button({
 Name="Create new profile",
 Function=function()
 d:CreatePrompt{
@@ -9168,7 +9818,7 @@ Tooltip="Creates a brand new profile",
 Visible=false,
 BackgroundTransparency=1,
 },ap,{Options={}})
-H.Button({
+I.Button({
 Name="Reset current profile",
 Function=function()
 d:CreatePrompt{
@@ -9182,7 +9832,7 @@ CancelColor=Color3.fromRGB(40,120,40),
 CancelHoverColor=Color3.fromRGB(60,170,60),
 OnConfirm=function()
 d.Save=function()end
-if D("vape/profiles/"..d.Profile..d.Place..".txt")and delfile then
+if E("vape/profiles/"..d.Profile..d.Place..".txt")and delfile then
 delfile("vape/profiles/"..d.Profile..d.Place..".txt")
 end
 shared.vapereload=true
@@ -9210,13 +9860,13 @@ local ax=Instance.new"Frame"
 ax.Name="Add"
 ax.Size=UDim2.fromOffset(200,31)
 ax.Position=UDim2.fromOffset(10,45)
-ax.BackgroundColor3=m.Light(o.Main,0.02)
+ax.BackgroundColor3=n.Light(p.Main,0.02)
 ax.Parent=ap
 addCorner(ax)
 local ay=ax:Clone()
 ay.Size=UDim2.new(1,-2,1,-2)
 ay.Position=UDim2.fromOffset(1,1)
-ay.BackgroundColor3=m.Dark(o.Main,0.02)
+ay.BackgroundColor3=n.Dark(p.Main,0.02)
 ay.Parent=ax
 local az=Instance.new"TextBox"
 az.Size=UDim2.new(1,-35,1,0)
@@ -9227,7 +9877,7 @@ az.PlaceholderText=ah.Placeholder or"Add entry..."
 az.TextXAlignment=Enum.TextXAlignment.Left
 az.TextColor3=Color3.new(1,1,1)
 az.TextSize=15
-az.FontFace=o.Font
+az.FontFace=p.Font
 az.ClearTextOnFocus=false
 az.Parent=ax
 local aA=Instance.new"ImageButton"
@@ -9235,7 +9885,7 @@ aA.Name="AddButton"
 aA.Size=UDim2.fromOffset(16,16)
 aA.Position=UDim2.new(1,-26,0,8)
 aA.BackgroundTransparency=1
-aA.Image=u"vape/assets/new/add.png"
+aA.Image=v"vape/assets/new/add.png"
 aA.ImageColor3=ah.Color
 aA.ImageTransparency=0.3
 aA.Parent=ax
@@ -9265,7 +9915,7 @@ local aE=aC:GetValue(aD)
 if aE then
 if aD~="default"then
 table.remove(d.Profiles,aE)
-if D("vape/profiles/"..aD..d.Place..".txt")and delfile then
+if E("vape/profiles/"..aD..d.Place..".txt")and delfile then
 delfile("vape/profiles/"..aD..d.Place..".txt")
 end
 end
@@ -9301,277 +9951,277 @@ aC.Selected=nil
 
 for aE,aF in(ah.Profiles and d.Profiles or aC.List)do
 if ah.Profiles then
-local aH=Instance.new"TextButton"
-aH.Name=aF.Name
-aH.Size=UDim2.fromOffset(200,33)
-aH.BackgroundColor3=m.Light(o.Main,0.02)
-aH.AutoButtonColor=false
-aH.Text=""
-aH.Parent=ap
-addCorner(aH)
-local aI=Instance.new"UIStroke"
-aI.Color=m.Light(o.Main,0.1)
-aI.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
-aI.Enabled=false
-aI.Parent=aH
-local aJ=Instance.new"TextLabel"
-aJ.Name="Title"
-aJ.Size=UDim2.new(1,-10,1,0)
-aJ.Position=UDim2.fromOffset(10,0)
+local aG=Instance.new"TextButton"
+aG.Name=aF.Name
+aG.Size=UDim2.fromOffset(200,33)
+aG.BackgroundColor3=n.Light(p.Main,0.02)
+aG.AutoButtonColor=false
+aG.Text=""
+aG.Parent=ap
+addCorner(aG)
+local aH=Instance.new"UIStroke"
+aH.Color=n.Light(p.Main,0.1)
+aH.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
+aH.Enabled=false
+aH.Parent=aG
+local aI=Instance.new"TextLabel"
+aI.Name="Title"
+aI.Size=UDim2.new(1,-10,1,0)
+aI.Position=UDim2.fromOffset(10,0)
+aI.BackgroundTransparency=1
+aI.Text=aF.Name
+aI.TextTruncate=Enum.TextTruncate.AtEnd
+aI.TextXAlignment=Enum.TextXAlignment.Left
+aI.TextColor3=n.Dark(p.Text,0.4)
+aI.TextSize=15
+aI.FontFace=p.Font
+aI.Parent=aG
+local aJ=Instance.new"TextButton"
+aJ.Name="Dots"
+aJ.Size=UDim2.fromOffset(25,33)
+aJ.Position=UDim2.new(1,-25,0,0)
 aJ.BackgroundTransparency=1
-aJ.Text=aF.Name
-aJ.TextTruncate=Enum.TextTruncate.AtEnd
-aJ.TextXAlignment=Enum.TextXAlignment.Left
-aJ.TextColor3=m.Dark(o.Text,0.4)
-aJ.TextSize=15
-aJ.FontFace=o.Font
-aJ.Parent=aH
-local aK=Instance.new"TextButton"
+aJ.Text=""
+aJ.Parent=aG
+local aK=Instance.new"ImageLabel"
 aK.Name="Dots"
-aK.Size=UDim2.fromOffset(25,33)
-aK.Position=UDim2.new(1,-25,0,0)
+aK.Size=UDim2.fromOffset(3,16)
+aK.Position=UDim2.fromOffset(10,9)
 aK.BackgroundTransparency=1
-aK.Text=""
-aK.Parent=aH
-local aL=Instance.new"ImageLabel"
-aL.Name="Dots"
-aL.Size=UDim2.fromOffset(3,16)
-aL.Position=UDim2.fromOffset(10,9)
-aL.BackgroundTransparency=1
-aL.Image=u"vape/assets/new/dots.png"
-aL.ImageColor3=m.Light(o.Main,0.37)
-aL.Parent=aK
-local aM=Instance.new"TextButton"
-addTooltip(aM,"Click to bind")
-aM.Name="Bind"
-aM.Size=UDim2.fromOffset(20,21)
-aM.Position=UDim2.new(1,-30,0,6)
-aM.AnchorPoint=Vector2.new(1,0)
-aM.BackgroundColor3=Color3.new(1,1,1)
-aM.BackgroundTransparency=0.92
-aM.BorderSizePixel=0
-aM.AutoButtonColor=false
-aM.Visible=false
-aM.Text=""
-addCorner(aM,UDim.new(0,4))
-local aN=Instance.new"ImageLabel"
-aN.Name="Icon"
-aN.Size=UDim2.fromOffset(12,12)
-aN.Position=UDim2.new(0.5,-6,0,5)
+aK.Image=v"vape/assets/new/dots.png"
+aK.ImageColor3=n.Light(p.Main,0.37)
+aK.Parent=aJ
+local aL=Instance.new"TextButton"
+addTooltip(aL,"Click to bind")
+aL.Name="Bind"
+aL.Size=UDim2.fromOffset(20,21)
+aL.Position=UDim2.new(1,-30,0,6)
+aL.AnchorPoint=Vector2.new(1,0)
+aL.BackgroundColor3=Color3.new(1,1,1)
+aL.BackgroundTransparency=0.92
+aL.BorderSizePixel=0
+aL.AutoButtonColor=false
+aL.Visible=false
+aL.Text=""
+addCorner(aL,UDim.new(0,4))
+local aM=Instance.new"ImageLabel"
+aM.Name="Icon"
+aM.Size=UDim2.fromOffset(12,12)
+aM.Position=UDim2.new(0.5,-6,0,5)
+aM.BackgroundTransparency=1
+aM.Image=v"vape/assets/new/bind.png"
+aM.ImageColor3=n.Dark(p.Text,0.43)
+aM.Parent=aL
+local aN=Instance.new"TextLabel"
+aN.Size=UDim2.fromScale(1,1)
+aN.Position=UDim2.fromOffset(0,1)
 aN.BackgroundTransparency=1
-aN.Image=u"vape/assets/new/bind.png"
-aN.ImageColor3=m.Dark(o.Text,0.43)
-aN.Parent=aM
-local aO=Instance.new"TextLabel"
-aO.Size=UDim2.fromScale(1,1)
-aO.Position=UDim2.fromOffset(0,1)
+aN.Visible=false
+aN.Text=""
+aN.TextColor3=n.Dark(p.Text,0.43)
+aN.TextSize=12
+aN.FontFace=p.Font
+aN.Parent=aL
+aL.MouseEnter:Connect(function()
+aN.Visible=false
+aM.Visible=not aN.Visible
+aM.Image=v"vape/assets/new/edit.png"
+if aF.Name~=d.Profile then
+aM.ImageColor3=n.Dark(p.Text,0.16)
+end
+end)
+aL.MouseLeave:Connect(function()
+aN.Visible=#aF.Bind>0
+aM.Visible=not aN.Visible
+aM.Image=v"vape/assets/new/bind.png"
+if aF.Name~=d.Profile then
+aM.ImageColor3=n.Dark(p.Text,0.43)
+end
+end)
+local aO=Instance.new"ImageLabel"
+aO.Name="Cover"
+aO.Size=UDim2.fromOffset(154,33)
 aO.BackgroundTransparency=1
 aO.Visible=false
-aO.Text=""
-aO.TextColor3=m.Dark(o.Text,0.43)
-aO.TextSize=12
-aO.FontFace=o.Font
-aO.Parent=aM
-aM.MouseEnter:Connect(function()
-aO.Visible=false
-aN.Visible=not aO.Visible
-aN.Image=u"vape/assets/new/edit.png"
-if aF.Name~=d.Profile then
-aN.ImageColor3=m.Dark(o.Text,0.16)
-end
-end)
-aM.MouseLeave:Connect(function()
-aO.Visible=#aF.Bind>0
-aN.Visible=not aO.Visible
-aN.Image=u"vape/assets/new/bind.png"
-if aF.Name~=d.Profile then
-aN.ImageColor3=m.Dark(o.Text,0.43)
-end
-end)
-local aP=Instance.new"ImageLabel"
-aP.Name="Cover"
-aP.Size=UDim2.fromOffset(154,33)
+aO.Image=v"vape/assets/new/bindbkg.png"
+aO.ScaleType=Enum.ScaleType.Slice
+aO.SliceCenter=Rect.new(0,0,141,40)
+aO.Parent=aG
+local aP=Instance.new"TextLabel"
+aP.Name="Text"
+aP.Size=UDim2.new(1,-10,1,-3)
 aP.BackgroundTransparency=1
-aP.Visible=false
-aP.Image=u"vape/assets/new/bindbkg.png"
-aP.ScaleType=Enum.ScaleType.Slice
-aP.SliceCenter=Rect.new(0,0,141,40)
-aP.Parent=aH
-local aQ=Instance.new"TextLabel"
-aQ.Name="Text"
-aQ.Size=UDim2.new(1,-10,1,-3)
-aQ.BackgroundTransparency=1
-aQ.Text="PRESS A KEY TO BIND"
-aQ.TextColor3=o.Text
-aQ.TextSize=11
-aQ.FontFace=o.Font
-aQ.Parent=aP
-aM.Parent=aH
-aK.MouseEnter:Connect(function()
+aP.Text="PRESS A KEY TO BIND"
+aP.TextColor3=p.Text
+aP.TextSize=11
+aP.FontFace=p.Font
+aP.Parent=aO
+aL.Parent=aG
+aJ.MouseEnter:Connect(function()
 if aF.Name~=d.Profile then
-aL.ImageColor3=o.Text
+aK.ImageColor3=p.Text
 end
 end)
-aK.MouseLeave:Connect(function()
+aJ.MouseLeave:Connect(function()
 if aF.Name~=d.Profile then
-aL.ImageColor3=m.Light(o.Main,0.37)
+aK.ImageColor3=n.Light(p.Main,0.37)
 end
 end)
-aK.Activated:Connect(function()
+aJ.Activated:Connect(function()
 if aF.Name~=d.Profile then
 ai:ChangeValue(aF.Name)
 end
 end)
-aH.Activated:Connect(function()
-d:Save(aF.Name,not D("vape/profiles/"..aF.Name..d.Place..".txt"))
+aG.Activated:Connect(function()
+d:Save(aF.Name,not E("vape/profiles/"..aF.Name..d.Place..".txt"))
 d:Load(true,aF.Name)
 end)
-aH.MouseEnter:Connect(function()
-aM.Visible=true
+aG.MouseEnter:Connect(function()
+aL.Visible=true
 if aF.Name~=d.Profile then
-aI.Enabled=true
-aJ.TextColor3=m.Dark(o.Text,0.16)
+aH.Enabled=true
+aI.TextColor3=n.Dark(p.Text,0.16)
 end
 end)
-aH.MouseLeave:Connect(function()
-aM.Visible=#aF.Bind>0
+aG.MouseLeave:Connect(function()
+aL.Visible=#aF.Bind>0
 if aF.Name~=d.Profile then
-aI.Enabled=false
-aJ.TextColor3=m.Dark(o.Text,0.4)
+aH.Enabled=false
+aI.TextColor3=n.Dark(p.Text,0.4)
 end
 end)
 
-local function bindFunction(aR,aS,aT)
-aF.Bind=table.clone(aS)
-if aT then
-aQ.Text=#aS<=0 and"BIND REMOVED"
-or"BOUND TO "..table.concat(aS," + "):upper()
-aP.Size=
-UDim2.fromOffset(E(aQ.Text,aQ.TextSize).X+20,40)
+local function bindFunction(aQ,aR,aS)
+aF.Bind=table.clone(aR)
+if aS then
+aP.Text=#aR<=0 and"BIND REMOVED"
+or"BOUND TO "..table.concat(aR," + "):upper()
+aO.Size=
+UDim2.fromOffset(F(aP.Text,aP.TextSize).X+20,40)
 task.delay(1,function()
-aP.Visible=false
+aO.Visible=false
 end)
 end
 
-if#aS<=0 then
-aO.Visible=false
-aN.Visible=true
-aM.Size=UDim2.fromOffset(20,21)
-else
-aM.Visible=true
-aO.Visible=true
+if#aR<=0 then
 aN.Visible=false
-aO.Text=table.concat(aS," + "):upper()
-aM.Size=UDim2.fromOffset(
-math.max(E(aO.Text,aO.TextSize,aO.Font).X+10,20),
+aM.Visible=true
+aL.Size=UDim2.fromOffset(20,21)
+else
+aL.Visible=true
+aN.Visible=true
+aM.Visible=false
+aN.Text=table.concat(aR," + "):upper()
+aL.Size=UDim2.fromOffset(
+math.max(F(aN.Text,aN.TextSize,aN.Font).X+10,20),
 21
 )
 end
 end
 
 bindFunction({},aF.Bind)
-aM.Activated:Connect(function()
-aQ.Text="PRESS A KEY TO BIND"
-aP.Size=
-UDim2.fromOffset(E(aQ.Text,aQ.TextSize).X+20,40)
-aP.Visible=true
+aL.Activated:Connect(function()
+aP.Text="PRESS A KEY TO BIND"
+aO.Size=
+UDim2.fromOffset(F(aP.Text,aP.TextSize).X+20,40)
+aO.Visible=true
 d.Binding={SetBind=bindFunction,Bind=aF.Bind}
 end)
 if aF.Name==d.Profile then
-aC.Selected=aH
+aC.Selected=aG
 end
-table.insert(aC.Objects,aH)
+table.insert(aC.Objects,aG)
 else
-local aH=table.find(aC.ListEnabled,aF)
-local aI=Instance.new"TextButton"
-aI.Name=aF
-aI.Size=UDim2.fromOffset(200,32)
-aI.BackgroundColor3=m.Light(o.Main,0.02)
-aI.AutoButtonColor=false
-aI.Text=""
-aI.Parent=ap
+local aG=table.find(aC.ListEnabled,aF)
+local aH=Instance.new"TextButton"
+aH.Name=aF
+aH.Size=UDim2.fromOffset(200,32)
+aH.BackgroundColor3=n.Light(p.Main,0.02)
+aH.AutoButtonColor=false
+aH.Text=""
+aH.Parent=ap
+addCorner(aH)
+local aI=Instance.new"Frame"
+aI.Name="BKG"
+aI.Size=UDim2.new(1,-2,1,-2)
+aI.Position=UDim2.fromOffset(1,1)
+aI.BackgroundColor3=p.Main
+aI.Visible=false
+aI.Parent=aH
 addCorner(aI)
 local aJ=Instance.new"Frame"
-aJ.Name="BKG"
-aJ.Size=UDim2.new(1,-2,1,-2)
-aJ.Position=UDim2.fromOffset(1,1)
-aJ.BackgroundColor3=o.Main
-aJ.Visible=false
-aJ.Parent=aI
-addCorner(aJ)
-local aK=Instance.new"Frame"
-aK.Name="Dot"
-aK.Size=UDim2.fromOffset(10,11)
-aK.Position=UDim2.fromOffset(10,12)
-aK.BackgroundColor3=aH and ah.Color or m.Light(o.Main,0.37)
-aK.Parent=aI
-addCorner(aK,UDim.new(1,0))
-local aL=aK:Clone()
-aL.Size=UDim2.fromOffset(8,9)
-aL.Position=UDim2.fromOffset(1,1)
-aL.BackgroundColor3=aH and ah.Color or m.Light(o.Main,0.02)
-aL.Parent=aK
-local aM=Instance.new"TextLabel"
-aM.Name="Title"
-aM.Size=UDim2.new(1,-30,1,0)
-aM.Position=UDim2.fromOffset(30,0)
-aM.BackgroundTransparency=1
-aM.Text=aF
-aM.TextXAlignment=Enum.TextXAlignment.Left
-aM.TextColor3=m.Dark(o.Text,0.16)
-aM.TextSize=15
-aM.FontFace=o.Font
-aM.Parent=aI
+aJ.Name="Dot"
+aJ.Size=UDim2.fromOffset(10,11)
+aJ.Position=UDim2.fromOffset(10,12)
+aJ.BackgroundColor3=aG and ah.Color or n.Light(p.Main,0.37)
+aJ.Parent=aH
+addCorner(aJ,UDim.new(1,0))
+local aK=aJ:Clone()
+aK.Size=UDim2.fromOffset(8,9)
+aK.Position=UDim2.fromOffset(1,1)
+aK.BackgroundColor3=aG and ah.Color or n.Light(p.Main,0.02)
+aK.Parent=aJ
+local aL=Instance.new"TextLabel"
+aL.Name="Title"
+aL.Size=UDim2.new(1,-30,1,0)
+aL.Position=UDim2.fromOffset(30,0)
+aL.BackgroundTransparency=1
+aL.Text=aF
+aL.TextXAlignment=Enum.TextXAlignment.Left
+aL.TextColor3=n.Dark(p.Text,0.16)
+aL.TextSize=15
+aL.FontFace=p.Font
+aL.Parent=aH
 if d.ThreadFix then
 setthreadidentity(8)
 end
-local aN=Instance.new"ImageButton"
-aN.Name="Close"
-aN.Size=UDim2.fromOffset(16,16)
-aN.Position=UDim2.new(1,-23,0,8)
-aN.BackgroundColor3=Color3.new(1,1,1)
-aN.BackgroundTransparency=1
-aN.AutoButtonColor=false
-aN.Image=u"vape/assets/new/closemini.png"
-aN.ImageColor3=m.Light(o.Text,0.2)
-aN.ImageTransparency=0.5
-aN.Parent=aI
-addCorner(aN,UDim.new(1,0))
-aN.MouseEnter:Connect(function()
-aN.ImageTransparency=0.3
-n:Tween(aN,o.Tween,{
+local aM=Instance.new"ImageButton"
+aM.Name="Close"
+aM.Size=UDim2.fromOffset(16,16)
+aM.Position=UDim2.new(1,-23,0,8)
+aM.BackgroundColor3=Color3.new(1,1,1)
+aM.BackgroundTransparency=1
+aM.AutoButtonColor=false
+aM.Image=v"vape/assets/new/closemini.png"
+aM.ImageColor3=n.Light(p.Text,0.2)
+aM.ImageTransparency=0.5
+aM.Parent=aH
+addCorner(aM,UDim.new(1,0))
+aM.MouseEnter:Connect(function()
+aM.ImageTransparency=0.3
+o:Tween(aM,p.Tween,{
 BackgroundTransparency=0.6,
 })
 end)
-aN.MouseLeave:Connect(function()
-aN.ImageTransparency=0.5
-n:Tween(aN,o.Tween,{
+aM.MouseLeave:Connect(function()
+aM.ImageTransparency=0.5
+o:Tween(aM,p.Tween,{
 BackgroundTransparency=1,
 })
 end)
-aN.Activated:Connect(function()
+aM.Activated:Connect(function()
 ai:ChangeValue(aF)
 end)
-aI.MouseEnter:Connect(function()
-aJ.Visible=true
+aH.MouseEnter:Connect(function()
+aI.Visible=true
 end)
-aI.MouseLeave:Connect(function()
-aJ.Visible=false
+aH.MouseLeave:Connect(function()
+aI.Visible=false
 end)
-aI.Activated:Connect(function()
-local aO=table.find(aC.ListEnabled,aF)
-if aO then
-table.remove(aC.ListEnabled,aO)
-aK.BackgroundColor3=m.Light(o.Main,0.37)
-aL.BackgroundColor3=m.Light(o.Main,0.02)
+aH.Activated:Connect(function()
+local aN=table.find(aC.ListEnabled,aF)
+if aN then
+table.remove(aC.ListEnabled,aN)
+aJ.BackgroundColor3=n.Light(p.Main,0.37)
+aK.BackgroundColor3=n.Light(p.Main,0.02)
 else
 table.insert(aC.ListEnabled,aF)
+aJ.BackgroundColor3=ah.Color
 aK.BackgroundColor3=ah.Color
-aL.BackgroundColor3=ah.Color
 end
 ah.Function()
 end)
-table.insert(aC.Objects,aI)
+table.insert(aC.Objects,aH)
 end
 end
 d:UpdateGUI(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
@@ -9583,7 +10233,7 @@ ap.Visible=aC.Expanded
 ao.Rotation=aC.Expanded and 0 or 180
 aj.Size=UDim2.fromOffset(
 220,
-aC.Expanded and math.min(51+at.AbsoluteContentSize.Y/A.Scale,611)or 45
+aC.Expanded and math.min(51+at.AbsoluteContentSize.Y/B.Scale,611)or 45
 )
 as.Visible=ap.CanvasPosition.Y>10 and ap.Visible
 end
@@ -9596,7 +10246,7 @@ end
 end
 end
 
-for aC,aD in H do
+for aC,aD in I do
 ai["Create"..aC]=function(aE,aF)
 return aD(aF,aq,ai)
 end
@@ -9642,23 +10292,23 @@ az.Text=""
 end
 end)
 az.MouseEnter:Connect(function()
-n:Tween(ax,o.Tween,{
-BackgroundColor3=m.Light(o.Main,0.14),
+o:Tween(ax,p.Tween,{
+BackgroundColor3=n.Light(p.Main,0.14),
 })
 end)
 az.MouseLeave:Connect(function()
-n:Tween(ax,o.Tween,{
-BackgroundColor3=m.Light(o.Main,0.02),
+o:Tween(ax,p.Tween,{
+BackgroundColor3=n.Light(p.Main,0.02),
 })
 end)
 ap:GetPropertyChangedSignal"CanvasPosition":Connect(function()
 as.Visible=ap.CanvasPosition.Y>10 and ap.Visible
 end)
 ar.MouseEnter:Connect(function()
-ar.ImageColor3=o.Text
+ar.ImageColor3=p.Text
 end)
 ar.MouseLeave:Connect(function()
-ar.ImageColor3=m.Light(o.Main,0.37)
+ar.ImageColor3=n.Light(p.Main,0.37)
 end)
 
 if ah.Profiles then
@@ -9692,9 +10342,9 @@ at:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
 if ag.ThreadFix then
 setthreadidentity(8)
 end
-ap.CanvasSize=UDim2.fromOffset(0,at.AbsoluteContentSize.Y/A.Scale)
+ap.CanvasSize=UDim2.fromOffset(0,at.AbsoluteContentSize.Y/B.Scale)
 if ai.Expanded then
-aj.Size=UDim2.fromOffset(220,math.min(51+at.AbsoluteContentSize.Y/A.Scale,611))
+aj.Size=UDim2.fromOffset(220,math.min(51+at.AbsoluteContentSize.Y/B.Scale,611))
 end
 end)
 au:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
@@ -9729,7 +10379,7 @@ ah.BackgroundColor3=Color3.new(1,1,1)
 ah.BackgroundTransparency=0.6
 ah.BorderSizePixel=0
 ah.Parent=ag
-n:Tween(ah,TweenInfo.new(0.5),{
+o:Tween(ah,TweenInfo.new(0.5),{
 BackgroundTransparency=1,
 })
 task.delay(0.5,ah.Destroy,ah)
@@ -9741,73 +10391,88 @@ ah.Name="Search"
 ah.Size=UDim2.fromOffset(220,37)
 ah.Position=UDim2.new(0.5,0,0,13)
 ah.AnchorPoint=Vector2.new(0.5,0)
-ah.BackgroundColor3=m.Dark(o.Main,0.02)
-ah.Parent=v
-local ai=Instance.new"ImageLabel"
-ai.Name="Icon"
-ai.Size=UDim2.fromOffset(14,14)
-ai.Position=UDim2.new(1,-23,0,11)
-ai.BackgroundTransparency=1
-ai.Image=u"vape/assets/new/search.png"
-ai.ImageColor3=m.Light(o.Main,0.37)
+ah.BackgroundColor3=n.Dark(p.Main,0.02)
+ah.Parent=w
+local ai=Instance.new"UIScale"
 ai.Parent=ah
-local aj=Instance.new"ImageButton"
-aj.Name="Legit"
-aj.Size=UDim2.fromOffset(29,16)
-aj.Position=UDim2.fromOffset(8,11)
+ai.Scale=1
+
+ah.MouseEnter:Connect(function()
+o:Tween(ai,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+Scale=1.15
+})
+end)
+ah.MouseLeave:Connect(function()
+o:Tween(ai,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+Scale=1
+})
+end)
+
+local aj=Instance.new"ImageLabel"
+aj.Name="Icon"
+aj.Size=UDim2.fromOffset(14,14)
+aj.Position=UDim2.new(1,-23,0,11)
 aj.BackgroundTransparency=1
-aj.Image=u"vape/assets/new/legit.png"
+aj.Image=v"vape/assets/new/search.png"
+aj.ImageColor3=n.Light(p.Main,0.37)
 aj.Parent=ah
-local ak=Instance.new"Frame"
-ak.Name="LegitDivider"
-ak.Size=UDim2.fromOffset(2,12)
-ak.Position=UDim2.fromOffset(43,13)
-ak.BackgroundColor3=m.Light(o.Main,0.14)
-ak.BorderSizePixel=0
+local ak=Instance.new"ImageButton"
+ak.Name="Legit"
+ak.Size=UDim2.fromOffset(29,16)
+ak.Position=UDim2.fromOffset(8,11)
+ak.BackgroundTransparency=1
+ak.Image=v"vape/assets/new/legit.png"
 ak.Parent=ah
+local al=Instance.new"Frame"
+al.Name="LegitDivider"
+al.Size=UDim2.fromOffset(2,12)
+al.Position=UDim2.fromOffset(43,13)
+al.BackgroundColor3=n.Light(p.Main,0.14)
+al.BorderSizePixel=0
+al.Parent=ah
 addBlur(ah)
 addCorner(ah)
-local al=Instance.new"TextBox"
-al.Size=UDim2.new(1,-50,0,37)
-al.Position=UDim2.fromOffset(50,0)
-al.BackgroundTransparency=1
-al.Text=""
-al.PlaceholderText=""
-al.TextXAlignment=Enum.TextXAlignment.Left
-al.TextColor3=o.Text
-al.TextSize=12
-al.FontFace=o.Font
-al.ClearTextOnFocus=false
-al.Parent=ah
-local am=Instance.new"ScrollingFrame"
-am.Name="Children"
-am.Size=UDim2.new(1,0,1,-37)
-am.Position=UDim2.fromOffset(0,34)
+local am=Instance.new"TextBox"
+am.Size=UDim2.new(1,-50,0,37)
+am.Position=UDim2.fromOffset(50,0)
 am.BackgroundTransparency=1
-am.BorderSizePixel=0
-am.ScrollBarThickness=2
-am.ScrollBarImageTransparency=0.75
-am.CanvasSize=UDim2.new()
+am.Text=""
+am.PlaceholderText=""
+am.TextXAlignment=Enum.TextXAlignment.Left
+am.TextColor3=p.Text
+am.TextSize=12
+am.FontFace=p.Font
+am.ClearTextOnFocus=false
 am.Parent=ah
-local an=Instance.new"Frame"
-an.Name="Divider"
-an.Size=UDim2.new(1,0,0,1)
-an.Position=UDim2.fromOffset(0,33)
-an.BackgroundColor3=Color3.new(1,1,1)
-an.BackgroundTransparency=0.928
+local an=Instance.new"ScrollingFrame"
+an.Name="Children"
+an.Size=UDim2.new(1,0,1,-37)
+an.Position=UDim2.fromOffset(0,34)
+an.BackgroundTransparency=1
 an.BorderSizePixel=0
-an.Visible=false
+an.ScrollBarThickness=2
+an.ScrollBarImageTransparency=0.75
+an.CanvasSize=UDim2.new()
 an.Parent=ah
-local ao=Instance.new"UIListLayout"
-ao.SortOrder=Enum.SortOrder.LayoutOrder
-ao.HorizontalAlignment=Enum.HorizontalAlignment.Center
-ao.Parent=am
+local ao=Instance.new"Frame"
+ao.Name="Divider"
+ao.Size=UDim2.new(1,0,0,1)
+ao.Position=UDim2.fromOffset(0,33)
+ao.BackgroundColor3=Color3.new(1,1,1)
+ao.BackgroundTransparency=0.928
+ao.BorderSizePixel=0
+ao.Visible=false
+ao.Parent=ah
+local ap=Instance.new"UIListLayout"
+ap.SortOrder=Enum.SortOrder.LayoutOrder
+ap.HorizontalAlignment=Enum.HorizontalAlignment.Center
+ap.Parent=an
 
-am:GetPropertyChangedSignal"CanvasPosition":Connect(function()
-an.Visible=am.CanvasPosition.Y>10 and am.Visible
+an:GetPropertyChangedSignal"CanvasPosition":Connect(function()
+ao.Visible=an.CanvasPosition.Y>10 and an.Visible
 end)
-aj.Activated:Connect(function()
-v.Visible=false
+ak.Activated:Connect(function()
+w.Visible=false
 ag.Legit.Window.Visible=true
 ag.Legit.Window.Position=UDim2.new(0.5,-350,0.5,-194)
 end)
@@ -9849,110 +10514,166 @@ end)
 
 
 
-local ap=false
-local aq
-al:GetPropertyChangedSignal"Text":Connect(function()
-if aq~=nil then
+local aq=false
+local ar
+am:GetPropertyChangedSignal"Text":Connect(function()
+if ar~=nil then
 pcall(function()
-task.cancel(aq)
+task.cancel(ar)
 end)
-aq=nil
+ar=nil
 end
-for ar,as in am:GetChildren()do
-if as:IsA"TextButton"then
-as:Destroy()
+for as,at in an:GetChildren()do
+if at:IsA"TextButton"then
+at:Destroy()
 end
 end
-if al.Text=="Type to search..."then
+if am.Text=="Type to search..."then
 return
 end
-if al.Text==""then
-if not ap then
-flickerTextEffect(al,true,"Type to search...")
+if am.Text==""then
+if not aq then
+flickerTextEffect(am,true,"Type to search...")
 end
 return
 end
 
-aq=task.spawn(function()
-for ar,as in ag.Modules do
-if ar:lower():find(al.Text:lower())then
-local at=as.Object:Clone()
-at.Bind:Destroy()
-at.Activated:Connect(function()
-as:Toggle()
+ar=task.spawn(function()
+for as,at in ag.Modules do
+if not(at.Object~=nil and at.Object.Parent~=nil and at.Object:FindFirstChild"Bind")then continue end
+local au=am.Text:lower()
+au=removeSpaces(au)
+
+local av
+local aw
+
+local ax=at.Name:lower()
+local ay=removeSpaces(ax):find(au)
+
+if ay then
+aw=ay
+end
+
+if not aw and at.SearchKeys then
+for az,aA in ipairs(at.SearchKeys)do
+local aB=aA:lower():find(au)
+if aB then
+av=aA
+break
+end
+end
+end
+
+if aw or av then
+local az=at.Object:Clone()
+az.RichText=true
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+local function highlight(aA)
+return highlightIgnoringSpaces(aA,au)
+end
+
+if aw then
+az.Text="            "..highlight(at.Name)
+else
+local aA=highlight(av)
+
+local aB=math.floor(az.TextSize*0.8)
+
+az.Text="            "
+..`<font size="{aB}" color="#AAAAAA">{at.Name}</font> `
+..aA
+end
+
+az.Bind:Destroy()
+az.Activated:Connect(function()
+at:Toggle()
 end)
 
-at.MouseButton2Click:Connect(function()
-as.Object.Parent.Parent.Visible=true
-local au=as.Object.Parent
-createHighlight(as.Object)
-local av=as.ModuleCategory
-if av~=nil then
+az.MouseButton2Click:Connect(function()
+at.Object.Parent.Parent.Visible=true
+local aA=at.Object.Parent
+createHighlight(at.Object)
+local aB=at.ModuleCategory
+if aB~=nil then
 
-av:Toggle(true)
+aB:Toggle(true)
 end
-local aw=as.CategoryApi
-if aw~=nil then
+local aC=at.CategoryApi
+if aC~=nil then
 
-aw:ToggleCategoryButton(true)
+aC:ToggleCategoryButton(true)
 end
 
-n:Tween(au,TweenInfo.new(0.5),{
+o:Tween(aA,TweenInfo.new(0.5),{
 CanvasPosition=Vector2.new(
 0,
-(as.Object.LayoutOrder*40)-(math.min(au.CanvasSize.Y.Offset,600)/2)
+(at.Object.LayoutOrder*40)-(math.min(aA.CanvasSize.Y.Offset,600)/2)
 ),
 })
 end)
 
-at.Parent=am
-at.Name=ar:lower()
-task.spawn(function()
-repeat
-pcall(function()
-for au,av in{"Text","TextColor3","BackgroundColor3"}do
-at[av]=as.Object[av]
+az.Parent=an
+az.Name=as:lower()
+
+
+
+
+
+
+
+
+
+
+
+
+
 end
-at.UIGradient.Color=as.Object.UIGradient.Color
-at.UIGradient.Enabled=as.Object.UIGradient.Enabled
-at.Dots.Dots.ImageColor3=as.Object.Dots.Dots.ImageColor3
-end)
-task.wait()
-until not at.Parent
-end)
-end
 end
 end)
 end)
-al.Focused:Connect(function()
-ap=true
-if al.Text=="Type to search..."then
-al.Text=""
+am.Focused:Connect(function()
+aq=true
+if am.Text=="Type to search..."then
+am.Text=""
 end
 end)
 d.VisibilityChanged:Connect(function()
-if not ap and v.Visible then
-flickerTextEffect(al,true,"Type to search...")
+if not aq and w.Visible then
+flickerTextEffect(am,true,"Type to search...")
 end
 end)
-al.FocusLost:Connect(function()
-ap=false
-if al.Text==""then
-flickerTextEffect(al,true,"Type to search...")
+am.FocusLost:Connect(function()
+aq=false
+if am.Text==""then
+flickerTextEffect(am,true,"Type to search...")
 end
 end)
-ao:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
+ap:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
 if ag.ThreadFix then
 setthreadidentity(8)
 end
-am.CanvasSize=UDim2.fromOffset(0,ao.AbsoluteContentSize.Y/A.Scale)
-ah.Size=UDim2.fromOffset(220,math.min(37+ao.AbsoluteContentSize.Y/A.Scale,437))
+an.CanvasSize=UDim2.fromOffset(0,ap.AbsoluteContentSize.Y/B.Scale)
+ah.Size=UDim2.fromOffset(220,math.min(37+ap.AbsoluteContentSize.Y/B.Scale,437))
 end)
 d.PreloadEvent:Connect(function()
-flickerTextEffect(al,true,"Type to search...")
+flickerTextEffect(am,true,"Type to search...")
 end)
 
-ag.Legit.Icon=aj
+ag.Legit.Icon=ak
 end
 
 
@@ -10320,9 +11041,9 @@ local aj=Instance.new"Frame"
 aj.Name="LegitGUI"
 aj.Size=UDim2.fromOffset(700,389)
 aj.Position=UDim2.new(0.5,-350,0.5,-194)
-aj.BackgroundColor3=o.Main
+aj.BackgroundColor3=p.Main
 aj.Visible=false
-aj.Parent=w
+aj.Parent=x
 addBlur(aj)
 addCorner(aj)
 makeDraggable(aj)
@@ -10338,8 +11059,8 @@ al.Name="Icon"
 al.Size=UDim2.fromOffset(16,16)
 al.Position=UDim2.fromOffset(18,13)
 al.BackgroundTransparency=1
-al.Image=u"vape/assets/new/legittab.png"
-al.ImageColor3=o.Text
+al.Image=v"vape/assets/new/legittab.png"
+al.ImageColor3=p.Text
 al.Parent=aj
 
 local am=addCloseButton(aj)
@@ -10392,7 +11113,7 @@ local au=ai:CreateModule(at)
 
 local av=Instance.new"TextButton"
 av.Name=aq.Name
-av.BackgroundColor3=m.Light(o.Main,0.02)
+av.BackgroundColor3=n.Light(p.Main,0.02)
 av.Text=""
 av.AutoButtonColor=false
 av.Parent=an
@@ -10406,23 +11127,23 @@ aw.Position=UDim2.fromOffset(16,81)
 aw.BackgroundTransparency=1
 aw.Text=aq.Name
 aw.TextXAlignment=Enum.TextXAlignment.Left
-aw.TextColor3=m.Dark(o.Text,0.31)
+aw.TextColor3=n.Dark(p.Text,0.31)
 aw.TextSize=13
-aw.FontFace=o.Font
+aw.FontFace=p.Font
 aw.Parent=av
 
 local ax=Instance.new"Frame"
 ax.Name="Knob"
 ax.Size=UDim2.fromOffset(22,12)
 ax.Position=UDim2.new(1,-57,0,14)
-ax.BackgroundColor3=m.Light(o.Main,0.14)
+ax.BackgroundColor3=n.Light(p.Main,0.14)
 ax.Parent=av
 addCorner(ax,UDim.new(1,0))
 
 local ay=ax:Clone()
 ay.Size=UDim2.fromOffset(8,8)
 ay.Position=UDim2.fromOffset(2,2)
-ay.BackgroundColor3=o.Main
+ay.BackgroundColor3=p.Main
 ay.Parent=ax
 
 local az=Instance.new"TextButton"
@@ -10438,8 +11159,8 @@ aA.Name="Dots"
 aA.Size=UDim2.fromOffset(2,12)
 aA.Position=UDim2.fromOffset(6,6)
 aA.BackgroundTransparency=1
-aA.Image=u"vape/assets/new/dots.png"
-aA.ImageColor3=m.Light(o.Main,0.37)
+aA.Image=v"vape/assets/new/dots.png"
+aA.ImageColor3=n.Light(p.Main,0.37)
 aA.Parent=az
 
 local aB=Instance.new"TextButton"
@@ -10457,7 +11178,7 @@ addCorner(aB)
 local aC=Instance.new"TextButton"
 aC.Size=UDim2.new(0,220,1,0)
 aC.Position=UDim2.fromScale(1,0)
-aC.BackgroundColor3=o.Main
+aC.BackgroundColor3=p.Main
 aC.AutoButtonColor=false
 aC.Text=""
 aC.Parent=aB
@@ -10469,9 +11190,9 @@ aD.Position=UDim2.fromOffset(36,12)
 aD.BackgroundTransparency=1
 aD.Text=aq.Name
 aD.TextXAlignment=Enum.TextXAlignment.Left
-aD.TextColor3=m.Dark(o.Text,0.16)
+aD.TextColor3=n.Dark(p.Text,0.16)
 aD.TextSize=13
-aD.FontFace=o.Font
+aD.FontFace=p.Font
 aD.Parent=aC
 
 local aE=Instance.new"ImageButton"
@@ -10479,8 +11200,8 @@ aE.Name="Back"
 aE.Size=UDim2.fromOffset(16,16)
 aE.Position=UDim2.fromOffset(11,13)
 aE.BackgroundTransparency=1
-aE.Image=u"vape/assets/new/back.png"
-aE.ImageColor3=m.Light(o.Main,0.37)
+aE.Image=v"vape/assets/new/back.png"
+aE.ImageColor3=n.Light(p.Main,0.37)
 aE.Parent=aC
 addCorner(aC)
 
@@ -10488,42 +11209,42 @@ local aF=Instance.new"ScrollingFrame"
 aF.Name="Children"
 aF.Size=UDim2.new(1,0,1,-45)
 aF.Position=UDim2.fromOffset(0,41)
-aF.BackgroundColor3=o.Main
+aF.BackgroundColor3=p.Main
 aF.BorderSizePixel=0
 aF.ScrollBarThickness=2
 aF.ScrollBarImageTransparency=0.75
 aF.CanvasSize=UDim2.new()
 aF.Parent=aC
 
-local aH=Instance.new"UIListLayout"
-aH.SortOrder=Enum.SortOrder.LayoutOrder
-aH.HorizontalAlignment=Enum.HorizontalAlignment.Center
-aH.Parent=aF
+local aG=Instance.new"UIListLayout"
+aG.SortOrder=Enum.SortOrder.LayoutOrder
+aG.HorizontalAlignment=Enum.HorizontalAlignment.Center
+aG.Parent=aF
 
 if aq.Size then
-local aI=Instance.new"Frame"
-aI.Size=aq.Size
-aI.BackgroundTransparency=1
-aI.Visible=false
-aI.Parent=w
-makeDraggable(aI,aj)
-local aJ=Instance.new"UIStroke"
-aJ.Color=Color3.fromRGB(5,134,105)
-aJ.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
-aJ.Thickness=0
-aJ.Parent=aI
-ar.Children=aI
+local aH=Instance.new"Frame"
+aH.Size=aq.Size
+aH.BackgroundTransparency=1
+aH.Visible=false
+aH.Parent=x
+makeDraggable(aH,aj)
+local aI=Instance.new"UIStroke"
+aI.Color=Color3.fromRGB(5,134,105)
+aI.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
+aI.Thickness=0
+aI.Parent=aH
+ar.Children=aH
 end
 
 aq.Function=aq.Function or function()end
 addMaid(ar)
 
-function ar.Toggle(aI)
-if aI._syncing then
+function ar.Toggle(aH)
+if aH._syncing then
 return
 end
 
-aI._syncing=true
+aH._syncing=true
 ar.Enabled=not ar.Enabled
 
 if ar.Children then
@@ -10537,175 +11258,175 @@ au:Toggle()
 au._syncing=false
 end
 
-aw.TextColor3=ar.Enabled and m.Light(o.Text,0.2)or m.Dark(o.Text,0.31)
-av.BackgroundColor3=ar.Enabled and m.Light(o.Main,0.05)
-or m.Light(o.Main,0.02)
+aw.TextColor3=ar.Enabled and n.Light(p.Text,0.2)or n.Dark(p.Text,0.31)
+av.BackgroundColor3=ar.Enabled and n.Light(p.Main,0.05)
+or n.Light(p.Main,0.02)
 
-n:Tween(ax,o.Tween,{
+o:Tween(ax,p.Tween,{
 BackgroundColor3=ar.Enabled
 and Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
-or m.Light(o.Main,0.14),
+or n.Light(p.Main,0.14),
 })
-n:Tween(ay,o.Tween,{
+o:Tween(ay,p.Tween,{
 Position=UDim2.fromOffset(ar.Enabled and 12 or 2,2),
 })
 
 if not ar.Enabled then
-for aJ,aK in ar.Connections do
-aK:Disconnect()
+for aI,aJ in ar.Connections do
+aJ:Disconnect()
 end
 table.clear(ar.Connections)
 end
 
-aI._syncing=false
+aH._syncing=false
 task.spawn(aq.Function,ar.Enabled)
 end
 
 local function createSyncedOption(
+aH,
 aI,
 aJ,
 aK,
 aL,
-aM,
-aN
+aM
 )
 
-local aO=aI(aJ,aK,aM)
-local aP=aI(table.clone(aJ),aL,aN)
+local aN=aH(aI,aJ,aL)
+local aO=aH(table.clone(aI),aK,aM)
 
 
+aN._syncing=false
 aO._syncing=false
-aP._syncing=false
 
 
-local aQ={"ChangeValue","Color","SetValue","Toggle","ConnectCallback","SetValues"}
+local aP={"ChangeValue","Color","SetValue","Toggle","ConnectCallback","SetValues"}
 
 
-for aR,aS in aQ do
-if aO[aS]and type(aO[aS])=="function"then
-local aT=aO[aS]
-aO[aS]=function(aU,...)
+for aQ,aR in aP do
+if aN[aR]and type(aN[aR])=="function"then
+local aS=aN[aR]
+aN[aR]=function(aT,...)
 
-if aU._syncing then
-return aT(aU,...)
+if aT._syncing then
+return aS(aT,...)
 end
 
-aU._syncing=true
-local aV={...}
-local aW=aT(aU,unpack(aV))
+aT._syncing=true
+local aU={...}
+local aV=aS(aT,unpack(aU))
 
 
 if
-aP[aS]
-and type(aP[aS])=="function"
-and not aP._syncing
-then
-pcall(function()
-aP._syncing=true
-aP[aS](aP,unpack(aV))
-aP._syncing=false
-end)
-end
-
-aU._syncing=false
-return aW
-end
-end
-end
-
-
-for aR,aS in aQ do
-if aP[aS]and type(aP[aS])=="function"then
-local aT=aP[aS]
-aP[aS]=function(aU,...)
-
-if aU._syncing then
-return aT(aU,...)
-end
-
-aU._syncing=true
-local aV={...}
-local aW=aT(aU,unpack(aV))
-
-
-if
-aO[aS]
-and type(aO[aS])=="function"
+aO[aR]
+and type(aO[aR])=="function"
 and not aO._syncing
 then
 pcall(function()
 aO._syncing=true
-aO[aS](aO,unpack(aV))
+aO[aR](aO,unpack(aU))
 aO._syncing=false
 end)
 end
 
-aU._syncing=false
-return aW
+aT._syncing=false
+return aV
 end
 end
 end
 
 
-for aR,aS in{"Load","Save"}do
-if aO[aS]and type(aO[aS])=="function"then
-local aT=aO[aS]
-aO[aS]=function(aU,...)
+for aQ,aR in aP do
+if aO[aR]and type(aO[aR])=="function"then
+local aS=aO[aR]
+aO[aR]=function(aT,...)
 
-return aT(aU,...)
+if aT._syncing then
+return aS(aT,...)
+end
+
+aT._syncing=true
+local aU={...}
+local aV=aS(aT,unpack(aU))
+
+
+if
+aN[aR]
+and type(aN[aR])=="function"
+and not aN._syncing
+then
+pcall(function()
+aN._syncing=true
+aN[aR](aN,unpack(aU))
+aN._syncing=false
+end)
+end
+
+aT._syncing=false
+return aV
 end
 end
 end
 
 
-aO.CategoryComponent=aP
-aP.LegitComponent=aO
+for aQ,aR in{"Load","Save"}do
+if aN[aR]and type(aN[aR])=="function"then
+local aS=aN[aR]
+aN[aR]=function(aT,...)
 
-return aO
+return aS(aT,...)
+end
+end
 end
 
 
-for aI,aJ in H do
-ar["Create"..aI]=function(aK,aL)
+aN.CategoryComponent=aO
+aO.LegitComponent=aN
+
+return aN
+end
+
+
+for aH,aI in I do
+ar["Create"..aH]=function(aJ,aK)
 return createSyncedOption(
-aJ,
-aL,
+aI,
+aK,
 aF,
 au.Children,
 ar,
 au
 )
 end
-ar["Add"..aI]=ar["Create"..aI]
+ar["Add"..aH]=ar["Create"..aH]
 end
 
 
-for aI,aJ in H do
-ar["Create"..aI]=function(aK,aL)
+for aH,aI in I do
+ar["Create"..aH]=function(aJ,aK)
 return createSyncedOption(
-aJ,
-aL,
+aI,
+aK,
 aF,
 au.Children,
 ar,
 au
 )
 end
-ar["Add"..aI]=ar["Create"..aI]
+ar["Add"..aH]=ar["Create"..aH]
 end
 
 
 aE.MouseEnter:Connect(function()
-aE.ImageColor3=o.Text
+aE.ImageColor3=p.Text
 end)
 aE.MouseLeave:Connect(function()
-aE.ImageColor3=m.Light(o.Main,0.37)
+aE.ImageColor3=n.Light(p.Main,0.37)
 end)
 aE.Activated:Connect(function()
-n:Tween(aB,o.Tween,{
+o:Tween(aB,p.Tween,{
 BackgroundTransparency=1,
 })
-n:Tween(aC,o.Tween,{
+o:Tween(aC,p.Tween,{
 Position=UDim2.fromScale(1,0),
 })
 task.wait(0.2)
@@ -10714,29 +11435,29 @@ end)
 
 az.Activated:Connect(function()
 aB.Visible=true
-n:Tween(aB,o.Tween,{
+o:Tween(aB,p.Tween,{
 BackgroundTransparency=0.5,
 })
-n:Tween(aC,o.Tween,{
+o:Tween(aC,p.Tween,{
 Position=UDim2.new(1,-220,0,0),
 })
 end)
 
 az.MouseEnter:Connect(function()
-aA.ImageColor3=o.Text
+aA.ImageColor3=p.Text
 end)
 az.MouseLeave:Connect(function()
-aA.ImageColor3=m.Light(o.Main,0.37)
+aA.ImageColor3=n.Light(p.Main,0.37)
 end)
 
 av.MouseEnter:Connect(function()
 if not ar.Enabled then
-av.BackgroundColor3=m.Light(o.Main,0.05)
+av.BackgroundColor3=n.Light(p.Main,0.05)
 end
 end)
 av.MouseLeave:Connect(function()
 if not ar.Enabled then
-av.BackgroundColor3=m.Light(o.Main,0.02)
+av.BackgroundColor3=n.Light(p.Main,0.02)
 end
 end)
 
@@ -10746,30 +11467,30 @@ end)
 
 av.MouseButton2Click:Connect(function()
 aB.Visible=true
-n:Tween(aB,o.Tween,{
+o:Tween(aB,p.Tween,{
 BackgroundTransparency=0.5,
 })
-n:Tween(aC,o.Tween,{
+o:Tween(aC,p.Tween,{
 Position=UDim2.new(1,-220,0,0),
 })
 end)
 
 aB.Activated:Connect(function()
-n:Tween(aB,o.Tween,{
+o:Tween(aB,p.Tween,{
 BackgroundTransparency=1,
 })
-n:Tween(aC,o.Tween,{
+o:Tween(aC,p.Tween,{
 Position=UDim2.fromScale(1,0),
 })
 task.wait(0.2)
 aB.Visible=false
 end)
 
-aH:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
+aG:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
 if d.ThreadFix then
 setthreadidentity(8)
 end
-aF.CanvasSize=UDim2.fromOffset(0,aH.AbsoluteContentSize.Y/A.Scale)
+aF.CanvasSize=UDim2.fromOffset(0,aG.AbsoluteContentSize.Y/B.Scale)
 end)
 
 ar.Object=av
@@ -10780,14 +11501,14 @@ au._syncing=false
 ah.Modules[aq.Name]=ar
 
 
-local aI={}
-for aJ,aK in ah.Modules do
-table.insert(aI,aK.Name)
+local aH={}
+for aI,aJ in ah.Modules do
+table.insert(aH,aJ.Name)
 end
-table.sort(aI)
+table.sort(aH)
 
-for aJ,aK in aI do
-ah.Modules[aK].Object.LayoutOrder=aJ
+for aI,aJ in aH do
+ah.Modules[aJ].Object.LayoutOrder=aI
 end
 
 return ar
@@ -10796,7 +11517,7 @@ end
 local function visibleCheck()
 for ap,aq in ah.Modules do
 if aq.Children then
-local ar=v.Visible
+local ar=w.Visible
 for as,at in ag.Windows do
 ar=ar or at.Visible
 end
@@ -10807,10 +11528,10 @@ end
 
 am.Activated:Connect(function()
 aj.Visible=false
-v.Visible=true
+w.Visible=true
 end)
 
-ag:Clean(v:GetPropertyChangedSignal"Visible":Connect(visibleCheck))
+ag:Clean(w:GetPropertyChangedSignal"Visible":Connect(visibleCheck))
 aj:GetPropertyChangedSignal"Visible":Connect(function()
 ag:UpdateGUI(ag.GUIColor.Hue,ag.GUIColor.Sat,ag.GUIColor.Value)
 visibleCheck()
@@ -10820,7 +11541,7 @@ ao:GetPropertyChangedSignal"AbsoluteContentSize":Connect(function()
 if ag.ThreadFix then
 setthreadidentity(8)
 end
-an.CanvasSize=UDim2.fromOffset(0,ao.AbsoluteContentSize.Y/A.Scale)
+an.CanvasSize=UDim2.fromOffset(0,ao.AbsoluteContentSize.Y/B.Scale)
 end)
 
 ag.Legit=ah
@@ -10840,17 +11561,17 @@ task.delay(0,function()
 if ag.ThreadFix then
 setthreadidentity(8)
 end
-local am=#q:GetChildren()+1
+local am=#r:GetChildren()+1
 local an=Instance.new"ImageLabel"
 an.Name="Notification"
-an.Size=UDim2.fromOffset(math.max(E(removeTags(ai),14,o.Font).X+80,266),75)
+an.Size=UDim2.fromOffset(math.max(F(removeTags(ai),14,p.Font).X+80,266),75)
 an.Position=UDim2.new(1,0,1,-(29+(78*am)))
 an.ZIndex=5
 an.BackgroundTransparency=1
-an.Image=u"vape/assets/new/notification.png"
+an.Image=v"vape/assets/new/notification.png"
 an.ScaleType=Enum.ScaleType.Slice
 an.SliceCenter=Rect.new(7,7,9,9)
-an.Parent=q
+an.Parent=r
 addBlur(an,true)
 local ao=Instance.new"ImageLabel"
 ao.Name="Icon"
@@ -10858,7 +11579,7 @@ ao.Size=UDim2.fromOffset(60,60)
 ao.Position=UDim2.fromOffset(-5,-8)
 ao.ZIndex=5
 ao.BackgroundTransparency=1
-ao.Image=u("vape/assets/new/"..(al or"info")..".png")
+ao.Image=v("vape/assets/new/"..(al or"info")..".png")
 ao.ImageColor3=Color3.new()
 ao.ImageTransparency=0.5
 ao.Parent=an
@@ -10881,7 +11602,7 @@ aq.TextYAlignment=Enum.TextYAlignment.Top
 aq.TextColor3=Color3.fromRGB(209,209,209)
 aq.TextSize=14
 aq.RichText=true
-aq.FontFace=o.FontSemiBold
+aq.FontFace=p.FontSemiBold
 aq.Parent=an
 local ar=aq:Clone()
 ar.Name="Text"
@@ -10890,7 +11611,7 @@ ar.Text=removeTags(ai)
 ar.TextColor3=Color3.new()
 ar.TextTransparency=0.5
 ar.RichText=true
-ar.FontFace=o.Font
+ar.FontFace=p.Font
 ar.Parent=an
 local as=ar:Clone()
 as.Position=UDim2.fromOffset(-1,-1)
@@ -10909,19 +11630,19 @@ or al=="warning"and Color3.fromRGB(236,129,43)
 or Color3.fromRGB(220,220,220)
 at.BorderSizePixel=0
 at.Parent=an
-if n.Tween then
-n:Tween(an,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{
+if o.Tween then
+o:Tween(an,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{
 AnchorPoint=Vector2.new(1,0),
-},n.tweenstwo)
-n:Tween(at,TweenInfo.new(aj,Enum.EasingStyle.Linear),{
+},o.tweenstwo)
+o:Tween(at,TweenInfo.new(aj,Enum.EasingStyle.Linear),{
 Size=UDim2.fromOffset(0,2),
 })
 end
 task.delay(aj,function()
-if n.Tween then
-n:Tween(an,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{
+if o.Tween then
+o:Tween(an,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{
 AnchorPoint=Vector2.new(0,0),
-},n.tweenstwo)
+},o.tweenstwo)
 end
 task.wait(0.2)
 an:ClearAllChildren()
@@ -10971,23 +11692,23 @@ aw.AnchorPoint=Vector2.new(0.5,0.5)
 aw.Position=UDim2.fromScale(0.5,0.45)
 aw.BackgroundTransparency=1
 aw.ZIndex=20
-aw.Image=u"vape/assets/new/notification.png"
+aw.Image=v"vape/assets/new/notification.png"
 aw.ScaleType=Enum.ScaleType.Slice
 aw.SliceCenter=Rect.new(7,7,9,9)
-aw.Parent=s
+aw.Parent=t
 
 local ax=Instance.new"UIScale"
 ax.Scale=1
 ax.Parent=aw
 
 aw.MouseEnter:Connect(function()
-n:Tween(ax,TweenInfo.new(0.15),{
+o:Tween(ax,TweenInfo.new(0.15),{
 Scale=1.05,
 })
 end)
 
 aw.MouseLeave:Connect(function()
-n:Tween(ax,TweenInfo.new(0.15),{
+o:Tween(ax,TweenInfo.new(0.15),{
 Scale=1,
 })
 end)
@@ -11005,7 +11726,7 @@ ay.Text=av
 ay.TextColor3=Color3.fromRGB(230,230,230)
 ay.PlaceholderColor3=Color3.fromRGB(140,140,140)
 ay.TextSize=14
-ay.FontFace=o.Font
+ay.FontFace=p.Font
 ay.ClearTextOnFocus=false
 ay.ZIndex=22
 ay.Parent=aw
@@ -11024,7 +11745,7 @@ az.RichText=true
 az.Text="<stroke color='#FFFFFF' thickness='0.3' transparency='0.5'>"..aj.."</stroke>"
 az.TextColor3=Color3.fromRGB(220,220,220)
 az.TextSize=16
-az.FontFace=o.FontSemiBold
+az.FontFace=p.FontSemiBold
 az.ZIndex=21
 az.Parent=aw
 
@@ -11040,7 +11761,7 @@ aA.RichText=true
 aA.Text=ak
 aA.TextColor3=Color3.fromRGB(170,170,170)
 aA.TextSize=20
-aA.FontFace=o.Font
+aA.FontFace=p.Font
 aA.ZIndex=21
 aA.Parent=aw
 
@@ -11061,7 +11782,7 @@ aC.AutoButtonColor=false
 aC.BackgroundColor3=an
 aC.TextColor3=Color3.fromRGB(230,230,230)
 aC.TextSize=14
-aC.FontFace=o.FontSemiBold
+aC.FontFace=p.FontSemiBold
 aC.ZIndex=22
 aC.Parent=aB
 addCorner(aC)
@@ -11073,9 +11794,9 @@ aD.Position=UDim2.new(0.5,6,0,0)
 aD.Text=am
 aD.Parent=aB
 
-local function hover(aE,aF,aH,aI)
-n:Tween(aE,TweenInfo.new(0.15),{
-BackgroundColor3=aI and aF or aH,
+local function hover(aE,aF,aG,aH)
+o:Tween(aE,TweenInfo.new(0.15),{
+BackgroundColor3=aH and aF or aG,
 })
 end
 
@@ -11102,8 +11823,8 @@ return
 end
 aE=true
 
-if n.Tween then
-n:Tween(aw,TweenInfo.new(0.25,Enum.EasingStyle.Exponential),{
+if o.Tween then
+o:Tween(aw,TweenInfo.new(0.25,Enum.EasingStyle.Exponential),{
 Size=UDim2.fromOffset(340,160),
 ImageTransparency=1,
 })
@@ -11136,11 +11857,11 @@ end
 end)
 
 
-if n.Tween then
+if o.Tween then
 aw.Size=UDim2.fromOffset(340,160)
-n:Tween(aw,TweenInfo.new(0.35,Enum.EasingStyle.Exponential),{
+o:Tween(aw,TweenInfo.new(0.35,Enum.EasingStyle.Exponential),{
 Size=UDim2.fromOffset(360,180),
-},n.tweenstwo)
+},o.tweenstwo)
 end
 end)
 end
@@ -11163,10 +11884,10 @@ local ak={}
 local al=true
 
 local am="vape/profiles/"..str(game.GameId).."_"..str(ah.Place)..".gui.txt"
-if not D(am)then
+if not E(am)then
 am="vape/profiles/"..str(game.GameId)..".gui.txt"
 end
-if D(am)then
+if E(am)then
 ak=loadJson(am)
 if not ak then
 ak={Categories={}}
@@ -11230,12 +11951,12 @@ ah.Categories.Profiles:ChangeValue()
 if ah.ProfileLabel then
 ah.ProfileLabel.Text=#ah.Profile>10 and ah.Profile:sub(1,10).."..."or ah.Profile
 ah.ProfileLabel.Size=UDim2.fromOffset(
-E(ah.ProfileLabel.Text,ah.ProfileLabel.TextSize,ah.ProfileLabel.Font).X+16,
+F(ah.ProfileLabel.Text,ah.ProfileLabel.TextSize,ah.ProfileLabel.Font).X+16,
 24
 )
 end
 
-local an=D("vape/profiles/"..ah.Profile..ah.Place..".txt")
+local an=E("vape/profiles/"..ah.Profile..ah.Place..".txt")
 
 if an then
 local ao=loadJson("vape/profiles/"..ah.Profile..ah.Place..".txt")
@@ -11349,8 +12070,8 @@ end
 
 if not ah.NewUser and ah.TutorialAPI.isActive then
 task.spawn(function()
-x.Visible=false
-v.Visible=true
+y.Visible=false
+w.Visible=true
 ah.TutorialAPI:setText"Tutorial Complete!"
 task.wait(1)
 ah.TutorialAPI:setText"Thanks for using Voidware <3"
@@ -11373,12 +12094,12 @@ ao.Position=UDim2.new(1,-90,0,4)
 ao.BackgroundColor3=Color3.new()
 ao.BackgroundTransparency=0.5
 ao.Text=""
-ao.Parent=B
+ao.Parent=C
 local ap=Instance.new"ImageLabel"
 ap.Size=UDim2.fromOffset(26,26)
 ap.Position=UDim2.fromOffset(3,3)
 ap.BackgroundTransparency=1
-ap.Image=u"vape/assets/new/vape.png"
+ap.Image=v"vape/assets/new/vape.png"
 ap.Parent=ao
 local aq=Instance.new"UICorner"
 aq.Parent=ao
@@ -11392,11 +12113,11 @@ as.Visible=false
 end
 for ar,as in ah.Modules do
 if as.Bind.Button then
-as.Bind.Button.Visible=v.Visible
+as.Bind.Button.Visible=w.Visible
 end
 end
-v.Visible=not v.Visible
-z.Visible=false
+w.Visible=not w.Visible
+A.Visible=false
 ah:BlurCheck()
 end)
 end
@@ -11639,7 +12360,7 @@ ak"api maid cleaning ended"
 ak("api thread fix check ",d.ThreadFix)
 if d.ThreadFix then
 setthreadidentity(8)
-v.Visible=false
+w.Visible=false
 d:BlurCheck()
 end
 ak"api thread fix check ended"
@@ -11655,34 +12376,34 @@ shared.vapereload=nil
 shared.VapeIndependent=nil
 end
 
-B=Instance.new"ScreenGui"
-B.Name=randomString()
-B.DisplayOrder=9999999
-B.ZIndexBehavior=Enum.ZIndexBehavior.Global
-B.IgnoreGuiInset=true
+C=Instance.new"ScreenGui"
+C.Name=randomString()
+C.DisplayOrder=9999999
+C.ZIndexBehavior=Enum.ZIndexBehavior.Global
+C.IgnoreGuiInset=true
 pcall(function()
-B.OnTopOfCoreBlur=true
+C.OnTopOfCoreBlur=true
 end)
 
 
 
-B.Parent=e(game:GetService"Players").LocalPlayer.PlayerGui
-B.ResetOnSpawn=false
+C.Parent=e(game:GetService"Players").LocalPlayer.PlayerGui
+C.ResetOnSpawn=false
 
-d.gui=B
+d.gui=C
+x=Instance.new"Frame"
+x.Name="ScaledGui"
+x.Size=UDim2.fromScale(1,1)
+x.BackgroundTransparency=1
+x.Parent=C
 w=Instance.new"Frame"
-w.Name="ScaledGui"
+w.Name="ClickGui"
 w.Size=UDim2.fromScale(1,1)
 w.BackgroundTransparency=1
-w.Parent=B
-v=Instance.new"Frame"
-v.Name="ClickGui"
-v.Size=UDim2.fromScale(1,1)
-v.BackgroundTransparency=1
-v.Visible=false
-v.Parent=w
-d:Clean(v:GetPropertyChangedSignal"Visible":Connect(function()
-d.VisibilityChanged:Fire(v.Visible)
+w.Visible=false
+w.Parent=x
+d:Clean(w:GetPropertyChangedSignal"Visible":Connect(function()
+d.VisibilityChanged:Fire(w.Visible)
 end))
 local ah=Instance.new"TextLabel"
 ah.Size=UDim2.fromScale(1,0.02)
@@ -11692,8 +12413,8 @@ ah.Text="discord.gg/voidware"
 ah.TextScaled=true
 ah.TextColor3=Color3.new(1,1,1)
 ah.TextStrokeTransparency=0.5
-ah.FontFace=o.Font
-ah.Parent=v
+ah.FontFace=p.Font
+ah.Parent=w
 d.TutorialAPI={
 tutorialType=2,
 isActive=false,
@@ -11719,17 +12440,17 @@ Destroy=function()
 ai.label.BackgroundTransparency=1
 end
 }
-n:Tween(ai.label,TweenInfo.new(1.5),{
+o:Tween(ai.label,TweenInfo.new(1.5),{
 TextSize=30,
 Position=UDim2.fromScale(0.5,0.6)
 })
 ai:setText"Welcome to Voidware!"
-ai.label.Parent=w
+ai.label.Parent=x
 end,
 tweenToSecondPosition=function(ai)
 if not ai.isActive then return end
 ai.GlobeIconWait=false
-n:Tween(ai.label,TweenInfo.new(1.5),{
+o:Tween(ai.label,TweenInfo.new(1.5),{
 Position=UDim2.fromScale(0.5,0.78)
 })
 end,
@@ -11739,11 +12460,11 @@ ai.GlobeIconWait=false
 ai.isActive=false
 ai.label.TextScaled=true
 ai.label.AutomaticSize=Enum.AutomaticSize.None
-n:Tween(ai.label,TweenInfo.new(0.5),{
+o:Tween(ai.label,TweenInfo.new(0.5),{
 Position=UDim2.fromScale(0.5,0.97)
 }).Completed:Connect(function()
 ai:setText(ai.defaultText)
-ai.label.Parent=v
+ai.label.Parent=w
 end)
 if aj then
 d:CreateNotification("Tutorial Complete!","Thank you for using Voidware <3",10)
@@ -11755,7 +12476,7 @@ ai.flickerTextEffect(ai.label,true,aj)
 end
 }
 d.VisibilityChanged:Connect(function()
-if d.TutorialAPI.isActive and d.TutorialAPI.GlobeIconWait and not x.Visible then
+if d.TutorialAPI.isActive and d.TutorialAPI.GlobeIconWait and not y.Visible then
 d.TutorialAPI:setText"Tutorial Cancelled"
 task.delay(0.3,function()
 d.TutorialAPI:revertTutorialMode()
@@ -11766,19 +12487,19 @@ local ai=Instance.new"TextButton"
 ai.BackgroundTransparency=1
 ai.Modal=true
 ai.Text=""
-ai.Parent=v
+ai.Parent=w
 local aj=Instance.new"ImageLabel"
 aj.Size=UDim2.fromOffset(64,64)
 aj.BackgroundTransparency=1
 aj.Visible=false
 aj.Image="rbxasset://textures/Cursors/KeyboardMouse/ArrowFarCursor.png"
-aj.Parent=B
-q=Instance.new"Folder"
-q.Name="Notifications"
-q.Parent=w
-s=Instance.new"Folder"
-s.Name="Prompts"
-s.Parent=w
+aj.Parent=C
+r=Instance.new"Folder"
+r.Name="Notifications"
+r.Parent=x
+t=Instance.new"Folder"
+t.Name="Prompts"
+t.Parent=x
 
 
 
@@ -11787,44 +12508,44 @@ s.Parent=w
 
 
 
-z=Instance.new"TextLabel"
-z.Name="Tooltip"
-z.Position=UDim2.fromScale(-1,-1)
-z.ZIndex=5
-z.BackgroundColor3=m.Dark(o.Main,0.02)
-z.Visible=false
-z.Text=""
-z.TextColor3=m.Dark(o.Text,0.16)
-z.TextSize=15
-z.FontFace=o.Font
-z.Parent=w
-y=addBlur(z)
-addCorner(z)
+A=Instance.new"TextLabel"
+A.Name="Tooltip"
+A.Position=UDim2.fromScale(-1,-1)
+A.ZIndex=5
+A.BackgroundColor3=n.Dark(p.Main,0.02)
+A.Visible=false
+A.Text=""
+A.TextColor3=n.Dark(p.Text,0.16)
+A.TextSize=15
+A.FontFace=p.Font
+A.Parent=x
+z=addBlur(A)
+addCorner(A)
 local ak=Instance.new"Frame"
 ak.Size=UDim2.new(1,-2,1,-2)
 ak.Position=UDim2.fromOffset(1,1)
 ak.ZIndex=6
 ak.BackgroundTransparency=1
-ak.Parent=z
+ak.Parent=A
 local al=Instance.new"UIStroke"
-al.Color=m.Light(o.Main,0.02)
+al.Color=n.Light(p.Main,0.02)
 al.Parent=ak
 addCorner(ak,UDim.new(0,4))
-A=Instance.new"UIScale"
-A.Scale=math.max(B.AbsoluteSize.X/1920,0.6)
-A.Parent=w
-d.guiscale=A
-w.Size=UDim2.fromScale(1/A.Scale,1/A.Scale)
+B=Instance.new"UIScale"
+B.Scale=math.max(C.AbsoluteSize.X/1920,0.6)
+B.Parent=x
+d.guiscale=B
+x.Size=UDim2.fromScale(1/B.Scale,1/B.Scale)
 
-d:Clean(B:GetPropertyChangedSignal"AbsoluteSize":Connect(function()
+d:Clean(C:GetPropertyChangedSignal"AbsoluteSize":Connect(function()
 if d.Scale.Enabled then
-A.Scale=math.max(B.AbsoluteSize.X/1920,0.6)
+B.Scale=math.max(C.AbsoluteSize.X/1920,0.6)
 end
 end))
 
-d:Clean(A:GetPropertyChangedSignal"Scale":Connect(function()
-w.Size=UDim2.fromScale(1/A.Scale,1/A.Scale)
-for am,an in w:GetDescendants()do
+d:Clean(B:GetPropertyChangedSignal"Scale":Connect(function()
+x.Size=UDim2.fromScale(1/B.Scale,1/B.Scale)
+for am,an in x:GetDescendants()do
 if an:IsA"GuiObject"and an.Visible then
 an.Visible=false
 an.Visible=true
@@ -11832,11 +12553,11 @@ end
 end
 end))
 
-d:Clean(v:GetPropertyChangedSignal"Visible":Connect(function()
+d:Clean(w:GetPropertyChangedSignal"Visible":Connect(function()
 d:UpdateGUI(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value,true)
-if v.Visible and h.MouseEnabled then
+if w.Visible and h.MouseEnabled then
 repeat
-local am=v.Visible
+local am=w.Visible
 for an,ao in d.Windows do
 am=am or ao.Visible
 end
@@ -11893,7 +12614,7 @@ List={},
 Function=function()end,
 NoSave=true,
 }
-F(function()
+G(function()
 d.Languages={}
 local an={}
 local ao
@@ -11943,7 +12664,7 @@ am:CreateButton{
 Name="Reset current profile",
 Function=function()
 d.Save=function()end
-if D("vape/profiles/"..d.Profile..d.Place..".txt")and delfile then
+if E("vape/profiles/"..d.Profile..d.Place..".txt")and delfile then
 delfile("vape/profiles/"..d.Profile..d.Place..".txt")
 end
 shared.vapereload=true
@@ -11993,44 +12714,44 @@ Tooltip="Reloads vape for debugging purposes",
 
 d:CreateCategory{
 Name="Combat",
-Icon=u"vape/assets/new/combaticon.png",
+Icon=v"vape/assets/new/combaticon.png",
 Size=UDim2.fromOffset(13,14),
 Visible=true,
 }
 d:CreateCategory{
 Name="Blatant",
-Icon=u"vape/assets/new/blatanticon.png",
+Icon=v"vape/assets/new/blatanticon.png",
 Size=UDim2.fromOffset(14,14),
 Visible=true,
 }
 d:CreateCategory{
 Name="Render",
-Icon=u"vape/assets/new/rendericon.png",
+Icon=v"vape/assets/new/rendericon.png",
 Size=UDim2.fromOffset(15,14),
 Visible=true,
 }
 d:CreateCategory{
 Name="Utility",
-Icon=u"vape/assets/new/utilityicon.png",
+Icon=v"vape/assets/new/utilityicon.png",
 Size=UDim2.fromOffset(15,14),
 Visible=true,
 }
 d:CreateCategory{
 Name="World",
-Icon=u"vape/assets/new/worldicon.png",
+Icon=v"vape/assets/new/worldicon.png",
 Size=UDim2.fromOffset(14,14),
 Visible=true,
 }
 for an,ao in{
 {
 Name="Inventory",
-Icon=u"vape/assets/new/inventoryicon.png",
+Icon=v"vape/assets/new/inventoryicon.png",
 Size=UDim2.fromOffset(15,14),
 GuiColorSync=true,
 },
 {
 Name="Minigames",
-Icon=u"vape/assets/new/miniicon.png",
+Icon=v"vape/assets/new/miniicon.png",
 Size=UDim2.fromOffset(19,12),
 GuiColorSync=true,
 }
@@ -12039,7 +12760,7 @@ d.Categories[ao.Name]=d.Categories.World:CreateModuleCategory(ao)
 end
 d:CreateCategory{
 Name="Legit",
-Icon=u"vape/assets/new/legittab.png",
+Icon=v"vape/assets/new/legittab.png",
 Size=UDim2.fromOffset(14,14),
 Visible=true
 }
@@ -12059,7 +12780,7 @@ Value=1,
 }
 local ap={
 Name="Friends",
-Icon=u"vape/assets/new/friendstab.png",
+Icon=v"vape/assets/new/friendstab.png",
 Size=UDim2.fromOffset(17,16),
 Placeholder="Roblox username",
 Color=Color3.fromRGB(5,134,105),
@@ -12086,7 +12807,7 @@ Darker=true,
 Function=function(aq,ar,as)
 for at,au in an.Object.Children:GetChildren()do
 local av=au:FindFirstChild"Dot"
-if av and av.BackgroundColor3~=m.Light(o.Main,0.37)then
+if av and av.BackgroundColor3~=n.Light(p.Main,0.37)then
 av.BackgroundColor3=Color3.fromHSV(aq,ar,as)
 av.Dot.BackgroundColor3=av.BackgroundColor3
 end
@@ -12112,7 +12833,7 @@ d:Clean(an.ColorUpdate)
 
 d:CreateCategoryList{
 Name="Profiles",
-Icon=u"vape/assets/new/profilesicon.png",
+Icon=v"vape/assets/new/profilesicon.png",
 Size=UDim2.fromOffset(17,10),
 Position=UDim2.fromOffset(12,16),
 Placeholder="Type name",
@@ -12123,8 +12844,8 @@ d:connectOnLoad(function(aq)
 if aq.NewUser then
 task.spawn(function()
 task.wait(1.5)
-if v.Visible then
-v.Visible=false
+if w.Visible then
+w.Visible=false
 end
 task.wait(0.1)
 aq:CreatePrompt{
@@ -12141,18 +12862,18 @@ local ar=d.ProfilesCategoryListWindow
 if ar then
 d.TutorialAPI:activateTutorial()
 ar:setup()
-n:Tween(ar.scale,TweenInfo.new(0.15),{
+o:Tween(ar.scale,TweenInfo.new(0.15),{
 Scale=1.1
 })
-n:Tween(ar.stroke,TweenInfo.new(0.15),{
+o:Tween(ar.stroke,TweenInfo.new(0.15),{
 Thickness=3
 })
 ar.window.MouseLeave:Once(function()
-n:Tween(ar.scale,TweenInfo.new(0.15),{
+o:Tween(ar.scale,TweenInfo.new(0.15),{
 Scale=1
 })
 end)
-v.Visible=true
+w.Visible=true
 task.delay(0.1,function()
 d.TutorialAPI.GlobeIconWait=true
 d.TutorialAPI:setText"Click on the globe icon to open the configs window"
@@ -12161,7 +12882,7 @@ end)
 end
 end,
 OnCancel=function()
-v.Visible=true
+w.Visible=true
 d.TutorialAPI:activateTutorial()
 d.TutorialAPI:tweenToSecondPosition()
 task.wait(1)
@@ -12180,7 +12901,7 @@ end)
 local aq
 aq=d:CreateCategoryList{
 Name="Targets",
-Icon=u"vape/assets/new/friendstab.png",
+Icon=v"vape/assets/new/friendstab.png",
 Size=UDim2.fromOffset(17,16),
 Placeholder="Roblox username",
 Function=function()
@@ -12195,7 +12916,7 @@ d:CreateSearch()
 d.Categories.Main:CreateDivider"overlays"
 local ar=d.Categories.World:CreateModuleCategory{
 Name="Overlays",
-Icon=u"vape/assets/new/overlaysicon.png",
+Icon=v"vape/assets/new/overlaysicon.png",
 Size=UDim2.fromOffset(24,18),
 GuiColorSync=true,
 UpExpand=true,
@@ -12207,7 +12928,7 @@ if au:IsA"TextButton"then
 if not ar.Expanded then
 au.Visible=true
 end
-local av=n:Tween(au,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+local av=o:Tween(au,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
 Size=UDim2.fromOffset(220,ar.Expanded and 0 or 40),
 TextTransparency=ar.Expanded and 1 or 0,
 })
@@ -12217,7 +12938,7 @@ au.Visible=false
 end)
 end
 elseif au:IsA"TextLabel"and not au.Name:lower():find"overlays"then
-n:Tween(au,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+o:Tween(au,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
 Size=UDim2.fromOffset(218,ar.Expanded and 0 or 27),
 TextTransparency=ar.Expanded and 1 or 0,
 })
@@ -12231,13 +12952,13 @@ if not au.Button then continue end
 if not au.Button.Enabled then continue end
 local av=au.Object:FindFirstChild"Title"
 if av then
-n:Tween(av,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+o:Tween(av,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
 TextTransparency=ar.Expanded and 1 or 0
 })
 end
 local aw=au.Object:FindFirstChild"Icon"
 if aw then
-n:Tween(aw,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+o:Tween(aw,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
 ImageTransparency=ar.Expanded and 1 or 0,
 })
 end
@@ -12248,7 +12969,7 @@ if au.OriginalCategorySize then
 if not ar.Expanded then
 au.Object.Visible=true
 end
-local ax=n:Tween(au.Object,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
+local ax=o:Tween(au.Object,TweenInfo.new(0.2,Enum.EasingStyle.Quad),{
 Size=UDim2.fromOffset(220,(ar.Expanded and 0 or au.OriginalCategorySize))
 })
 if ar.Expanded then
@@ -12320,8 +13041,8 @@ Tooltip="Displays a message indicating your GUI upon injecting.\nI.E. 'Press RSH
 at:CreateToggle{
 Name="Show tooltips",
 Function=function(au)
-z.Visible=false
-y.Visible=au
+A.Visible=false
+z.Visible=au
 end,
 Default=true,
 Tooltip="Toggles visibility of these",
@@ -12329,10 +13050,10 @@ Tooltip="Toggles visibility of these",
 at:CreateToggle{
 Name="Show legit mode",
 Function=function(au)
-v.Search.Legit.Visible=au
-v.Search.LegitDivider.Visible=au
-v.Search.TextBox.Size=UDim2.new(1,au and-50 or-10,0,37)
-v.Search.TextBox.Position=UDim2.fromOffset(au and 50 or 10,0)
+w.Search.Legit.Visible=au
+w.Search.LegitDivider.Visible=au
+w.Search.TextBox.Size=UDim2.new(1,au and-50 or-10,0,37)
+w.Search.TextBox.Position=UDim2.fromOffset(au and 50 or 10,0)
 end,
 Default=true,
 Tooltip="Shows the button to change to Legit Mode",
@@ -12344,9 +13065,9 @@ Default=true,
 Function=function(av)
 au.Object.Visible=not av
 if av then
-A.Scale=math.max(B.AbsoluteSize.X/1920,0.6)
+B.Scale=math.max(C.AbsoluteSize.X/1920,0.6)
 else
-A.Scale=au.Value
+B.Scale=au.Value
 end
 end,
 Tooltip="Automatically rescales the gui using the screens resolution",
@@ -12358,7 +13079,7 @@ Max=2,
 Decimal=10,
 Function=function(av,aw)
 if aw and not d.Scale.Enabled then
-A.Scale=av
+B.Scale=av
 end
 end,
 Default=1.5,
@@ -12393,7 +13114,7 @@ Max=30,
 Default=15,
 Tooltip="Adjusts the tooltip's text size",
 Function=function(av)
-z.TextSize=av
+A.TextSize=av
 end
 }
 at:CreateButton{
@@ -12498,7 +13219,7 @@ d.Categories.Main:CreateBind()
 
 local aw=d:CreateOverlay{
 Name="Text GUI",
-Icon=u"vape/assets/new/textguiicon.png",
+Icon=v"vape/assets/new/textguiicon.png",
 Size=UDim2.fromOffset(16,12),
 Position=UDim2.fromOffset(12,14),
 Function=function()
@@ -12587,7 +13308,7 @@ Function=function()
 d:UpdateTextGUI()
 end,
 }
-local aH=aw:CreateToggle{
+local aG=aw:CreateToggle{
 Name="Watermark",
 Tooltip="Renders a vape watermark",
 Default=true,
@@ -12596,22 +13317,22 @@ Function=function()
 d:UpdateTextGUI()
 end,
 }
-local aI={
+local aH={
 Value=0.5,
 Object={Visible={}},
 }
-local aJ={Enabled=false}
-local aK=aw:CreateToggle{
+local aI={Enabled=false}
+local aJ=aw:CreateToggle{
 Name="Render background",
 Default=true,
 NoDefaultCallback=true,
-Function=function(aK)
-aI.Object.Visible=aK
-aJ.Object.Visible=aK
+Function=function(aJ)
+aH.Object.Visible=aJ
+aI.Object.Visible=aJ
 d:UpdateTextGUI()
 end,
 }
-aI=aw:CreateSlider{
+aH=aw:CreateSlider{
 Name="Transparency",
 Min=0,
 Max=1,
@@ -12621,9 +13342,9 @@ Function=function()
 d:UpdateTextGUI()
 end,
 Darker=true,
-Visible=aK.Enabled
+Visible=aJ.Enabled
 }
-aJ=aw:CreateToggle{
+aI=aw:CreateToggle{
 Name="Tint",
 Function=function()
 d:UpdateTextGUI()
@@ -12631,22 +13352,22 @@ end,
 Default=true,
 NoDefaultCallback=true,
 Darker=true,
-Visible=aK.Enabled
+Visible=aJ.Enabled
 }
-local aL
-local aM=aw:CreateToggle{
+local aK
+local aL=aw:CreateToggle{
 Name="Hide modules",
 Tooltip="Allows you to blacklist certain modules from being shown.",
-Function=function(aM)
-aL.Object.Visible=aM
+Function=function(aL)
+aK.Object.Visible=aL
 d:UpdateTextGUI()
 end,
 }
-aL=aw:CreateTextList{
+aK=aw:CreateTextList{
 Name="Blacklist",
 Tooltip="Name of module to hide.",
-Icon=u"vape/assets/new/blockedicon.png",
-Tab=u"vape/assets/new/blockedtab.png",
+Icon=v"vape/assets/new/blockedicon.png",
+Tab=v"vape/assets/new/blockedtab.png",
 TabSize=UDim2.fromOffset(21,16),
 Color=Color3.fromRGB(250,50,56),
 Function=function()
@@ -12655,27 +13376,27 @@ end,
 Visible=false,
 Darker=true,
 }
-local aN=aw:CreateToggle{
+local aM=aw:CreateToggle{
 Name="Hide render",
 Function=function()
 d:UpdateTextGUI()
 end,
 }
+local aN
 local aO
 local aP
 local aQ
-local aR
-local aS=aw:CreateToggle{
+local aR=aw:CreateToggle{
 Name="Add custom text",
-Function=function(aS)
-aO.Object.Visible=aS
-aP.Object.Visible=aS
-aQ.Object.Visible=aS
-aR.Object.Visible=aQ.Enabled and aS
+Function=function(aR)
+aN.Object.Visible=aR
+aO.Object.Visible=aR
+aP.Object.Visible=aR
+aQ.Object.Visible=aP.Enabled and aR
 d:UpdateTextGUI()
 end,
 }
-aO=aw:CreateTextBox{
+aN=aw:CreateTextBox{
 Name="Custom text",
 Function=function()
 d:UpdateTextGUI()
@@ -12683,11 +13404,11 @@ end,
 Darker=true,
 Visible=false,
 }
-d.settextguicustomtext=function(aT)
-aS:SetValue(true)
-aK:SetValue(aT)
+d.settextguicustomtext=function(aS)
+aR:SetValue(true)
+aJ:SetValue(aS)
 end
-aP=aw:CreateFont{
+aO=aw:CreateFont{
 Name="Custom Font",
 Blacklist="Arial",
 Function=function()
@@ -12696,16 +13417,16 @@ end,
 Darker=true,
 Visible=false,
 }
-aQ=aw:CreateToggle{
+aP=aw:CreateToggle{
 Name="Set custom text color",
-Function=function(aT)
-aR.Object.Visible=aT
+Function=function(aS)
+aQ.Object.Visible=aS
 d:UpdateGUI(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
 end,
 Darker=true,
 Visible=false,
 }
-aR=aw:CreateColorSlider{
+aQ=aw:CreateColorSlider{
 Name="Color of custom text",
 Function=function()
 d:UpdateGUI(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
@@ -12718,137 +13439,137 @@ Visible=false,
 
 
 
-local aT={}
-local aU=Instance.new"ImageLabel"
-aU.Name="Logo"
-aU.Size=UDim2.fromOffset(80,21)
-aU.Position=UDim2.new(1,-142,0,3)
-aU.BackgroundTransparency=1
-aU.BorderSizePixel=0
-aU.Visible=false
-aU.BackgroundColor3=Color3.new()
-aU.Image=u"vape/assets/new/textvape.png"
-aU.Parent=aw.Children
+local aS={}
+local aT=Instance.new"ImageLabel"
+aT.Name="Logo"
+aT.Size=UDim2.fromOffset(80,21)
+aT.Position=UDim2.new(1,-142,0,3)
+aT.BackgroundTransparency=1
+aT.BorderSizePixel=0
+aT.Visible=false
+aT.BackgroundColor3=Color3.new()
+aT.Image=v"vape/assets/new/textvape.png"
+aT.Parent=aw.Children
 
-local aV=aw.Children.AbsolutePosition.X>(B.AbsoluteSize.X/2)
+local aU=aw.Children.AbsolutePosition.X>(C.AbsoluteSize.X/2)
 d:Clean(aw.Children:GetPropertyChangedSignal"AbsolutePosition":Connect(function()
 if d.ThreadFix then
 setthreadidentity(8)
 end
-local aW=aw.Children.AbsolutePosition.X>(B.AbsoluteSize.X/2)
-if aV~=aW then
-aV=aW
+local aV=aw.Children.AbsolutePosition.X>(C.AbsoluteSize.X/2)
+if aU~=aV then
+aU=aV
 d:UpdateTextGUI()
 end
 end))
 
-local aW=Instance.new"ImageLabel"
-aW.Name="Logo2"
-aW.Size=UDim2.fromOffset(33,18)
-aW.Position=UDim2.new(1,1,0,1)
-aW.BackgroundColor3=Color3.new()
-aW.BackgroundTransparency=1
-aW.BorderSizePixel=0
-aW.Image=u"vape/assets/new/textv4.png"
-aW.Parent=aU
-local aX=aU:Clone()
-aX.Position=UDim2.fromOffset(1,1)
-aX.ZIndex=0
-aX.Visible=true
-aX.ImageColor3=Color3.new()
-aX.ImageTransparency=0.65
-aX.Parent=aU
-aX.Logo2.ZIndex=0
-aX.Logo2.ImageColor3=Color3.new()
-aX.Logo2.ImageTransparency=0.65
+local aV=Instance.new"ImageLabel"
+aV.Name="Logo2"
+aV.Size=UDim2.fromOffset(33,18)
+aV.Position=UDim2.new(1,1,0,1)
+aV.BackgroundColor3=Color3.new()
+aV.BackgroundTransparency=1
+aV.BorderSizePixel=0
+aV.Image=v"vape/assets/new/textv4.png"
+aV.Parent=aT
+local aW=aT:Clone()
+aW.Position=UDim2.fromOffset(1,1)
+aW.ZIndex=0
+aW.Visible=true
+aW.ImageColor3=Color3.new()
+aW.ImageTransparency=0.65
+aW.Parent=aT
+aW.Logo2.ZIndex=0
+aW.Logo2.ImageColor3=Color3.new()
+aW.Logo2.ImageTransparency=0.65
+local aX=Instance.new"UIGradient"
+aX.Rotation=90
+aX.Parent=aT
 local aY=Instance.new"UIGradient"
 aY.Rotation=90
-aY.Parent=aU
-local aZ=Instance.new"UIGradient"
-aZ.Rotation=90
-aZ.Parent=aW
-local a_=Instance.new"TextLabel"
-a_.Position=UDim2.fromOffset(5,2)
-a_.BackgroundTransparency=1
-a_.BorderSizePixel=0
-a_.Visible=false
-a_.Text=""
-a_.TextSize=25
-a_.FontFace=aP.Value
-a_.RichText=true
-local a0=a_:Clone()
-a_:GetPropertyChangedSignal"Position":Connect(function()
-a0.Position=UDim2.new(
-a_.Position.X.Scale,
-a_.Position.X.Offset+1,
+aY.Parent=aV
+local aZ=Instance.new"TextLabel"
+aZ.Position=UDim2.fromOffset(5,2)
+aZ.BackgroundTransparency=1
+aZ.BorderSizePixel=0
+aZ.Visible=false
+aZ.Text=""
+aZ.TextSize=25
+aZ.FontFace=aO.Value
+aZ.RichText=true
+local a_=aZ:Clone()
+aZ:GetPropertyChangedSignal"Position":Connect(function()
+a_.Position=UDim2.new(
+aZ.Position.X.Scale,
+aZ.Position.X.Offset+1,
 0,
-a_.Position.Y.Offset+1
+aZ.Position.Y.Offset+1
 )
 end)
-a_:GetPropertyChangedSignal"FontFace":Connect(function()
-a0.FontFace=a_.FontFace
+aZ:GetPropertyChangedSignal"FontFace":Connect(function()
+a_.FontFace=aZ.FontFace
 end)
-a_:GetPropertyChangedSignal"Text":Connect(function()
-a0.Text=removeTags(a_.Text)
+aZ:GetPropertyChangedSignal"Text":Connect(function()
+a_.Text=removeTags(aZ.Text)
 end)
-a_:GetPropertyChangedSignal"Size":Connect(function()
-a0.Size=a_.Size
+aZ:GetPropertyChangedSignal"Size":Connect(function()
+a_.Size=aZ.Size
 end)
-a0.TextColor3=Color3.new()
-a0.TextTransparency=0.65
-a0.Parent=aw.Children
+a_.TextColor3=Color3.new()
+a_.TextTransparency=0.65
 a_.Parent=aw.Children
-local a1=Instance.new"Frame"
-a1.Name="Holder"
-a1.Size=UDim2.fromScale(1,1)
-a1.Position=UDim2.fromOffset(5,37)
-a1.BackgroundTransparency=1
-a1.Parent=aw.Children
-local a2=Instance.new"UIListLayout"
-a2.HorizontalAlignment=Enum.HorizontalAlignment.Right
-a2.VerticalAlignment=Enum.VerticalAlignment.Top
-a2.SortOrder=Enum.SortOrder.LayoutOrder
-a2.Parent=a1
+aZ.Parent=aw.Children
+local a0=Instance.new"Frame"
+a0.Name="Holder"
+a0.Size=UDim2.fromScale(1,1)
+a0.Position=UDim2.fromOffset(5,37)
+a0.BackgroundTransparency=1
+a0.Parent=aw.Children
+local a1=Instance.new"UIListLayout"
+a1.HorizontalAlignment=Enum.HorizontalAlignment.Right
+a1.VerticalAlignment=Enum.VerticalAlignment.Top
+a1.SortOrder=Enum.SortOrder.LayoutOrder
+a1.Parent=a0
 
 
 
 
 
+local a2
 local a3
 local a4
-local a5
-a4=d:CreateOverlay{
+a3=d:CreateOverlay{
 Name="Target Info",
-Icon=u"vape/assets/new/targetinfoicon.png",
+Icon=v"vape/assets/new/targetinfoicon.png",
 Size=UDim2.fromOffset(14,14),
 Position=UDim2.fromOffset(12,14),
 CategorySize=240,
-Function=function(a6)
-if a6 then
+Function=function(a5)
+if a5 then
 task.spawn(function()
 repeat
-a3:UpdateInfo()
+a2:UpdateInfo()
 task.wait()
-until not a4.Button or not a4.Button.Enabled
+until not a3.Button or not a3.Button.Enabled
 end)
 end
 end,
 }
 
-local a6=Instance.new"Frame"
-a6.Size=UDim2.fromOffset(240,89)
-a6.BackgroundColor3=m.Dark(o.Main,0.1)
-a6.BackgroundTransparency=0.5
-a6.Parent=a4.Children
-local a7=addBlur(a6)
+local a5=Instance.new"Frame"
+a5.Size=UDim2.fromOffset(240,89)
+a5.BackgroundColor3=n.Dark(p.Main,0.1)
+a5.BackgroundTransparency=0.5
+a5.Parent=a3.Children
+local a7=addBlur(a5)
 a7.Visible=false
-addCorner(a6)
+addCorner(a5)
 local a8=Instance.new"ImageLabel"
 a8.Size=UDim2.fromOffset(26,27)
 a8.Position=UDim2.fromOffset(19,17)
-a8.BackgroundColor3=o.Main
+a8.BackgroundColor3=p.Main
 a8.Image="rbxthumb://type=AvatarHeadShot&id=1&w=420&h=420"
-a8.Parent=a6
+a8.Parent=a5
 local a9=Instance.new"Frame"
 a9.Size=UDim2.fromScale(1,1)
 a9.BackgroundTransparency=1
@@ -12866,15 +13587,15 @@ bb.Text="Target name"
 bb.TextXAlignment=Enum.TextXAlignment.Left
 bb.TextYAlignment=Enum.TextYAlignment.Top
 bb.TextScaled=true
-bb.TextColor3=m.Light(o.Text,0.4)
+bb.TextColor3=n.Light(p.Text,0.4)
 bb.TextStrokeTransparency=1
-bb.FontFace=o.Font
+bb.FontFace=p.Font
 local bc=bb:Clone()
 bc.Position=UDim2.fromOffset(55,21)
 bc.TextColor3=Color3.new()
 bc.TextTransparency=0.65
 bc.Visible=false
-bc.Parent=a6
+bc.Parent=a5
 bb:GetPropertyChangedSignal"Size":Connect(function()
 bc.Size=bb.Size
 end)
@@ -12884,14 +13605,14 @@ end)
 bb:GetPropertyChangedSignal"FontFace":Connect(function()
 bc.FontFace=bb.FontFace
 end)
-bb.Parent=a6
+bb.Parent=a5
 local bd=Instance.new"Frame"
 bd.Name="HealthBKG"
 bd.Size=UDim2.fromOffset(200,9)
 bd.Position=UDim2.fromOffset(20,56)
-bd.BackgroundColor3=o.Main
+bd.BackgroundColor3=p.Main
 bd.BorderSizePixel=0
-bd.Parent=a6
+bd.Parent=a5
 addCorner(bd,UDim.new(1,0))
 local be=bd:Clone()
 be.Size=UDim2.fromScale(0.8,1)
@@ -12918,9 +13639,9 @@ bg.Visible=false
 local bh=Instance.new"UIStroke"
 bh.Enabled=false
 bh.Color=Color3.fromHSV(0.44,1,1)
-bh.Parent=a6
+bh.Parent=a5
 
-a4:CreateFont{
+a3:CreateFont{
 Name="Font",
 Blacklist="Arial",
 Function=function(bi)
@@ -12931,14 +13652,14 @@ local bi={
 Value=0.5,
 Object={Visible={}},
 }
-local bj=a4:CreateToggle{
+local bj=a3:CreateToggle{
 Name="Use Displayname",
 Default=true,
 }
-a4:CreateToggle{
+a3:CreateToggle{
 Name="Render Background",
 Function=function(bk)
-a6.BackgroundTransparency=bk and bi.Value or 1
+a5.BackgroundTransparency=bk and bi.Value or 1
 bc.Visible=not bk
 a7.Visible=bk
 bg.Visible=not bk
@@ -12947,63 +13668,63 @@ bi.Object.Visible=bk
 end,
 Default=true,
 }
-bi=a4:CreateSlider{
+bi=a3:CreateSlider{
 Name="Transparency",
 Min=0,
 Max=1,
 Default=0.5,
 Decimal=10,
 Function=function(bk)
-a6.BackgroundTransparency=bk
+a5.BackgroundTransparency=bk
 end,
 Darker=true,
 }
 local bk
-local bl=a4:CreateToggle{
+local bl=a3:CreateToggle{
 Name="Custom Color",
 Function=function(bl)
 bk.Object.Visible=bl
 if bl then
-a6.BackgroundColor3=
+a5.BackgroundColor3=
 Color3.fromHSV(bk.Hue,bk.Sat,bk.Value)
 a8.BackgroundColor3=
 Color3.fromHSV(bk.Hue,bk.Sat,math.max(bk.Value-0.1,0.075))
 bd.BackgroundColor3=a8.BackgroundColor3
 else
-a6.BackgroundColor3=m.Dark(o.Main,0.1)
-a8.BackgroundColor3=o.Main
-bd.BackgroundColor3=o.Main
+a5.BackgroundColor3=n.Dark(p.Main,0.1)
+a8.BackgroundColor3=p.Main
+bd.BackgroundColor3=p.Main
 end
 end,
 }
-bk=a4:CreateColorSlider{
+bk=a3:CreateColorSlider{
 Name="Color",
-Function=function(bm,bn,I)
+Function=function(bm,bn,bo)
 if bl.Enabled then
-a6.BackgroundColor3=Color3.fromHSV(bm,bn,I)
-a8.BackgroundColor3=Color3.fromHSV(bm,bn,math.max(I-0.1,0))
+a5.BackgroundColor3=Color3.fromHSV(bm,bn,bo)
+a8.BackgroundColor3=Color3.fromHSV(bm,bn,math.max(bo-0.1,0))
 bd.BackgroundColor3=a8.BackgroundColor3
 end
 end,
 Darker=true,
 Visible=false,
 }
-d:setupguicolorsync(a4,{
+d:setupguicolorsync(a3,{
 Color1=bk,
 Default=true
 })
-a4:CreateToggle{
+a3:CreateToggle{
 Name="Border",
 Function=function(bm)
 bh.Enabled=bm
-a5.Object.Visible=bm
+a4.Object.Visible=bm
 end,
 }
-a5=a4:CreateColorSlider{
+a4=a3:CreateColorSlider{
 Name="Border Color",
-Function=function(bm,bn,I,J)
-bh.Color=Color3.fromHSV(bm,bn,I)
-bh.Transparency=1-J
+Function=function(bm,bn,bo,bp)
+bh.Color=Color3.fromHSV(bm,bn,bo)
+bh.Transparency=1-bp
 end,
 Darker=true,
 Visible=false,
@@ -13011,424 +13732,424 @@ Visible=false,
 
 local bm=0
 local bn=0
-a3={
+a2={
 Targets={},
-Object=a6,
-UpdateInfo=function(I)
-local J=d.Libraries
-if not J then
+Object=a5,
+UpdateInfo=function(bo)
+local bp=d.Libraries
+if not bp then
 return
 end
 
-for K,L in I.Targets do
-if L<tick()then
-I.Targets[K]=nil
+for bq,br in bo.Targets do
+if br<tick()then
+bo.Targets[bq]=nil
 end
 end
 
-local K,L=(tick())
-for M,N in I.Targets do
-if N>K then
-L=M
-K=N
+local bq,br=(tick())
+for bs,bt in bo.Targets do
+if bt>bq then
+br=bs
+bq=bt
 end
 end
 
-a6.Visible=L~=nil or v.Visible
-if L then
-bb.Text=L.Player and(bj.Enabled and L.Player.DisplayName or L.Player.Name)
-or L.Character and L.Character.Name
+a5.Visible=br~=nil or w.Visible
+if br then
+bb.Text=br.Player and(bj.Enabled and br.Player.DisplayName or br.Player.Name)
+or br.Character and br.Character.Name
 or bb.Text
 a8.Image="rbxthumb://type=AvatarHeadShot&id="
-..(L.Player and L.Player.UserId or 1)
+..(br.Player and br.Player.UserId or 1)
 .."&w=420&h=420"
 
-if not L.Character then
-L.Health=L.Health or 0
-L.MaxHealth=L.MaxHealth or 100
+if not br.Character then
+br.Health=br.Health or 0
+br.MaxHealth=br.MaxHealth or 100
 end
 
-if L.Health~=bm or L.MaxHealth~=bn then
-local M=math.max(L.Health/L.MaxHealth,0)
-n:Tween(be,TweenInfo.new(0.3),{
-Size=UDim2.fromScale(math.min(M,1),1),
-BackgroundColor3=Color3.fromHSV(math.clamp(M/2.5,0,1),0.89,0.75),
+if br.Health~=bm or br.MaxHealth~=bn then
+local bs=math.max(br.Health/br.MaxHealth,0)
+o:Tween(be,TweenInfo.new(0.3),{
+Size=UDim2.fromScale(math.min(bs,1),1),
+BackgroundColor3=Color3.fromHSV(math.clamp(bs/2.5,0,1),0.89,0.75),
 })
-n:Tween(bf,TweenInfo.new(0.3),{
-Size=UDim2.fromScale(math.clamp(M-1,0,0.8),1),
+o:Tween(bf,TweenInfo.new(0.3),{
+Size=UDim2.fromScale(math.clamp(bs-1,0,0.8),1),
 })
-if bm>L.Health and I.LastTarget==L then
-n:Cancel(a9)
+if bm>br.Health and bo.LastTarget==br then
+o:Cancel(a9)
 a9.BackgroundTransparency=0.3
-n:Tween(a9,TweenInfo.new(0.5),{
+o:Tween(a9,TweenInfo.new(0.5),{
 BackgroundTransparency=1,
 })
 end
-bm=L.Health
-bn=L.MaxHealth
+bm=br.Health
+bn=br.MaxHealth
 end
 
-if not L.Character then
-table.clear(L)
+if not br.Character then
+table.clear(br)
 end
-I.LastTarget=L
+bo.LastTarget=br
 end
-return L
+return br
 end,
 }
-d.Libraries.targetinfo=a3
+d.Libraries.targetinfo=a2
 
-function d.UpdateTextGUI(I,J)
-if not J and not d.Loaded then
+function d.UpdateTextGUI(bo,bp)
+if not bp and not d.Loaded then
 return
 end
 if aw.Button.Enabled then
-local K=aw.Children.AbsolutePosition.X>(B.AbsoluteSize.X/2)
-aU.Visible=aH.Enabled
-aU.Position=K and UDim2.new(1/aB.Scale,-113,0,6)or UDim2.fromOffset(0,6)
-aX.Visible=aC.Enabled
-a_.Text=aO.Value
-a_.FontFace=aP.Value
-a_.Visible=a_.Text~=""and aS.Enabled
-a0.Visible=a_.Visible and aC.Enabled
-a2.HorizontalAlignment=K and Enum.HorizontalAlignment.Right or Enum.HorizontalAlignment.Left
-a1.Size=UDim2.fromScale(1/aB.Scale,1)
-a1.Position=UDim2.fromOffset(
-K and 3 or 0,
+local bq=aw.Children.AbsolutePosition.X>(C.AbsoluteSize.X/2)
+aT.Visible=aG.Enabled
+aT.Position=bq and UDim2.new(1/aB.Scale,-113,0,6)or UDim2.fromOffset(0,6)
+aW.Visible=aC.Enabled
+aZ.Text=aN.Value
+aZ.FontFace=aO.Value
+aZ.Visible=aZ.Text~=""and aR.Enabled
+a_.Visible=aZ.Visible and aC.Enabled
+a1.HorizontalAlignment=bq and Enum.HorizontalAlignment.Right or Enum.HorizontalAlignment.Left
+a0.Size=UDim2.fromScale(1/aB.Scale,1)
+a0.Position=UDim2.fromOffset(
+bq and 3 or 0,
 11
-+(aU.Visible and aU.Size.Y.Offset or 0)
-+(a_.Visible and 28 or 0)
-+(aK.Enabled and 3 or 0)
++(aT.Visible and aT.Size.Y.Offset or 0)
++(aZ.Visible and 28 or 0)
++(aJ.Enabled and 3 or 0)
 )
-if a_.Visible then
-local L=
-E(removeTags(a_.Text),a_.TextSize,a_.FontFace)
-a_.Size=UDim2.fromOffset(L.X,L.Y)
-a_.Position=UDim2.new(
-K and 1/aB.Scale or 0,
-K and-L.X or 0,
+if aZ.Visible then
+local br=
+F(removeTags(aZ.Text),aZ.TextSize,aZ.FontFace)
+aZ.Size=UDim2.fromOffset(br.X,br.Y)
+aZ.Position=UDim2.new(
+bq and 1/aB.Scale or 0,
+bq and-br.X or 0,
 0,
-(aU.Visible and 32 or 8)
+(aT.Visible and 32 or 8)
 )
 end
 
-local L={}
-for M,N in aT do
-if N.Enabled then
-table.insert(L,N.Object.Name)
+local br={}
+for bs,bt in aS do
+if bt.Enabled then
+table.insert(br,bt.Object.Name)
 end
-N.Object:Destroy()
+bt.Object:Destroy()
 end
-table.clear(aT)
+table.clear(aS)
 
-local M=TweenInfo.new(0.3,Enum.EasingStyle.Exponential)
-for N,O in d.Modules do
-if aM.Enabled and table.find(aL.ListEnabled,N)then
+local bs=TweenInfo.new(0.3,Enum.EasingStyle.Exponential)
+for bt,bu in d.Modules do
+if aL.Enabled and table.find(aK.ListEnabled,bt)then
 continue
 end
-if aN.Enabled and O.Category=="Render"then
+if aM.Enabled and bu.Category=="Render"then
 continue
 end
-if O.Enabled or table.find(L,N)then
-local P=Instance.new"Frame"
-P.Name=N
-P.Size=UDim2.fromOffset()
-P.BackgroundTransparency=1
-P.ClipsDescendants=true
-P.Parent=a1
-local Q
-local R
-if aK.Enabled then
-Q=Instance.new"Frame"
-Q.Size=UDim2.new(1,3,1,0)
-Q.BackgroundColor3=m.Dark(o.Main,0.15)
-Q.BackgroundTransparency=aI.Value
-Q.BorderSizePixel=0
-Q.Parent=P
-local S=Instance.new"Frame"
-S.Size=UDim2.new(1,0,0,1)
-S.Position=UDim2.new(0,0,1,-1)
-S.BackgroundColor3=Color3.new()
-S.BackgroundTransparency=0.928
-+(0.072*math.clamp((aI.Value-0.5)/0.5,0,1))
-S.BorderSizePixel=0
-S.Parent=Q
-local T=S:Clone()
-T.Name="Line"
-T.Position=UDim2.new()
-T.Parent=Q
-R=Instance.new"Frame"
-R.Size=UDim2.new(0,2,1,0)
-R.Position=K and UDim2.new(1,-5,0,0)or UDim2.new()
-R.BorderSizePixel=0
-R.Parent=Q
+if bu.Enabled or table.find(br,bt)then
+local bv=Instance.new"Frame"
+bv.Name=bt
+bv.Size=UDim2.fromOffset()
+bv.BackgroundTransparency=1
+bv.ClipsDescendants=true
+bv.Parent=a0
+local bw
+local bx
+if aJ.Enabled then
+bw=Instance.new"Frame"
+bw.Size=UDim2.new(1,3,1,0)
+bw.BackgroundColor3=n.Dark(p.Main,0.15)
+bw.BackgroundTransparency=aH.Value
+bw.BorderSizePixel=0
+bw.Parent=bv
+local by=Instance.new"Frame"
+by.Size=UDim2.new(1,0,0,1)
+by.Position=UDim2.new(0,0,1,-1)
+by.BackgroundColor3=Color3.new()
+by.BackgroundTransparency=0.928
++(0.072*math.clamp((aH.Value-0.5)/0.5,0,1))
+by.BorderSizePixel=0
+by.Parent=bw
+local bz=by:Clone()
+bz.Name="Line"
+bz.Position=UDim2.new()
+bz.Parent=bw
+bx=Instance.new"Frame"
+bx.Size=UDim2.new(0,2,1,0)
+bx.Position=bq and UDim2.new(1,-5,0,0)or UDim2.new()
+bx.BorderSizePixel=0
+bx.Parent=bw
 end
-local S=Instance.new"TextLabel"
-S.Position=UDim2.fromOffset(K and 3 or 6,2)
-S.BackgroundTransparency=1
-S.BorderSizePixel=0
-S.Text=N..(O.ExtraText and" <font color='#A8A8A8'>"..O.ExtraText().."</font>"or"")
-S.TextSize=15
-S.FontFace=ay.Value
-S.RichText=true
-local T=E(removeTags(S.Text),S.TextSize,S.FontFace)
-S.Size=UDim2.fromOffset(T.X,T.Y)
+local by=Instance.new"TextLabel"
+by.Position=UDim2.fromOffset(bq and 3 or 6,2)
+by.BackgroundTransparency=1
+by.BorderSizePixel=0
+by.Text=bt..(bu.ExtraText and" <font color='#A8A8A8'>"..bu.ExtraText().."</font>"or"")
+by.TextSize=15
+by.FontFace=ay.Value
+by.RichText=true
+local bz=F(removeTags(by.Text),by.TextSize,by.FontFace)
+by.Size=UDim2.fromOffset(bz.X,bz.Y)
 if aC.Enabled then
-local U=S:Clone()
-U.Position=
-UDim2.fromOffset(S.Position.X.Offset+1,S.Position.Y.Offset+1)
-U.Text=removeTags(S.Text)
-U.TextColor3=Color3.new()
-U.Parent=P
+local bA=by:Clone()
+bA.Position=
+UDim2.fromOffset(by.Position.X.Offset+1,by.Position.Y.Offset+1)
+bA.Text=removeTags(by.Text)
+bA.TextColor3=Color3.new()
+bA.Parent=bv
 end
-S.Parent=P
-local U=UDim2.fromOffset(T.X+10,T.Y+(aK.Enabled and 5 or 3))
+by.Parent=bv
+local bA=UDim2.fromOffset(bz.X+10,bz.Y+(aJ.Enabled and 5 or 3))
 if aF.Enabled then
-if not table.find(L,N)then
-n:Tween(P,M,{
-Size=U,
+if not table.find(br,bt)then
+o:Tween(bv,bs,{
+Size=bA,
 })
 else
-P.Size=U
-if not O.Enabled then
-n:Tween(P,M,{
+bv.Size=bA
+if not bu.Enabled then
+o:Tween(bv,bs,{
 Size=UDim2.fromOffset(),
 })
 end
 end
 else
-P.Size=O.Enabled and U or UDim2.fromOffset()
+bv.Size=bu.Enabled and bA or UDim2.fromOffset()
 end
-table.insert(aT,{
-Object=P,
-Text=S,
-Background=Q,
-Color=R,
-Enabled=O.Enabled,
+table.insert(aS,{
+Object=bv,
+Text=by,
+Background=bw,
+Color=bx,
+Enabled=bu.Enabled,
 })
 end
 end
 
 if ax.Value=="Alphabetical"then
-table.sort(aT,function(N,O)
-return N.Text.Text<O.Text.Text
+table.sort(aS,function(bt,bu)
+return bt.Text.Text<bu.Text.Text
 end)
 else
-table.sort(aT,function(N,O)
-return N.Text.Size.X.Offset>O.Text.Size.X.Offset
+table.sort(aS,function(bt,bu)
+return bt.Text.Size.X.Offset>bu.Text.Size.X.Offset
 end)
 end
 
-for N,O in aT do
-if O.Color then
-O.Color.Parent.Line.Visible=N~=1
+for bt,bu in aS do
+if bu.Color then
+bu.Color.Parent.Line.Visible=bt~=1
 end
-O.Object.LayoutOrder=N
+bu.Object.LayoutOrder=bt
 end
 end
 
 d:UpdateGUI(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value,true)
 end
 
-function d.UpdateGUI(I,J,K,L,M)
+function d.UpdateGUI(bo,bp,bq,br,bs)
 if d.Loaded==nil then
 return
 end
-d.GUIColorChanged:Fire(J,K,L,M)
-if not M and d.GUIColor.Rainbow then
+d.GUIColorChanged:Fire(bp,bq,br,bs)
+if not bs and d.GUIColor.Rainbow then
 return
 end
 if aw.Button.Enabled then
-aY.Color=ColorSequence.new{
-ColorSequenceKeypoint.new(0,Color3.fromHSV(J,K,L)),
+aX.Color=ColorSequence.new{
+ColorSequenceKeypoint.new(0,Color3.fromHSV(bp,bq,br)),
 ColorSequenceKeypoint.new(
 1,
-aE.Enabled and Color3.fromHSV(d:Color((J-0.075)%1))
-or Color3.fromHSV(J,K,L)
+aE.Enabled and Color3.fromHSV(d:Color((bp-0.075)%1))
+or Color3.fromHSV(bp,bq,br)
 ),
 }
-aZ.Color=aE.Enabled and aD.Enabled and aY.Color
+aY.Color=aE.Enabled and aD.Enabled and aX.Color
 or ColorSequence.new{
 ColorSequenceKeypoint.new(0,Color3.new(1,1,1)),
 ColorSequenceKeypoint.new(1,Color3.new(1,1,1)),
 }
-a_.TextColor3=aQ.Enabled
-and Color3.fromHSV(aR.Hue,aR.Sat,aR.Value)
-or aY.Color.Keypoints[2].Value
+aZ.TextColor3=aP.Enabled
+and Color3.fromHSV(aQ.Hue,aQ.Sat,aQ.Value)
+or aX.Color.Keypoints[2].Value
 
-local N=aA.Value=="Custom color"
+local bt=aA.Value=="Custom color"
 and Color3.fromHSV(az.Hue,az.Sat,az.Value)
 or nil
-for O,P in aT do
-P.Text.TextColor3=N
+for bu,bv in aS do
+bv.Text.TextColor3=bt
 or(
 d.GUIColor.Rainbow
-and Color3.fromHSV(d:Color((J-((aE and O+2 or O)*0.025))%1))
-or aY.Color.Keypoints[2].Value
+and Color3.fromHSV(d:Color((bp-((aE and bu+2 or bu)*0.025))%1))
+or aX.Color.Keypoints[2].Value
 )
-if P.Color then
-P.Color.BackgroundColor3=P.Text.TextColor3
+if bv.Color then
+bv.Color.BackgroundColor3=bv.Text.TextColor3
 end
-if aJ.Enabled and P.Background then
-P.Background.BackgroundColor3=m.Dark(P.Text.TextColor3,0.75)
+if aI.Enabled and bv.Background then
+bv.Background.BackgroundColor3=n.Dark(bv.Text.TextColor3,0.75)
 end
 end
 end
 
-if not v.Visible and not d.Legit.Window.Visible then
+if not w.Visible and not d.Legit.Window.Visible then
 return
 end
-local N=d.GUIColor.Rainbow and d.RainbowMode.Value~="Retro"
+local bt=d.GUIColor.Rainbow and d.RainbowMode.Value~="Retro"
 
-for O,P in d.Categories do
-if O=="Main"then
-P.Object.VapeLogo.V4Logo.ImageColor3=Color3.fromHSV(J,K,L)
-for Q,R in P.Buttons do
-if R.Enabled then
-R.Object.TextColor3=N
-and Color3.fromHSV(d:Color((J-(R.Index*0.025))%1))
-or Color3.fromHSV(J,K,L)
-if R.Icon then
-R.Icon.ImageColor3=R.Object.TextColor3
+for bu,bv in d.Categories do
+if bu=="Main"then
+bv.Object.VapeLogo.V4Logo.ImageColor3=Color3.fromHSV(bp,bq,br)
+for bw,bx in bv.Buttons do
+if bx.Enabled then
+bx.Object.TextColor3=bt
+and Color3.fromHSV(d:Color((bp-(bx.Index*0.025))%1))
+or Color3.fromHSV(bp,bq,br)
+if bx.Icon then
+bx.Icon.ImageColor3=bx.Object.TextColor3
 end
-end
-end
-end
-
-if P.Options then
-for Q,R in P.Options do
-if R.Color then
-R:Color(J,K,L,N)
 end
 end
 end
 
-if P.Type=="CategoryList"then
-P.Object.Children.Add.AddButton.ImageColor3=N and Color3.fromHSV(d:Color(J%1))
-or Color3.fromHSV(J,K,L)
-if P.Selected then
-P.Selected.BackgroundColor3=N and Color3.fromHSV(d:Color(J%1))
-or Color3.fromHSV(J,K,L)
-P.Selected.Title.TextColor3=d.GUIColor.Rainbow and Color3.new(0.19,0.19,0.19)
-or d:TextColor(J,K,L)
-P.Selected.Dots.Dots.ImageColor3=P.Selected.Title.TextColor3
-P.Selected.Bind.Icon.ImageColor3=P.Selected.Title.TextColor3
-P.Selected.Bind.TextLabel.TextColor3=P.Selected.Title.TextColor3
+if bv.Options then
+for bw,bx in bv.Options do
+if bx.Color then
+bx:Color(bp,bq,br,bt)
 end
 end
 end
 
-for O,P in d.Modules do
-if P.Enabled then
-P.Object.BackgroundColor3=N
-and Color3.fromHSV(d:Color((J-(P.Index*0.025))%1))
-or Color3.fromHSV(J,K,L)
-P.Object.TextColor3=d.GUIColor.Rainbow and Color3.new(0.19,0.19,0.19)
-or d:TextColor(J,K,L)
-P.Object.UIGradient.Enabled=N and d.RainbowMode.Value=="Gradient"
-if P.Object.UIGradient.Enabled then
-P.Object.BackgroundColor3=Color3.new(1,1,1)
-P.Object.UIGradient.Color=ColorSequence.new{
-ColorSequenceKeypoint.new(0,Color3.fromHSV(d:Color((J-(P.Index*0.025))%1))),
+if bv.Type=="CategoryList"then
+bv.Object.Children.Add.AddButton.ImageColor3=bt and Color3.fromHSV(d:Color(bp%1))
+or Color3.fromHSV(bp,bq,br)
+if bv.Selected then
+bv.Selected.BackgroundColor3=bt and Color3.fromHSV(d:Color(bp%1))
+or Color3.fromHSV(bp,bq,br)
+bv.Selected.Title.TextColor3=d.GUIColor.Rainbow and Color3.new(0.19,0.19,0.19)
+or d:TextColor(bp,bq,br)
+bv.Selected.Dots.Dots.ImageColor3=bv.Selected.Title.TextColor3
+bv.Selected.Bind.Icon.ImageColor3=bv.Selected.Title.TextColor3
+bv.Selected.Bind.TextLabel.TextColor3=bv.Selected.Title.TextColor3
+end
+end
+end
+
+for bu,bv in d.Modules do
+if bv.Enabled then
+bv.Object.BackgroundColor3=bt
+and Color3.fromHSV(d:Color((bp-(bv.Index*0.025))%1))
+or Color3.fromHSV(bp,bq,br)
+bv.Object.TextColor3=d.GUIColor.Rainbow and Color3.new(0.19,0.19,0.19)
+or d:TextColor(bp,bq,br)
+bv.Object.UIGradient.Enabled=bt and d.RainbowMode.Value=="Gradient"
+if bv.Object.UIGradient.Enabled then
+bv.Object.BackgroundColor3=Color3.new(1,1,1)
+bv.Object.UIGradient.Color=ColorSequence.new{
+ColorSequenceKeypoint.new(0,Color3.fromHSV(d:Color((bp-(bv.Index*0.025))%1))),
 ColorSequenceKeypoint.new(
 1,
-Color3.fromHSV(d:Color((J-((P.Index+1)*0.025))%1))
+Color3.fromHSV(d:Color((bp-((bv.Index+1)*0.025))%1))
 ),
 }
 end
-P.Object.Bind.Icon.ImageColor3=P.Object.TextColor3
-P.Object.Bind.TextLabel.TextColor3=P.Object.TextColor3
-P.Object.Dots.Dots.ImageColor3=P.Object.TextColor3
+bv.Object.Bind.Icon.ImageColor3=bv.Object.TextColor3
+bv.Object.Bind.TextLabel.TextColor3=bv.Object.TextColor3
+bv.Object.Dots.Dots.ImageColor3=bv.Object.TextColor3
 end
 
-for Q,R in P.Options do
-if R.Color then
-R:Color(J,K,L,N)
+for bw,bx in bv.Options do
+if bx.Color then
+bx:Color(bp,bq,br,bt)
 end
 end
 end
 
-for O,P in d.Overlays.Toggles do
-if P.Enabled then
-n:Cancel(P.Object.Knob)
-P.Object.Knob.BackgroundColor3=N and Color3.fromHSV(d:Color((J-(O*0.075))%1))
-or Color3.fromHSV(J,K,L)
+for bu,bv in d.Overlays.Toggles do
+if bv.Enabled then
+o:Cancel(bv.Object.Knob)
+bv.Object.Knob.BackgroundColor3=bt and Color3.fromHSV(d:Color((bp-(bu*0.075))%1))
+or Color3.fromHSV(bp,bq,br)
 end
 end
 
 if d.Legit.Icon then
-d.Legit.Icon.ImageColor3=Color3.fromHSV(J,K,L)
+d.Legit.Icon.ImageColor3=Color3.fromHSV(bp,bq,br)
 end
 
 if d.Legit.Window.Visible then
-for O,P in d.Legit.Modules do
-if P.Enabled then
-n:Cancel(P.Object.Knob)
-P.Object.Knob.BackgroundColor3=Color3.fromHSV(J,K,L)
+for bu,bv in d.Legit.Modules do
+if bv.Enabled then
+o:Cancel(bv.Object.Knob)
+bv.Object.Knob.BackgroundColor3=Color3.fromHSV(bp,bq,br)
 end
 
-for Q,R in P.Options do
-if R.Color then
-R:Color(J,K,L,N)
+for bw,bx in bv.Options do
+if bx.Color then
+bx:Color(bp,bq,br,bt)
 end
 end
 end
 end
 end
 
-d:Clean(q.ChildRemoved:Connect(function()
-for I,J in q:GetChildren()do
-if n.Tween then
-n:Tween(J,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{
-Position=UDim2.new(1,0,1,-(29+(78*I))),
+d:Clean(r.ChildRemoved:Connect(function()
+for bo,bp in r:GetChildren()do
+if o.Tween then
+o:Tween(bp,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{
+Position=UDim2.new(1,0,1,-(29+(78*bo))),
 })
 end
 end
 end))
 
-d:Clean(h.InputBegan:Connect(function(I)
-if not h:GetFocusedTextBox()and I.KeyCode~=Enum.KeyCode.Unknown then
-table.insert(d.HeldKeybinds,I.KeyCode.Name)
+d:Clean(h.InputBegan:Connect(function(bo)
+if not h:GetFocusedTextBox()and bo.KeyCode~=Enum.KeyCode.Unknown then
+table.insert(d.HeldKeybinds,bo.KeyCode.Name)
 if d.Binding then
 return
 end
 
-if checkKeybinds(d.HeldKeybinds,d.Keybind,I.KeyCode.Name)then
+if checkKeybinds(d.HeldKeybinds,d.Keybind,bo.KeyCode.Name)then
 if d.ThreadFix then
 setthreadidentity(8)
 end
-for J,K in d.Windows do
-K.Visible=false
+for bp,bq in d.Windows do
+bq.Visible=false
 end
-v.Visible=not v.Visible
-z.Visible=false
+w.Visible=not w.Visible
+A.Visible=false
 d:BlurCheck()
 end
 
-local J=false
-for K,L in d.Modules do
-if checkKeybinds(d.HeldKeybinds,L.Bind,I.KeyCode.Name)then
-J=true
+local bp=false
+for bq,br in d.Modules do
+if checkKeybinds(d.HeldKeybinds,br.Bind,bo.KeyCode.Name)then
+bp=true
 if d.ToggleNotifications.Enabled then
 d:CreateNotification(
 "Module Toggled",
-K
+bq
 .."<font color='#FFFFFF'> has been </font>"
-..(not L.Enabled and"<font color='#5AFF5A'>Enabled</font>"or"<font color='#FF5A5A'>Disabled</font>")
+..(not br.Enabled and"<font color='#5AFF5A'>Enabled</font>"or"<font color='#FF5A5A'>Disabled</font>")
 .."<font color='#FFFFFF'>!</font>",
 0.75
 )
 end
-L:Toggle(true)
+br:Toggle(true)
 end
 end
-if J then
+if bp then
 d:UpdateTextGUI()
 end
 
-for K,L in d.Profiles do
-if checkKeybinds(d.HeldKeybinds,L.Bind,I.KeyCode.Name)and L.Name~=d.Profile then
-d:Save(L.Name)
+for bq,br in d.Profiles do
+if checkKeybinds(d.HeldKeybinds,br.Bind,bo.KeyCode.Name)and br.Name~=d.Profile then
+d:Save(br.Name)
 d:Load(true)
 break
 end
@@ -13436,14 +14157,14 @@ end
 end
 end))
 
-d:Clean(h.InputEnded:Connect(function(I)
-if not h:GetFocusedTextBox()and I.KeyCode~=Enum.KeyCode.Unknown then
+d:Clean(h.InputEnded:Connect(function(bo)
+if not h:GetFocusedTextBox()and bo.KeyCode~=Enum.KeyCode.Unknown then
 if d.Binding then
 if not d.MultiKeybind.Enabled then
-d.HeldKeybinds={I.KeyCode.Name}
+d.HeldKeybinds={bo.KeyCode.Name}
 end
 d.Binding:SetBind(
-checkKeybinds(d.HeldKeybinds,d.Binding.Bind,I.KeyCode.Name)and{}
+checkKeybinds(d.HeldKeybinds,d.Binding.Bind,bo.KeyCode.Name)and{}
 or d.HeldKeybinds,
 true
 )
@@ -13451,9 +14172,9 @@ d.Binding=nil
 end
 end
 
-local J=table.find(d.HeldKeybinds,I.KeyCode.Name)
-if J then
-table.remove(d.HeldKeybinds,J)
+local bp=table.find(d.HeldKeybinds,bo.KeyCode.Name)
+if bp then
+table.remove(d.HeldKeybinds,bp)
 end
 end))
 
