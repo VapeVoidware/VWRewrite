@@ -391,6 +391,26 @@ getgenv().pload = function(name, id, found)
 	return suc and res
 end
 
+local function getExecutor()
+	local executor = "UNKNOWN"
+	local res = select(
+		2,
+		pcall(function()
+			return tostring(identifyexecutor())
+		end)
+	)
+	if res then
+		executor = res
+	end
+	return string.lower(executor)
+end
+
+local LOADER_LIB_BLACKLISTED = false
+local suc, executor = pcall(getExecutor)
+if suc and table.find({ "moon" }, executor) then
+	LOADER_LIB_BLACKLISTED = true
+end
+
 local __def_table = setmetatable({}, {
 	__index = function(self)
 		return self
@@ -402,7 +422,7 @@ local __def_table = setmetatable({}, {
 		return self
 	end,
 })
-local loaderFile = pload("libraries/loader", "loader", true) or __def_table
+local loaderFile = not LOADER_LIB_BLACKLISTED and pload("libraries/loader", "loader", true) or __def_table
 loaderFile.Colors.Gradient = {
 	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
 	ColorSequenceKeypoint.new(0.5, Color3.fromHex("#c41e3a")),
