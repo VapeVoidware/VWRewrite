@@ -238,6 +238,7 @@ end
 local TESTING_COMMIT = "master"
 local PRODUCTION_COMMIT = "87845dde6519ac986ae6a300ea4d746cc45e7d57"
 local commit = shared.CustomCommit or (shared.TestingMode or shared.StagingMode) and TESTING_COMMIT or PRODUCTION_COMMIT
+shared.VOIDWARE_SCRIPT_TYPE = "BEDWARS_REWRITE_NEW"
 shared.META_COMMIT = "a109a0a4441e42d497fa7e3cdc04d770dd853a04"
 if (isfile("vape/profiles/commit.txt") and readfile("vape/profiles/commit.txt") or "") ~= commit then
 	wipeFolder("vape")
