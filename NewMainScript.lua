@@ -234,6 +234,7 @@ local commit = "main"
 writefile(baseDirectory.."commithash2.txt", commit)
 commit = '070e96570036b2836b10f3581c88bd452f722c26'
 commit = shared.CustomCommit and tostring(shared.CustomCommit) or commit
+shared.VOIDWARE_SCRIPT_TYPE = "BEDWARS_REWRITE_OLD"
 writefile(baseDirectory.."commithash2.txt", commit)
 pcall(function()
     if not isfile("vape/assetversion.txt") then
