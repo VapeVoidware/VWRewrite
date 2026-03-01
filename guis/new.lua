@@ -42,7 +42,7 @@ AliasesConfig={KitESP=
 }
 }
 d.DefaultColor=Color3.fromHSV(d.GUIColor.Hue,d.GUIColor.Sat,d.GUIColor.Value)
-for e,f in{"PreloadEvent","GUIColorChanged","SelfDestructEvent","VisibilityChanged","OnLoadEvent","ProfileChangedEvent","MainGuiSettingsOpenedEvent"}do
+for e,f in{"PreloadEvent","GUIColorChanged","SelfDestructEvent","VisibilityChanged","OnLoadEvent","ProfileChangedEvent","MainGuiSettingsOpenedEvent","ProfilesRefresh"}do
 if d[f]then continue end
 d[f]=b(f)
 end
@@ -798,6 +798,12 @@ end)
 J.Activated:Connect(function()
 G:Toggle()
 J.BackgroundColor3=G.Enabled and Color3.new(0,0.7,0)or Color3.new()
+end)
+
+d.ProfilesRefresh:Connect(function()
+if J~=nil and J.Parent~=nil then
+J:Destroy()
+end
 end)
 
 G.Bind={Button=J}
@@ -5458,7 +5464,7 @@ end
 
 
 function ao.SetBind(N,O,P,Q)
-if O.Mobile then
+if O.Mobile and d.isMobile then
 createMobileButton(ao,Vector2.new(O.X,O.Y))
 return
 end
@@ -11963,6 +11969,9 @@ end
 local an=E("vape/profiles/"..ah.Profile..ah.Place..".txt")
 
 if an then
+pcall(function()
+d.ProfilesRefresh:Fire()
+end)
 local ao=loadJson("vape/profiles/"..ah.Profile..ah.Place..".txt")
 if not ao then
 ao={Categories={},Modules={},Legit={}}
