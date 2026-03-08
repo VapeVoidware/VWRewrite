@@ -1589,29 +1589,44 @@ task.wait()
 until u.Loaded==nil
 end)
 
-pcall(function()
-if getthreadidentity and setthreadidentity then
-local ap=getthreadidentity()
-setthreadidentity(2)
 
-L.Shop=require(n.TS.games.bedwars.shop['bedwars-shop']).BedwarsShop
-L.ShopItems=debug.getupvalue(debug.getupvalue(L.Shop.getShopItem,1),2)
-L.Shop.getShopItem('iron_sword',s)
 
-setthreadidentity(ap)
-F.shopLoaded=true
-else
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 task.spawn(function()
-repeat
-task.wait(0.1)
-until u.Loaded==nil or L.AppController:isAppOpen'BedwarsItemShopApp'
-
-L.Shop=require(n.TS.games.bedwars.shop['bedwars-shop']).BedwarsShop
-L.ShopItems=debug.getupvalue(debug.getupvalue(L.Shop.getShopItem,1),2)
-F.shopLoaded=true
-end)
+xpcall(function()
+if getthreadidentity and setthreadidentity then
+setthreadidentity(2)
 end
+L.Shop=require(n.TS.games.bedwars.shop['bedwars-shop']).BedwarsShop
+L.ShopItems=L.Shop.ShopItems
+L.Shop.getShopItem("iron_sword",s)
+if getthreadidentity and setthreadidentity then
+setthreadidentity(8)
+end
+end,print)
 end)
+F.shopLoaded=true
 
 u:Clean(function()
 ae.Get=af
@@ -2109,7 +2124,7 @@ Max=40,
 Default=18,
 Function=function(ae)
 if G.Enabled then
-BlockSelector.getMouseInfo=function(af,ag,ah)
+L.BlockSelector.getMouseInfo=function(af,ag,ah)
 ah=ah or{}
 ah.range=ae
 return ad(af,ag,ah)
