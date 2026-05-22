@@ -236,7 +236,7 @@ end
 
 --if not shared.VapeDeveloper then
 local TESTING_COMMIT = "master"
-local PRODUCTION_COMMIT = "cb71920ef6c3d0160a4457148a536e915934f586"
+local PRODUCTION_COMMIT = "df1507ca3679a67920955cbf2ebf267330d0c398"
 local commit = shared.CustomCommit or (shared.TestingMode or shared.StagingMode) and TESTING_COMMIT or PRODUCTION_COMMIT
 shared.VOIDWARE_SCRIPT_TYPE = "BEDWARS_REWRITE_NEW"
 shared.META_COMMIT = "a109a0a4441e42d497fa7e3cdc04d770dd853a04"
