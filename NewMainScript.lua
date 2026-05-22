@@ -423,7 +423,10 @@ local __def_table = setmetatable({}, {
 		return self
 	end,
 })
-local loaderFile = not LOADER_LIB_BLACKLISTED and pload("libraries/loader", "loader", true) or __def_table
+local loaderFile = not shared.LOADER_LIB_DISABLED
+		and not LOADER_LIB_BLACKLISTED
+		and pload("libraries/loader", "loader", true)
+	or __def_table
 loaderFile.Colors.Gradient = {
 	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
 	ColorSequenceKeypoint.new(0.5, Color3.fromHex("#c41e3a")),

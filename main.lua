@@ -70,6 +70,7 @@ local TELEPORT_META = {
 	"LOADER_BYPASS_SLOWMODE",
 	"VoidwareLoadingDebug",
 	"admin_config_api_key",
+	"LOADER_LIB_DISABLED",
 	"BedwarsClientDebug",
 	"VapeCustomProfile",
 	"NoVoidwareModules",
